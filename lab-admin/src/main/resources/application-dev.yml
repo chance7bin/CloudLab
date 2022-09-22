@@ -1,0 +1,8 @@
+lab:
+  profile: E:/opengms-lab/uploadPath
+
+#日志配置
+logging:
+  config: classpath:log4j2-config-dev.xml
+  file:
+    path: E:/opengms-lab/log
