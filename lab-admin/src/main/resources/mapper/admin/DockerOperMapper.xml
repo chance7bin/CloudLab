@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengms.admin.mapper.DockerOperMapper">
+
+    <resultMap type="jupyterContainer" id="jupyterContainerResult">
+        <id     property="containerId"         column="container_id"      />
+        <id     property="containerInsId"      column="container_ins_id"      />
+        <result property="containerName"       column="container_name"    />
+        <result property="imageName"           column="image_name"     />
+        <result property="containerExportPort" column="container_export_port"   />
+        <result property="hostBindPort"        column="host_bind_port"    />
+        <result property="workspaceVolume"     column="workspace_volume"    />
+        <result property="configVolume"        column="config_volume"    />
+        <result property="createBy"            column="create_by"      />
+        <result property="createTime"          column="create_time"    />
+        <result property="updateBy"            column="update_by"      />
+        <result property="updateTime"          column="update_time"    />
+    </resultMap>
+
+
+    <insert id="insertJupyterContainer" parameterType="jupyterContainer" useGeneratedKeys="true" keyProperty="containerId">
+        insert into jupyer_container(
+        <if test="containerId != null and containerId != 0">container_id,</if>
+        <if test="containerInsId != null and containerInsId != ''">container_ins_id,</if>
+        <if test="containerName != null and containerName != ''">container_name,</if>
+        <if test="imageName != null and imageName != ''">image_name,</if>
+        <if test="containerExportPort != null">container_export_port,</if>
+        <if test="hostBindPort != null">host_bind_port,</if>
+        <if test="workspaceVolume != null and workspaceVolume != ''">workspace_volume,</if>
+        <if test="configVolume != null and configVolume != ''">config_volume,</if>
+        <if test="createBy != null and createBy != ''">create_by,</if>
+        <if test="remark != null and remark != ''">remark,</if>
+        create_time
+        )values(
+        <if test="containerId != null and containerId != 0">#{containerId},</if>
+        <if test="containerInsId != null and containerInsId != ''">#{containerInsId},</if>
+        <if test="containerName != null and containerName != ''">#{containerName},</if>
+        <if test="imageName != null and imageName != ''">#{imageName},</if>
+        <if test="containerExportPort != null">#{containerExportPort},</if>
+        <if test="hostBindPort != null">#{hostBindPort},</if>
+        <if test="workspaceVolume != null and workspaceVolume != ''">#{workspaceVolume},</if>
+        <if test="configVolume != null and configVolume != ''">#{configVolume},</if>
+        <if test="createBy != null and createBy != ''">#{createBy},</if>
+        <if test="remark != null and remark != ''">#{remark},</if>
+        sysdate()
+        )
+    </insert>
+
+</mapper>

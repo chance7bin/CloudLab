@@ -57,5 +57,10 @@ public class SysUserServiceImpl implements ISysUserService {
 
     }
 
+    @Override
+    public boolean createJupyterContainer(String userName) {
+        return false;
+    }
+
 
 }

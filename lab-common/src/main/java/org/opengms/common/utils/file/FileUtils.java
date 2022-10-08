@@ -36,7 +36,7 @@ public class FileUtils
      * @Author bin
      **/
     public static String readResourceTxtFile(String resourcePath) throws IOException {
-        ClassPathResource classPathResource = new ClassPathResource("static/jupyter_lab_config.py");
+        ClassPathResource classPathResource = new ClassPathResource(resourcePath);
         InputStream is = classPathResource.getInputStream();
         return readTxtFile(is);
     }

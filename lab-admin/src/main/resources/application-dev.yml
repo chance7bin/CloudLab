@@ -1,5 +1,8 @@
 lab:
   profile: E:/opengms-lab/uploadPath
+  # 资源存放路径
+  repository:
+    workspace: E:/opengms-lab/workspace
 
 #日志配置
 logging:

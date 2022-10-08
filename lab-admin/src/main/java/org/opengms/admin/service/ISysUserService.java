@@ -43,4 +43,7 @@ public interface ISysUserService {
      */
     boolean registerUser(SysUser user);
 
+
+    boolean createJupyterContainer(String userName);
+
 }

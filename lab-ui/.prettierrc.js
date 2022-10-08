@@ -1,5 +1,6 @@
 module.exports = {
   // 无尾逗号
   "trailingComma": "none",
-  "printWidth": 120
+  "printWidth": 120,
+  "endOfLine": "auto"
 };
