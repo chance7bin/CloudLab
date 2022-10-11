@@ -11,11 +11,13 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
+import org.opengms.admin.entity.bo.docker.LaunchParams;
 import org.opengms.admin.entity.po.docker.ContainerInfo;
 import org.opengms.admin.entity.po.docker.JupyterContainer;
 import org.opengms.admin.mapper.DockerOperMapper;
 import org.opengms.admin.service.IDockerService;
 import org.opengms.common.utils.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,22 +39,20 @@ public class DockerServiceImpl implements IDockerService {
 
 
     @Override
-    public String createContainer(ContainerInfo containerInfo) {
+    public ContainerInfo createContainer(ContainerInfo containerInfo) {
 
         DockerClient client = connect();
-        //创建
+
         CreateContainerResponse response = initContainer(client, containerInfo);
-        String containerId = response.getId();
+        String containerInsId = response.getId();
         //启动
-        client.startContainerCmd(containerId).exec();
+        client.startContainerCmd(containerInsId).exec();
 
-        return containerId;
+        containerInfo.setContainerInsId(containerInsId);
+
+        return containerInfo;
     }
 
-    @Override
-    public int insertContainer(ContainerInfo containerInfo) {
-        return 0;
-    }
 
     @Override
     public int updateContainer(ContainerInfo containerInfo) {
@@ -87,28 +87,19 @@ public class DockerServiceImpl implements IDockerService {
 
         //数据卷 Bind.parse
         List<Bind> binds = new ArrayList<>();
-        // for (String volume : containerInfo.getVolumeList()) {
-        //     binds.add(Bind.parse(volume));
-        // }
-
-        //jupyter容器数据卷挂载
-        if (containerInfo instanceof JupyterContainer){
-            String workspaceVolume = ((JupyterContainer) containerInfo).getWorkspaceVolume();
-            String configVolume = ((JupyterContainer) containerInfo).getConfigVolume();
-            if (StringUtils.isNotEmpty(workspaceVolume)){
-                binds.add(Bind.parse(workspaceVolume));
-            }
-            if (StringUtils.isNotEmpty(configVolume)){
-                binds.add(Bind.parse(configVolume));
-            }
+        for (String volume : containerInfo.getVolumeList()) {
+            binds.add(Bind.parse(volume));
         }
 
         //容器启动配置
         HostConfig hostConfig = new HostConfig()
             //端口映射
-            .withPortBindings(new Ports(new ExposedPort(containerInfo.getContainerExportPort()), Ports.Binding.bindPort(containerInfo.getHostBindPort())))
+            .withPortBindings(new Ports(new ExposedPort(containerInfo.getContainerExportPort()), Ports.Binding.bindPort(containerInfo.getHostBindPort())));
+
+        if (binds.size() != 0){
             //挂载
-            .withBinds(binds);
+            hostConfig.withBinds(binds);
+        }
 
         CreateContainerCmd containerCmd = client.createContainerCmd(containerInfo.getImageName())
             //容器名

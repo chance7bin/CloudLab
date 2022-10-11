@@ -11,8 +11,12 @@ import com.github.dockerjava.transport.DockerHttpClient;
 import org.junit.jupiter.api.Test;
 import org.opengms.admin.config.AppConfig;
 import org.opengms.admin.entity.bo.Server;
+import org.opengms.admin.entity.po.docker.JupyterContainer;
+import org.opengms.admin.mapper.DockerOperMapper;
+import org.opengms.admin.service.IWorkspaceService;
 import org.opengms.common.utils.file.FileUtils;
 import org.opengms.common.utils.ip.IpUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 
@@ -127,5 +131,42 @@ public class LabApplicationTests {
         client.startContainerCmd(containerId).exec();
     }
 
+    @Autowired
+    IWorkspaceService workspaceService;
+
+    @Autowired
+    DockerOperMapper dockerOperMapper;
+
+    //测试mapper层list转string
+    @Test
+    void testMapperList2String(){
+        //插入
+        Boolean success = workspaceService.initWorkspace(1L);
+        System.out.println(success);
+
+        //查找
+        // List<JupyterContainer> jupyterContainers = dockerOperMapper.listAll();
+        // System.out.println(jupyterContainers);
+
+
+    }
+
+    // 将数据卷目录修改成适合docker的格式 [ /e/... ]
+    @Test
+    void formatPathSupportDocker(){
+        // E:\opengms-lab\container\workspace\test:/opt/notebooks
+        String path = "E:\\opengms-lab\\container\\workspace\\test:/opt/notebooks";
+        path = path.replaceAll("\\\\","/");
+        int index = path.indexOf(":");
+        String outputPath = path;
+        if (index == 1){
+            // 只有 E: 这种形式的才要进行处理
+            outputPath = "/" + Character.toString(path.charAt(0)).toLowerCase() + path.substring(index + 1);
+        }
+        System.out.println(outputPath);
+
+
+
+    }
 
 }

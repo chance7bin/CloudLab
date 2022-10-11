@@ -8,13 +8,19 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
+/**
+ * jupyter服务层
+ *
+ * @author bin
+ * @date 2022/10/6
+ */
 @Service
 public class JupyterServiceImpl implements IJupyterService {
 
 
 
     @Override
-    public Boolean generateJupyterConfig(String configDir) {
+    public String generateJupyterConfig(String configDir) {
 
         try {
             String resourcePath = "static/jupyter_lab_config.py";
@@ -27,12 +33,12 @@ public class JupyterServiceImpl implements IJupyterService {
 
             s += "c.ServerApp.token = '" + jupyterToken + "'";
 
-            FileUtils.writeBytes(s.getBytes(), configDir,"jupyter_lab_config.py");
+            return FileUtils.writeBytes(s.getBytes(), configDir,"jupyter_lab_config.py");
 
-            return true;
+            // return true;
 
         } catch (IOException e) {
-            return false;
+            return null;
             // throw new ServiceException("生成jupyter配置文件出错");
         }
 

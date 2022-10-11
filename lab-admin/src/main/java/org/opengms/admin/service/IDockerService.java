@@ -1,5 +1,6 @@
 package org.opengms.admin.service;
 
+import org.opengms.admin.entity.bo.docker.LaunchParams;
 import org.opengms.admin.entity.po.docker.ContainerInfo;
 import org.opengms.admin.entity.po.system.SysUser;
 
@@ -12,10 +13,13 @@ import org.opengms.admin.entity.po.system.SysUser;
 public interface IDockerService {
 
 
-    String createContainer(ContainerInfo containerInfo);
-
-
-    int insertContainer(ContainerInfo containerInfo);
+    /**
+     * 创建容器
+     * @param containerInfo
+     * @return org.opengms.admin.entity.po.docker.ContainerInfo
+     * @Author bin
+     **/
+    ContainerInfo createContainer(ContainerInfo containerInfo);
 
     int updateContainer(ContainerInfo containerInfo);
 
