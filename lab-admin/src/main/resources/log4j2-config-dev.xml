@@ -33,18 +33,13 @@
     <!--若是additivity设为false，则 子Logger 只会在自己的appender里输出，而不会在 父Logger 的appender里输出。-->
     <Loggers>
         <!--过滤掉spring和mybatis的一些无用的DEBUG信息-->
-        <logger name="org.mybatis" level="DEBUG" additivity="false">
+        <logger name="org.mybatis" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </logger>
 
-        <Logger name="org.springframework" level="INFO" additivity="false">
+        <Logger name="org.springframework" level="WARN" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-
-        <!--pagehelper日志输出限制-->
-        <!--<Logger name="com.github.pagehelper" level="info" additivity="false">-->
-        <!--    <AppenderRef ref="Console"/>-->
-        <!--</Logger>-->
 
         <!-- 设置com.zaxxer.hikari包下的日志只打印WARN及以上级别的日志 -->
         <logger name="com.zaxxer.hikari" level="WARN" additivity="false">

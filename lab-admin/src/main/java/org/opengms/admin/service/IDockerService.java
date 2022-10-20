@@ -1,8 +1,11 @@
 package org.opengms.admin.service;
 
-import org.opengms.admin.entity.bo.docker.LaunchParams;
+import org.opengms.admin.entity.dto.docker.ContainerInfoDTO;
+import org.opengms.admin.entity.dto.docker.ImageInfoDTO;
+import org.opengms.admin.entity.dto.docker.JupyterInfoDTO;
 import org.opengms.admin.entity.po.docker.ContainerInfo;
-import org.opengms.admin.entity.po.system.SysUser;
+
+import java.util.List;
 
 /**
  * 与docker有关的业务操作
@@ -23,4 +26,13 @@ public interface IDockerService {
 
     int updateContainer(ContainerInfo containerInfo);
 
+
+    //获取docker镜像列表
+    List<ImageInfoDTO> listImages();
+
+    //获取docker容器列表
+    List<ContainerInfoDTO> listContainers();
+
+
+    JupyterInfoDTO getJupyterContainerById(Long id);
 }

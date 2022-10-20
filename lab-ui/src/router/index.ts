@@ -72,6 +72,20 @@ export const constantRoutes = [
     ]
   },
   {
+    path: "/workspace",
+    component: Layout,
+    hidden: true,
+    redirect: "noredirect",
+    children: [
+      {
+        path: "instance",
+        component: () => import("@/views/lab/workspace/index.vue"),
+        name: "instance",
+        meta: { title: "工作空间", icon: "user" }
+      }
+    ]
+  },
+  {
     path: "/user",
     component: Layout,
     hidden: true,

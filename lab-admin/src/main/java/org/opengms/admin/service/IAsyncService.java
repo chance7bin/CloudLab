@@ -13,4 +13,8 @@ public interface IAsyncService {
     void recordOper(SysOperLog operLog);
 
     void recordLogininfor(String username, String status, String message, Object... args);
+
+    void startSocketListener();
+
+    void startSocketListenerNIO();
 }

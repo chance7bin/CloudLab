@@ -7,8 +7,8 @@ import org.opengms.common.utils.StringUtils;
 import oshi.hardware.GlobalMemory;
 
 import javax.servlet.http.HttpServletRequest;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.IOException;
+import java.net.*;
 
 /**
  * 获取IP方法
@@ -284,5 +284,38 @@ public class IpUtils
     public static boolean isUnknown(String checkString)
     {
         return StringUtils.isBlank(checkString) || "unknown".equalsIgnoreCase(checkString);
+    }
+
+
+    /**
+     * 判断主机端口是否正在使用
+     *
+     * @param hostName
+     * @param port
+     * @return boolean - true/false
+     */
+    public static boolean isSocketOccupy(String hostName, int port) {
+        boolean isAlive = false;
+
+        // 创建一个套接字
+        SocketAddress socketAddress = new InetSocketAddress(hostName, port);
+        Socket socket = new Socket();
+
+        // 超时设置，单位毫秒
+        int timeout = 1000;
+
+        // log("hostName: " + hostName + ", port: " + port);
+        try {
+            socket.connect(socketAddress, timeout);
+            socket.close();
+            isAlive = true;
+
+        } catch (SocketTimeoutException exception) {
+            // System.out.println("SocketTimeoutException " + hostName + ":" + port + ". " + exception.getMessage());
+        } catch (IOException exception) {
+            // System.out.println(
+            //     "IOException - Unable to connect to " + hostName + ":" + port + ". " + exception.getMessage());
+        }
+        return isAlive;
     }
 }

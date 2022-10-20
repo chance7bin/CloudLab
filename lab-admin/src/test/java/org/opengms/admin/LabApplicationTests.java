@@ -8,11 +8,13 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.opengms.admin.config.AppConfig;
 import org.opengms.admin.entity.bo.Server;
 import org.opengms.admin.entity.po.docker.JupyterContainer;
 import org.opengms.admin.mapper.DockerOperMapper;
+import org.opengms.admin.service.IDockerService;
 import org.opengms.admin.service.IWorkspaceService;
 import org.opengms.common.utils.file.FileUtils;
 import org.opengms.common.utils.ip.IpUtils;
@@ -21,7 +23,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.*;
-import java.net.URISyntaxException;
+import java.net.*;
 import java.time.Duration;
 import java.util.List;
 
@@ -29,6 +31,7 @@ import java.util.List;
  * @author bin
  * @date 2022/09/22
  */
+@Slf4j
 @SpringBootTest
 public class LabApplicationTests {
 
@@ -137,11 +140,11 @@ public class LabApplicationTests {
     @Autowired
     DockerOperMapper dockerOperMapper;
 
-    //测试mapper层list转string
+    //测试启动容器
     @Test
-    void testMapperList2String(){
+    void testStartContainer(){
         //插入
-        Boolean success = workspaceService.initWorkspace(1L);
+        Boolean success = workspaceService.initWorkspace(1L, "jupyter_cus:5.0");
         System.out.println(success);
 
         //查找
@@ -168,5 +171,77 @@ public class LabApplicationTests {
 
 
     }
+
+
+    //测试端口是否被占用
+    @Test
+    void testHost(){
+        // log(isSocketAliveUitlitybyCrunchify("localhost", 27017));
+
+        log(isSocketAlive("localhost", 8080));
+
+    }
+
+    /**
+     * 判断主机端口是否正在使用
+     *
+     * @param hostName
+     * @param port
+     * @return boolean - true/false
+     */
+    public static boolean isSocketAlive(String hostName, int port) {
+        boolean isAlive = false;
+
+        // 创建一个套接字
+        SocketAddress socketAddress = new InetSocketAddress(hostName, port);
+        Socket socket = new Socket();
+
+        // 超时设置，单位毫秒
+        int timeout = 1000;
+
+        // log("hostName: " + hostName + ", port: " + port);
+        try {
+            socket.connect(socketAddress, timeout);
+            socket.close();
+            isAlive = true;
+
+        } catch (SocketTimeoutException exception) {
+            // System.out.println("SocketTimeoutException " + hostName + ":" + port + ". " + exception.getMessage());
+        } catch (IOException exception) {
+            // System.out.println(
+            //     "IOException - Unable to connect to " + hostName + ":" + port + ". " + exception.getMessage());
+        }
+        return isAlive;
+    }
+
+    private static void log(String string) {
+        System.out.println(string);
+    }
+
+    private static void log(boolean isAlive) {
+        System.out.println("是否真正在使用: " + isAlive + "\n");
+    }
+
+    @Autowired
+    IDockerService dockerService;
+
+    //测试获取镜像列表
+    @Test
+    void testListImages(){
+        // log(isSocketAliveUitlitybyCrunchify("localhost", 27017));
+        // List list = dockerService.listImages();
+        List list = dockerService.listContainers();
+
+        System.out.println(list);
+
+
+    }
+
+    //测试事务
+    @Test
+    void testTransaction(){
+        // log.info("123");
+    }
+
 
 }

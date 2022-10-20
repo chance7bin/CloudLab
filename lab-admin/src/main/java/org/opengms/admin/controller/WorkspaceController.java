@@ -6,6 +6,7 @@ import org.opengms.admin.service.IWorkspaceService;
 import org.opengms.admin.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,11 +23,11 @@ public class WorkspaceController {
     @Autowired
     IWorkspaceService workspaceService;
 
-    @GetMapping("/initialization")
-    public ApiResponse initWorkspace(){
+    @GetMapping("/initialization/{imageName}")
+    public ApiResponse initWorkspace(@PathVariable("imageName") String imageName){
 
         Long userId = SecurityUtils.getUserId();
-        return workspaceService.initWorkspace(userId) ? ApiResponse.success() : ApiResponse.error();
+        return workspaceService.initWorkspace(userId, imageName) ? ApiResponse.success() : ApiResponse.error();
 
     }
 

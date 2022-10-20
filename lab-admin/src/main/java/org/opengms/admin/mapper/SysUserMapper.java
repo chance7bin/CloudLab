@@ -11,6 +11,13 @@ import org.opengms.admin.entity.po.system.SysUser;
 @Mapper
 public interface SysUserMapper {
 
+    /**
+     * 根据userid 返回用户信息
+     *
+     * @param userId
+     * @return org.opengms.admin.entity.po.system.SysUser
+     * @author bin
+     **/
     SysUser selectUserById(Long userId);
 
     /**

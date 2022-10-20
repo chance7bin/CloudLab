@@ -1,4 +1,7 @@
 import lodash from "lodash";
+import { HTTP_STATUS } from "@/utils/globalConstants";
+import errorCode from "@/utils/errorCode";
+
 /**
  * 通用ts方法封装处理
  * Copyright (c) 2019 ruoyi
@@ -51,4 +54,46 @@ export function getNormalPath(p) {
     return res.slice(0, res.length - 1);
   }
   return res;
+}
+
+// 验证接口的返回结果,带提示框
+export function validateApiResultWithTips(proxy: Record<string, any>, res: any, successMsg: string, errorMsg: string) {
+  return new Promise((resolve) => {
+    if (res.code == HTTP_STATUS.SUCCESS) {
+      if (errorMsg != null && errorMsg != "") {
+        proxy.$modal.msgSuccess(successMsg);
+      } else {
+        proxy.$modal.msgSuccess("成功");
+      }
+      resolve(res.data);
+    } else if (res.code == HTTP_STATUS.UNAUTHORIZED) {
+      proxy.$modal.msgError(errorCode["401"]);
+    } else if (res.code == HTTP_STATUS.FORBIDDEN) {
+      proxy.$modal.msgError(errorCode["403"]);
+    } else if (res.code == HTTP_STATUS.NOT_FOUND) {
+      proxy.$modal.msgError(errorCode["404"]);
+    } else {
+      if (errorMsg != null && errorMsg != "") {
+        proxy.$modal.msgError(errorMsg);
+      } else {
+        proxy.$modal.msgError(errorCode["default"]);
+      }
+    }
+  });
+}
+
+// 验证接口的返回结果
+export function validateApiResult(res: any) {
+  return new Promise((resolve, reject) => {
+    if (res.code == HTTP_STATUS.SUCCESS) {
+      resolve(res.data);
+    } else {
+      reject();
+    }
+  });
+}
+
+// 传入的变量不是空字符串
+export function notEmptyString(data: string) {
+  return data != null && data !== "";
 }

@@ -104,4 +104,9 @@ swagger:
   enabled: true
   # 请求前缀
   pathMapping: /dev-api
+  
 
+#socket配置
+socket:
+  host: 127.0.0.1
+  port: 6001

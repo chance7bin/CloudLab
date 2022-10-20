@@ -106,11 +106,6 @@
         <!--    <artifactId>jaxb-api</artifactId>-->
         <!--</dependency>-->
 
-        <!--redis 缓存操作 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
 
         <!--pool 对象池 -->
         <!-- spring2.0集成redis所需common-pool2 -->
@@ -135,6 +130,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>1.16.10</version>
         </dependency>
 
 

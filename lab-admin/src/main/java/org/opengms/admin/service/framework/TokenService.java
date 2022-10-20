@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengms.admin.constant.CacheConstants;
 import org.opengms.common.constant.Constants;
 import org.opengms.admin.entity.dto.LoginUser;
-import org.opengms.common.redis.RedisCache;
+import org.opengms.admin.utils.redis.RedisCache;
 import org.opengms.common.utils.ServletUtils;
 import org.opengms.common.utils.StringUtils;
 import org.opengms.common.utils.ip.AddressUtils;

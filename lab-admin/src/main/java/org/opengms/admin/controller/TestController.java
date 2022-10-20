@@ -13,7 +13,7 @@ import org.opengms.admin.enums.BusinessType;
 import org.opengms.admin.service.ISysOperLogService;
 import org.opengms.admin.entity.dto.ApiResponse;
 import org.opengms.admin.entity.dto.TableDataInfo;
-import org.opengms.common.redis.RedisCache;
+import org.opengms.admin.utils.redis.RedisCache;
 import org.opengms.admin.exception.ServiceException;
 import org.opengms.common.utils.MessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 import org.opengms.admin.controller.common.BaseController;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @Description

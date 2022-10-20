@@ -1,8 +1,8 @@
 import request from "@/utils/request";
 
-export function initWorkspace() {
+export function initWorkspace(imageName: string) {
   return request({
-    url: "/workspace/initialization",
+    url: "/workspace/initialization/" + imageName,
     method: "get"
   });
 }

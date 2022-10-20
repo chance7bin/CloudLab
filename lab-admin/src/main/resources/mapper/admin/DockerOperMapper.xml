@@ -4,13 +4,14 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.opengms.admin.mapper.DockerOperMapper">
 
-    <resultMap type="jupyterContainer" id="jupyterContainerResult">
+    <resultMap type="JupyterContainer" id="jupyterContainerResult">
         <id     property="containerId"         column="container_id"      />
         <result property="containerInsId"      column="container_ins_id"      />
         <result property="containerName"       column="container_name"    />
         <result property="imageName"           column="image_name"     />
         <result property="containerExportPort" column="container_export_port"   />
         <result property="hostBindPort"        column="host_bind_port"    />
+        <result property="jupyterToken"        column="jupyter_token"/>
         <result property="workspaceVolume"     column="workspace_volume"    />
         <result property="configVolume"        column="config_volume"/>
         <result property="volumeList"          column="volume_list"  typeHandler="org.opengms.admin.handler.ListTypeHandler"/>
@@ -30,6 +31,7 @@
         <if test="imageName != null and imageName != ''">image_name,</if>
         <if test="containerExportPort != null">container_export_port,</if>
         <if test="hostBindPort != null">host_bind_port,</if>
+        <if test="jupyterToken != null and jupyterToken != ''">jupyter_token,</if>
         <if test="workspaceVolume != null and workspaceVolume != ''">workspace_volume,</if>
         <if test="configVolume != null and configVolume != ''">config_volume,</if>
         <if test="volumeList != null and volumeList.size != 0">volume_list,</if>
@@ -43,6 +45,7 @@
         <if test="imageName != null and imageName != ''">#{imageName},</if>
         <if test="containerExportPort != null">#{containerExportPort},</if>
         <if test="hostBindPort != null">#{hostBindPort},</if>
+        <if test="jupyterToken != null and jupyterToken != ''">#{jupyterToken},</if>
         <if test="workspaceVolume != null and workspaceVolume != ''">#{workspaceVolume},</if>
         <if test="configVolume != null and configVolume != ''">#{configVolume},</if>
         <if test="volumeList != null and volumeList.size != 0">#{volumeList,typeHandler=org.opengms.admin.handler.ListTypeHandler},</if>
@@ -55,6 +58,20 @@
 
     <select id="listAll" resultMap="jupyterContainerResult">
         select * from jupyer_container
+    </select>
+
+
+    <select id="listAllUsedPort" resultType="java.lang.Integer">
+        select host_bind_port from jupyer_container
+    </select>
+
+
+    <select id="getContainerInfoByInsId" parameterType="string" resultMap="jupyterContainerResult">
+        select * from jupyer_container where container_ins_id=#{containerInsId}
+    </select>
+
+    <select id="getContainerInfoById" parameterType="Long" resultMap="jupyterContainerResult">
+        select * from jupyer_container where container_id=#{containerId}
     </select>
 
 

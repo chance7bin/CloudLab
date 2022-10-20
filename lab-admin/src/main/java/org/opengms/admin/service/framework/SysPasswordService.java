@@ -7,7 +7,7 @@ import org.opengms.admin.security.context.AuthenticationContextHolder;
 import org.opengms.admin.service.IAsyncService;
 import org.opengms.admin.utils.SecurityUtils;
 import org.opengms.common.constant.Constants;
-import org.opengms.common.redis.RedisCache;
+import org.opengms.admin.utils.redis.RedisCache;
 import org.opengms.common.utils.MessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

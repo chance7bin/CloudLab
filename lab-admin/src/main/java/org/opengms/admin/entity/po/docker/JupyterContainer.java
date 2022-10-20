@@ -23,4 +23,7 @@ public class JupyterContainer extends ContainerInfo{
     /** 配置文件数据卷挂载 */
     String configVolume;
 
+    /** jupyter的认证token */
+    String jupyterToken;
+
 }

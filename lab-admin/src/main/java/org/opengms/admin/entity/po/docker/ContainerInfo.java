@@ -20,7 +20,7 @@ public class ContainerInfo extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     /** 容器id */
-    Long containerId = SnowFlake.nextId();
+    Long containerId;
 
     /** 容器实例id */
     String containerInsId;

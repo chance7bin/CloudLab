@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 
 /**
  * 文件处理工具类
@@ -336,6 +337,34 @@ public class FileUtils
         }
         String baseName = FilenameUtils.getBaseName(fileName);
         return baseName;
+    }
+
+    /**
+     * 根据传入的字节大小对单位进行转换
+     * @param size 字节
+     * @return java.lang.String
+     * @author bin
+     **/
+    public static String calcSize(Long size){
+        //获取到的size为：1705230
+        int GB = 1024 * 1024 * 1024;//定义GB的计算常量
+        int MB = 1024 * 1024;//定义MB的计算常量
+        int KB = 1024;//定义KB的计算常量
+        DecimalFormat df = new DecimalFormat("0.00");//格式化小数
+        String resultSize = "";
+        if (size / GB >= 1) {
+            //如果当前Byte的值大于等于1GB
+            resultSize = df.format(size / (float) GB) + "GB";
+        } else if (size / MB >= 1) {
+            //如果当前Byte的值大于等于1MB
+            resultSize = df.format(size / (float) MB) + "MB";
+        } else if (size / KB >= 1) {
+            //如果当前Byte的值大于等于1KB
+            resultSize = df.format(size / (float) KB) + "KB";
+        } else {
+            resultSize = size + "B";
+        }
+        return resultSize;
     }
 
 }

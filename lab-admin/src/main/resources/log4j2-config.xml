@@ -10,7 +10,7 @@
     <Properties>
         <!-- 日志输出格式 -->
         <!--<property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${PID:-} [%15.15t] %-40.40logger{39} : %m%n" />-->
-        <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight{%5level} %style{%pid}{yellow} --- [%15.15t] %style{%-40.40logger{39}}{blue} : %msg%n%style{%throwable}{red}" />
+        <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight{%5level} %style{%pid}{magenta} --- [%15.15t] %style{%-40.40logger{39}}{cyan} : %msg%n%style{%throwable}{red}" />
 
         <!-- ${sys:LOG_PATH} 读取的就是 application.yml 中的 logging.file.path 的值 -->
         <property name="baseDir" value="${sys:LOG_PATH}" />
@@ -29,26 +29,26 @@
         </Console>
 
         <!--debug级别日志文件输出-->
-        <!--<RollingFile name="debug_appender" fileName="${baseDir}/debug.log"-->
-        <!--             filePattern="${baseDir}/debug_%i.log.%d{yyyy-MM-dd}">-->
-        <!--    &lt;!&ndash; 过滤器 &ndash;&gt;-->
-        <!--    <Filters>-->
-        <!--        &lt;!&ndash; 限制日志级别在debug及以上在info以下 &ndash;&gt;-->
-        <!--        <ThresholdFilter level="debug"/>-->
-        <!--        <ThresholdFilter level="info" onMatch="DENY" onMismatch="NEUTRAL"/>-->
-        <!--    </Filters>-->
-        <!--    &lt;!&ndash; 日志格式 &ndash;&gt;-->
-        <!--    <PatternLayout pattern="${LOG_PATTERN}"/>-->
-        <!--    &lt;!&ndash; 策略 &ndash;&gt;-->
-        <!--    <Policies>-->
-        <!--        &lt;!&ndash; 每隔一天转存 &ndash;&gt;-->
-        <!--        <TimeBasedTriggeringPolicy interval="1" modulate="true"/>-->
-        <!--        &lt;!&ndash; 文件大小 &ndash;&gt;-->
-        <!--        <SizeBasedTriggeringPolicy size="100 MB"/>-->
-        <!--    </Policies>-->
-        <!--    &lt;!&ndash; DefaultRolloverStrategy属性如不设置，则默认为最多同一文件夹下7个文件开始覆盖&ndash;&gt;-->
-        <!--    <DefaultRolloverStrategy max="15"/>-->
-        <!--</RollingFile>-->
+        <RollingFile name="debug_appender" fileName="${baseDir}/debug.log"
+                     filePattern="${baseDir}/debug_%i.log.%d{yyyy-MM-dd}">
+            <!-- 过滤器 -->
+            <Filters>
+                <!-- 限制日志级别在debug及以上在info以下 -->
+                <ThresholdFilter level="debug"/>
+                <ThresholdFilter level="info" onMatch="DENY" onMismatch="NEUTRAL"/>
+            </Filters>
+            <!-- 日志格式 -->
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <!-- 策略 -->
+            <Policies>
+                <!-- 每隔一天转存 -->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!-- 文件大小 -->
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <!-- DefaultRolloverStrategy属性如不设置，则默认为最多同一文件夹下7个文件开始覆盖-->
+            <DefaultRolloverStrategy max="15"/>
+        </RollingFile>
 
         <!-- info级别日志文件输出 -->
         <RollingFile name="info_appender" fileName="${baseDir}/info.log"
@@ -105,11 +105,6 @@
         <Logger name="org.springframework" level="WARN" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-
-        <!--pagehelper日志输出限制-->
-        <!--<Logger name="com.github.pagehelper" level="info" additivity="false">-->
-        <!--    <AppenderRef ref="Console"/>-->
-        <!--</Logger>-->
 
         <!-- 设置com.zaxxer.hikari包下的日志只打印WARN及以上级别的日志 -->
         <logger name="com.zaxxer.hikari" level="WARN" additivity="false">

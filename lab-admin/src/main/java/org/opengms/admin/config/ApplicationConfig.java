@@ -1,8 +1,10 @@
 package org.opengms.admin.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.web.context.request.RequestContextListener;
 
 /**
  * @author bin
@@ -14,5 +16,10 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 // 扫描common模块的bean
 @ComponentScan(value = {"org.opengms.common"})
 public class ApplicationConfig {
+
+    // @Bean
+    // public RequestContextListener requestContextListener(){
+    //     return new RequestContextListener();
+    // }
 
 }

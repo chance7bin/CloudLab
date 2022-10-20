@@ -6,7 +6,7 @@ import org.opengms.admin.entity.po.system.SysConfig;
 import org.opengms.admin.exception.ServiceException;
 import org.opengms.admin.mapper.SysConfigMapper;
 import org.opengms.admin.service.ISysConfigService;
-import org.opengms.common.redis.RedisCache;
+import org.opengms.admin.utils.redis.RedisCache;
 import org.opengms.common.utils.StringUtils;
 import org.opengms.common.utils.text.Convert;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -26,7 +26,6 @@ public class LoginUser implements UserDetails
      */
     private Long userId;
 
-
     /**
      * 用户唯一标识
      */

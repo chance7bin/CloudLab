@@ -21,19 +21,31 @@ public class JupyterServiceImpl implements IJupyterService {
 
     @Override
     public String generateJupyterConfig(String configDir) {
+        return generateJupyterConfig(configDir, null);
+    }
 
+    @Override
+    public String generateJupyterConfig(String configDir, String suffix) {
+        return generateJupyterConfig(configDir, suffix, null);
+    }
+
+    @Override
+    public String generateJupyterConfig(String configDir, String suffix, String token) {
         try {
             String resourcePath = "static/jupyter_lab_config.py";
 
             String s = FileUtils.readResourceTxtFile(resourcePath);
 
-            // System.out.println(s);
-
-            String jupyterToken = "66666";
+            String jupyterToken = token == null ? "66666" : token;
 
             s += "c.ServerApp.token = '" + jupyterToken + "'";
 
-            return FileUtils.writeBytes(s.getBytes(), configDir,"jupyter_lab_config.py");
+            String filename = "jupyter_lab_config.py";
+            if (suffix != null){
+                filename = "jupyter_lab_config" + "_" + suffix + ".py";
+            }
+
+            return FileUtils.writeBytes(s.getBytes(), configDir,filename);
 
             // return true;
 
@@ -41,6 +53,5 @@ public class JupyterServiceImpl implements IJupyterService {
             return null;
             // throw new ServiceException("生成jupyter配置文件出错");
         }
-
     }
 }

@@ -163,6 +163,7 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
         return day + "天" + hour + "小时" + min + "分钟";
     }
 
+
     /**
      * 增加 LocalDateTime ==> Date
      */
@@ -181,4 +182,48 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
         ZonedDateTime zdt = localDateTime.atZone(ZoneId.systemDefault());
         return Date.from(zdt.toInstant());
     }
+
+    /**
+     * 增加 Long (时间戳, 13位) ==> Date
+     */
+    public static Date toDate(Long timestamp)
+    {
+        return new Date(timestamp);
+    }
+
+    /**
+     * 根据传入的日期获取距离现在过了多久
+     * @param time date格式的时间
+     * @return java.lang.String
+     * @author bin
+     **/
+    public static String getTime2Now(Date time){
+
+        final long YEAR = 1000 * 60 * 60 * 24 * 365L;
+        final long MONTH = 1000 * 60 * 60 * 24 * 30L;
+        final long DAY = 1000 * 60 * 60 * 24L;
+        final long HOUR = 1000 * 60 * 60L;
+        final long MINUTE = 1000 * 60L;
+
+        Date now = new Date();
+        long between = now.getTime() - time.getTime();
+        if (between > YEAR){
+            return ((between - YEAR) / YEAR + 1) + "年前";
+        }
+        if (between > MONTH){
+            return ((between - MONTH) / MONTH + 1) + "月前";
+        }
+        if (between > DAY){
+            return ((between - DAY) / DAY + 1) + "天前";
+        }
+        if (between > HOUR){
+            return ((between - HOUR) / HOUR + 1) + "小时前";
+        }
+        if (between > MINUTE){
+            return ((between - MINUTE) / MINUTE + 1) + "分钟前";
+        }
+        return "刚刚";
+    }
+
+
 }

@@ -1,4 +1,4 @@
-package org.opengms.common.config;
+package org.opengms.admin.config.config;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONReader;
