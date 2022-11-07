@@ -1,4 +1,4 @@
-package org.opengms.admin.config.socket;
+package org.opengms.admin.msc.socket;
 
 /** socket配置
  * @author 7bin

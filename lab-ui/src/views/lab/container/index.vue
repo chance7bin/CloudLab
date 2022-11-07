@@ -22,6 +22,7 @@
       <el-table-column label="镜像名称" prop="imageName" width="200" />
       <el-table-column label="容器状态" prop="status" width="180" />
       <el-table-column label="启动时间" prop="started" width="180" />
+      <el-table-column label="创建时间" prop="created" width="180" />
       <el-table-column label="操作">
         <template #default="scope">
           <el-button link type="primary" @click="enterWorkspace(scope.$index, scope.row)">进入</el-button>

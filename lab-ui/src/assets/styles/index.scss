@@ -4,7 +4,7 @@
 @import './element-ui.scss';
 @import './sidebar.scss';
 @import './btn.scss';
-@import './ruoyi.scss';
+@import './common.scss';
 
 body {
   height: 100%;
@@ -13,7 +13,15 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
+
+  //取消双击选中文字
+  -moz-user-select:none;/*火狐*/
+  -webkit-user-select:none;/*webkit浏览器*/
+  -ms-user-select:none;/*IE10*/
+  user-select:none;
 }
+
+
 
 label {
   font-weight: 700;

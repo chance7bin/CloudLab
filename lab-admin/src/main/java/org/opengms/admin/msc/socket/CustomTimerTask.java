@@ -1,4 +1,4 @@
-package org.opengms.admin.config.socket;
+package org.opengms.admin.msc.socket;
 
 import java.nio.channels.SelectionKey;
 import java.util.Date;

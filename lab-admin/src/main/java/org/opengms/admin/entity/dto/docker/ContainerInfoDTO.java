@@ -24,6 +24,9 @@ public class ContainerInfoDTO {
     /** 启动时间 */
     private String started;
 
+    /** 创建时间 */
+    private String created;
+
     /** 绑定的主机端口号 */
     private Integer hostBindPort;
 

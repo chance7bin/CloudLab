@@ -94,12 +94,17 @@ public class DockerServiceImpl implements IDockerService {
         for (Container container : containers) {
             ContainerInfoDTO containerInfoDTO = new ContainerInfoDTO();
             JupyterContainer jc = dockerOperMapper.getContainerInfoByInsId(container.getId());
+            // TODO: 2022/10/28 获取容器从docker命令行还是数据库？
+            if (jc == null){
+                continue;
+            }
             containerInfoDTO.setContainerId(jc.getContainerId());
             containerInfoDTO.setContainerName(jc.getContainerName());
             containerInfoDTO.setImageName(container.getImage());
             containerInfoDTO.setStatus(container.getState());
+            containerInfoDTO.setStarted(container.getStatus());
             // container.getCreated() 的时间戳位数是10位 now.getTime()是13位
-            containerInfoDTO.setStarted(DateUtils.getTime2Now(DateUtils.toDate(container.getCreated() * 1000)));
+            containerInfoDTO.setCreated(DateUtils.getTime2Now(DateUtils.toDate(container.getCreated() * 1000)));
             containerInfoList.add(containerInfoDTO);
         }
 

@@ -1,8 +1,11 @@
-package org.opengms.admin.entity.bo.socket;
+package org.opengms.admin.msc.entity.socket;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.checkerframework.checker.units.qual.mol;
+import org.opengms.admin.msc.entity.bo.MsrIns;
+import org.opengms.admin.msc.entity.bo.mdl.ModelClass;
 
 import java.nio.channels.SocketChannel;
 
@@ -28,5 +31,8 @@ public class Client {
 
     /** 发送给客户端的消息 */
     String sendMessage;
+
+    /** 模型运行实例 */
+    MsrIns msrIns;
 
 }

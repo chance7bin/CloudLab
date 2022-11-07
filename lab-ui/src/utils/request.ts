@@ -33,8 +33,14 @@ service.interceptors.request.use(
     }
     // get请求映射params参数
     if (config.method === "get" && config.params) {
-      let url = config.url + "?" + tansParams(config.params);
-      url = url.slice(0, -1);
+      let url;
+      // 如果请求的params是字符串的话直接加个问号进行拼接
+      if (typeof config.params === "string") {
+        url = config.url + "?" + config.params;
+      } else {
+        url = config.url + "?" + tansParams(config.params);
+        url = url.slice(0, -1);
+      }
       config.params = {};
       config.url = url;
     }

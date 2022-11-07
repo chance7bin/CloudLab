@@ -272,3 +272,10 @@
 .top-right-btn {
 	margin-left: auto;
 }
+
+/* 文字单行超出部分省略号 */
+.overflow-ellipsis{
+	overflow: hidden;
+	text-overflow:ellipsis;
+	white-space: nowrap;
+}

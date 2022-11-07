@@ -1,5 +1,6 @@
 package org.opengms.common.utils.file;
 
+import cn.hutool.core.io.FileUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -14,6 +15,9 @@ import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * 文件处理工具类
@@ -366,5 +370,106 @@ public class FileUtils
         }
         return resultSize;
     }
+
+
+
+    /**
+     * 获得路径下的文件路径列表
+     * @param path 
+     * @return java.util.List<java.lang.String> 
+     * @author 7bin
+     **/
+    public static List<String> getFilesPath(String path)
+    {
+        File file = new File(path);
+        File[] files = file.listFiles();
+        List<String> filesPath = new ArrayList<>();
+        for (File f : files) {
+            filesPath.add(f.getAbsolutePath());
+        }
+        return filesPath;
+    }
+
+    /**
+     * 获得路径下的文件
+     * @param path
+     * @return java.util.List<java.lang.String>
+     * @author 7bin
+     **/
+    public static List<File> ls(String path)
+    {
+
+        File[] ls = FileUtil.ls(path);
+        // 不是文件夹会抛出异常
+
+        return new ArrayList<>(Arrays.asList(ls));
+    }
+
+    /**
+     * 获得路径下的文件列表(含子目录)
+     * @param path 待查找的路径
+     * @param fileList 存储结果列表
+     * @return void 
+     * @author 7bin
+     **/
+    public static void getFilesContainChild(String path, List<File> fileList)
+    {
+        File file = new File(path);
+        // 如果这个路径是文件夹
+        if (file.isDirectory()) {
+            // 获取路径下的所有文件
+            File[] files = file.listFiles();
+            if (files == null){
+                return;
+            }
+            for (int i = 0; i < files.length; i++) {
+                // 如果还是文件夹 递归获取里面的文件 文件夹
+                fileList.add(files[i]);
+                if (files[i].isDirectory()) {
+                    // System.out.println("目录：" + files[i].getAbsolutePath());
+                    // filesPath.add(files[i].getAbsolutePath());
+                    //继续读取文件夹里面的所有文件
+                    getFilesContainChild(files[i].getAbsolutePath(), fileList);
+                } else {
+                    // filesPath.add(files[i].getAbsolutePath());
+                    // System.out.println("文件：" + files[i].getAbsolutePath());
+                }
+            }
+        } else {
+            // System.out.println("文件：" + file.getAbsolutePath());
+            fileList.add(file);
+        }
+    }
+
+
+    /**
+     * 根据传入的父目录得到文件的相对路径
+     * @param file 待处理文件
+     * @param parentPath 父目录
+     * @return java.lang.String
+     * @author 7bin
+     **/
+    public static String getFileRelativePath(File file, String parentPath) {
+        String path = FileUtil.getCanonicalPath(file);
+        parentPath = transPath(parentPath);
+        path = transPath(path);
+        if (!path.contains(parentPath)){
+            return path;
+        } else {
+            return (path.split(parentPath))[1];
+        }
+    }
+
+
+    /**
+     * 转移路径分隔符 \ -> /
+     * @param path
+     * @return java.lang.String
+     * @author 7bin
+     **/
+    public static String transPath(String path){
+        return path.replaceAll("\\\\", "/");
+    }
+    
 
 }

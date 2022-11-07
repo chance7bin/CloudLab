@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import iFrame from '@/components/iFrame/index.vue'
 import { getJupyterContainerById } from "@/api/docker";
-import { notEmptyString } from "@/utils/common";
+import { notEmptyString } from "@/utils/stringUtils";
 import useCurrentInstance from "@/utils/currentInstance";
 const { proxy } = useCurrentInstance();
 const route = useRoute();

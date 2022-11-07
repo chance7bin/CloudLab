@@ -14,7 +14,5 @@ public interface IAsyncService {
 
     void recordLogininfor(String username, String status, String message, Object... args);
 
-    void startSocketListener();
 
-    void startSocketListenerNIO();
 }

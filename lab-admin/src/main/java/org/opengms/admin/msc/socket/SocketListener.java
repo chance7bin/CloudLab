@@ -1,15 +1,10 @@
-package org.opengms.admin.config.socket;
+package org.opengms.admin.msc.socket;
 
 import lombok.extern.slf4j.Slf4j;
-import org.opengms.admin.service.IAsyncService;
+import org.opengms.admin.msc.service.ISocketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 /**
@@ -23,10 +18,10 @@ import org.springframework.stereotype.Component;
 public class SocketListener implements ApplicationRunner {
 
     @Autowired
-    IAsyncService asyncService;
+    ISocketService socketService;
 
     @Override
     public void run(ApplicationArguments args) {
-        asyncService.startSocketListenerNIO();
+        socketService.startSocketListenerNIO();
     }
 }

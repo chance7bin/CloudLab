@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
 
 import Layout from "@/layout/index.vue";
+import Drive from "@/views/drive/index.vue";
 
 /**
  * Note: 路由配置项
@@ -71,6 +72,21 @@ export const constantRoutes = [
       }
     ]
   },
+
+
+  // {
+  //   path: "/lab",
+  //   component: Layout,
+  //   redirect: "noredirect",
+  //   children: [
+  //     {
+  //       path: "/service",
+  //       component: () => import("@/views/lab/service.vue"),
+  //       name: "service",
+  //       meta: { title: "服务", icon: "dashboard" }
+  //     }
+  //   ]
+  // },
   {
     path: "/workspace",
     component: Layout,

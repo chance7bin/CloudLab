@@ -1,5 +1,6 @@
 package org.opengms.admin;
 
+import cn.hutool.core.io.FileUtil;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
@@ -9,22 +10,38 @@ import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.formula.functions.T;
+import org.dom4j.Attribute;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 import org.junit.jupiter.api.Test;
-import org.opengms.admin.config.AppConfig;
+import org.opengms.admin.drive.entity.dto.FileDTO;
 import org.opengms.admin.entity.bo.Server;
-import org.opengms.admin.entity.po.docker.JupyterContainer;
 import org.opengms.admin.mapper.DockerOperMapper;
+import org.opengms.admin.msc.entity.bo.mdl.*;
+import org.opengms.admin.msc.entity.bo.mdl.Event;
+import org.opengms.admin.msc.enums.MDLStructure;
 import org.opengms.admin.service.IDockerService;
 import org.opengms.admin.service.IWorkspaceService;
+import org.opengms.common.utils.ReflectUtils;
+import org.opengms.common.utils.file.FileTypeUtils;
 import org.opengms.common.utils.file.FileUtils;
 import org.opengms.common.utils.ip.IpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
 
+import java.beans.PropertyDescriptor;
 import java.io.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.*;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -242,6 +259,111 @@ public class LabApplicationTests {
     void testTransaction(){
         // log.info("123");
     }
+
+    @Value(value = "${lab.repository.workspace}")
+    private String workspace;
+
+
+    //测试获取文件列表
+    @Test
+    void testGetFilesContainChild(){
+        String workspaceDir = workspace + "/workspace";
+        List<File> files = FileUtils.ls(workspaceDir);
+        List<FileDTO> fileDTOList = new ArrayList<>();
+        for (File file : files) {
+            FileDTO fileDTO = new FileDTO();
+            fileDTO.setFilename(file.getName());
+            fileDTO.setDirectory(file.isDirectory());
+            if (!file.isDirectory()){
+                fileDTO.setFileType(FileTypeUtils.getFileType(file));
+                fileDTO.setFileSize(FileUtils.calcSize(FileUtil.size(file)));
+            }
+            fileDTOList.add(fileDTO);
+        }
+        System.out.println(fileDTOList);
+    }
+
+
+    //测试读取xml
+    @Test
+    void testXML() throws DocumentException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+
+
+
+        SAXReader saxReader = new SAXReader();
+
+        Document document = saxReader.read(new File("E:\\Projects\\pythonProject\\ogmslab\\test\\createWordCloud.mdl"));
+
+        // 获取ModelClass
+        ModelClass modelClass = new ModelClass();
+        Element modelClassNode = document.getRootElement();
+        setElementAttributes(modelClassNode.attributes(), modelClass);
+
+        // 获取AttributeSet
+        AttributeSet attributeSet = new AttributeSet();
+        Element attributeSetNode = modelClassNode.element(MDLStructure.ATTRIBUTE_SET.getInfo());
+        Description description = new Description();
+        Element descriptionNode = attributeSetNode.element(MDLStructure.DESCRIPTION.getInfo());
+        setElementAttributes(descriptionNode.attributes(), description);
+        attributeSet.setDescription(description);
+        modelClass.setAttributeSet(attributeSet);
+
+        // 获取Behavior
+        Behavior behavior = new Behavior();
+        Element behaviorNode = modelClassNode.element(MDLStructure.BEHAVIOR.getInfo());
+        StateGroup stateGroup = new StateGroup();
+        Element stateGroupNode = behaviorNode.element(MDLStructure.STATE_GROUP.getInfo());
+        // 获取state
+        List<Element> states = stateGroupNode.elements(MDLStructure.STATE.getInfo());
+        List<State> stateList = new ArrayList<>();
+        for (Element stateNode : states) {
+            State state = new State();
+            setElementAttributes(stateNode.attributes(), state);
+            List<Element> events = stateNode.elements(MDLStructure.EVENT.getInfo());
+            List<Event> eventList = new ArrayList<>();
+            // 获取event
+            for (Element eventNode : events) {
+                Event event = new Event();
+                setElementAttributes(eventNode.attributes(), event);
+                Element inputParameterNode = eventNode.element(MDLStructure.INPUT_PARAMETER.getInfo());
+                if (inputParameterNode != null){
+                    InputParameter inputParameter = new InputParameter();
+                    setElementAttributes(inputParameterNode.attributes(), inputParameter);
+                    event.setInputParameter(inputParameter);
+                }
+                Element outputParameterNode = eventNode.element(MDLStructure.OUTPUT_PARAMETER.getInfo());
+                if (outputParameterNode != null){
+                    OutputParameter outputParameter = new OutputParameter();
+                    setElementAttributes(outputParameterNode.attributes(), outputParameter);
+                    event.setOutputParameter(outputParameter);
+                }
+                eventList.add(event);
+            }
+            state.setEvents(eventList);
+            stateList.add(state);
+        }
+
+        stateGroup.setStates(stateList);
+        behavior.setStateGroup(stateGroup);
+        modelClass.setBehavior(behavior);
+
+        System.out.println(modelClass);
+
+
+    }
+
+
+    //设置xml的属性
+    private void setElementAttributes(List<Attribute> attributes, Object obj){
+        for (Attribute attribute : attributes) {
+            try {
+                ReflectUtils.setValueByProp(obj,attribute.getName(),attribute.getValue());
+            } catch (Exception e){
+                log.error(e.getMessage());
+            }
+        }
+    }
+
 
 
 }
