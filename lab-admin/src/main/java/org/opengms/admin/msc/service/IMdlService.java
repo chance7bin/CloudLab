@@ -2,6 +2,7 @@ package org.opengms.admin.msc.service;
 
 import org.dom4j.Attribute;
 import org.opengms.admin.msc.entity.bo.mdl.ModelClass;
+import org.opengms.admin.msc.entity.po.ModelService;
 import org.opengms.common.utils.ReflectUtils;
 
 import java.util.List;
@@ -22,5 +23,5 @@ public interface IMdlService {
 
 
     // 获取Parameter步骤的参数值
-    String getParameter(ModelClass modelClass, String state, String event);
+    String getParameter(ModelService modelService, String state, String event);
 }

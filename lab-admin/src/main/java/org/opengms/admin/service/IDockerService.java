@@ -35,4 +35,6 @@ public interface IDockerService {
 
 
     JupyterInfoDTO getJupyterContainerById(Long id);
+
+    void execCommand();
 }

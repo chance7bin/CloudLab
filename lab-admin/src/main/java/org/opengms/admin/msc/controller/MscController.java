@@ -2,6 +2,7 @@ package org.opengms.admin.msc.controller;
 
 import org.opengms.admin.annotation.Anonymous;
 import org.opengms.admin.entity.dto.ApiResponse;
+import org.opengms.admin.msc.controller.common.BaseController;
 import org.opengms.admin.msc.service.IMSService;
 import org.opengms.common.utils.TerminalUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,7 @@ import java.util.Arrays;
  */
 @RestController
 @RequestMapping("/msc")
-public class MscController {
+public class MscController extends BaseController {
 
     @Autowired
     IMSService msService;
@@ -27,7 +28,7 @@ public class MscController {
     @PostMapping(value = "/invoke")
     public ApiResponse invoke(){
 
-        msService.invoke();
+        // msService.invoke();
 
         return ApiResponse.success();
     }

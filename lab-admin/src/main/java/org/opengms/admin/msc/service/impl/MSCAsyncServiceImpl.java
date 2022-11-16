@@ -63,16 +63,18 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
             // exitVal == -1 为程序执行成功, 但自定义返回错误代码
             if (exitVal == 0) {
                 log.info("Exec done, cost: " + ((end - start) / 1000) + "s");
+                log.info("[程序正常退出] " + response);
+                // System.out.println(response);
                 // currentMsrIns.getLogs().add(new Log("程序执行完成, 用时: " + ((end - start) / 1000) + "s"));
             } else if (exitVal == -1) {
-                log.error("程序自定义错误: " + response);
+                log.error("[程序自定义错误] " + response);
                 // currentMsrIns.getLogs().add(new Log("程序自定义错误: " + response));
             } else {
-                log.error("程序内部错误: " + error);
+                log.error("[程序内部错误] " + error);
                 // currentMsrIns.getLogs().add(new Log("程序内部错误: " + error));
             }
         } catch (Exception e) {
-            log.error("执行终端命令出错: " + e.getMessage());
+            log.error("[执行终端命令出错] " + e.getMessage());
             // if (currentMsrIns != null){
                 // currentMsrIns.getLogs().add(new Log("执行终端命令出错: " + e.getMessage()));
             // }

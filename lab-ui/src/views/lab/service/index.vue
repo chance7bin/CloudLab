@@ -69,24 +69,22 @@
         </el-form>
       </el-card>
     </div>
-    <el-dialog class="config-dialog" v-model="configDialogVisible" width="20%" title="选择文件">
+    <el-dialog class="config-dialog" v-model="configDialogVisible" width="20%" title="选择文件" draggable>
       <file-select-modal
         :container-name="deployPackage.containerName"
         @selectedItem="fillInputValue"
       ></file-select-modal>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="confirmInputValue">
-            确定
-          </el-button>
+          <el-button type="primary" @click="confirmInputValue"> 确定 </el-button>
         </div>
       </template>
     </el-dialog>
 
     <div class="step-control">
-      <el-button style="margin-top: 12px" @click="previous">上一步</el-button>
-      <el-button style="margin-top: 12px" @click="next" type="primary">下一步</el-button>
-      <el-button style="margin-top: 12px" @click="testInvoke" type="warning">测试</el-button>
+      <el-button style="margin-top: 12px" @click="previous" v-show="active > 0" >上一步</el-button>
+      <el-button style="margin-top: 12px" @click="next" type="primary">{{active === 2 ? "创建" : "下一步"}}</el-button>
+      <!--<el-button style="margin-top: 12px" @click="testInvoke" type="warning">测试</el-button>-->
     </div>
   </div>
 </template>
@@ -98,9 +96,12 @@ import { Edit, HomeFilled, UploadFilled, FolderOpened } from "@element-plus/icon
 const { proxy } = useCurrentInstance();
 import { listContainers } from "@/api/docker";
 import type { FormInstance, FormRules } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import MyFolder from "@/components/Drive/MyFolder.vue";
 import { ref } from "vue";
-import { invoke } from "@/api/msc";
+import { createModelService } from "@/api/msc";
+import { useRouter } from "vue-router";
+const router = useRouter();
 
 interface Config {
   serviceName: string;
@@ -109,13 +110,15 @@ interface Config {
 }
 
 interface DeployPackage {
+  containerId: string | null;
   containerName: string;
-  file: any;
+  relativeDir: any;
   config: Config;
 }
 const deployPackage: DeployPackage = {
+  containerId: null,
   containerName: "",
-  file: null,
+  relativeDir: null,
   config: {
     serviceName: "",
     mdlFile: "",
@@ -124,7 +127,7 @@ const deployPackage: DeployPackage = {
 };
 
 // 控制tab切换
-const active = ref<number>(2);
+const active = ref<number>(0);
 const previous = () => {
   if (active.value <= 0) {
     return;
@@ -188,10 +191,11 @@ listContainers().then((res) => {
 
 const selectedContainer = ref<string>("");
 const handleCurrentContainer = (val) => {
-  // console.log("val:", val.containerName);
+  console.log("val:", val);
   selectedContainer.value = val.containerName;
   proxy.$modal.msgSuccess("已选择: " + selectedContainer.value);
   deployPackage.containerName = selectedContainer.value;
+  deployPackage.containerId = val.containerId;
 };
 
 //配置文件设置
@@ -201,23 +205,25 @@ const ruleFormRef = ref<FormInstance>();
 const configForm = reactive({
   serviceName: "",
   mdlFile: "",
-  encapsulationFile: ""
+  mdlFilePath: "",
+  encapsulationFile: "",
+  encapsulationFilePath: ""
 });
 const rules = reactive<FormRules>({
-  serviceName: [{ required: true, message: "请输入服务名称", trigger: "blur" }],
-  mdlFile: [{ required: true, message: "请选择mdl文件", trigger: "blur" }],
-  encapsulationFile: [{ required: true, message: "请选择封装脚本", trigger: "blur" }]
+  serviceName: [{ required: true, message: "请输入服务名称", trigger: "change" }],
+  mdlFile: [{ required: true, message: "请选择mdl文件", trigger: "change" }],
+  encapsulationFile: [{ required: true, message: "请选择封装脚本", trigger: "change" }]
 });
 // 当前选择的文件属于哪个步骤
 let currentEvent = "";
 let currentSelectedItem = {};
 const selectMdlFile = () => {
-  deployPackage.containerName = "jupyter_cus_5.0_8268889755334766592"
+  // deployPackage.containerName = "jupyter_cus_5.0_8268889755334766592"
   configDialogVisible.value = true;
   currentEvent = "mdlFile";
 }
 const selectEncapsulationFile = () => {
-  deployPackage.containerName = "jupyter_cus_5.0_8268889755334766592"
+  // deployPackage.containerName = "jupyter_cus_5.0_8268889755334766592"
   configDialogVisible.value = true;
   currentEvent = "encapsulationFile";
 }
@@ -229,10 +235,12 @@ const confirmInputValue = () => {
   switch (currentEvent) {
     case "mdlFile":{
       configForm.mdlFile = currentSelectedItem["label"];
+      configForm.mdlFilePath = currentSelectedItem["relativePath"];
       break;
     }
     case "encapsulationFile":{
       configForm.encapsulationFile = currentSelectedItem["label"];
+      configForm.encapsulationFilePath = currentSelectedItem["relativePath"];
       break;
     }
   }
@@ -247,9 +255,9 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     if (valid) {
       // console.log('submit!', configForm.serviceName)
       // 填写服务配置信息
-      deployPackage.config.serviceName = configForm.serviceName;
-      deployPackage.config.mdlFile = configForm.mdlFile;
-      deployPackage.config.encapsulationFile = configForm.encapsulationFile;
+      // deployPackage.config.serviceName = configForm.serviceName;
+      // deployPackage.config.mdlFile = configForm.mdlFile;
+      // deployPackage.config.encapsulationFile = configForm.encapsulationFile;
     } else {
       proxy.$modal.alertError("服务配置未填写完整");
       // console.log('error submit!', fields)
@@ -272,6 +280,39 @@ const createService = async () => {
   if (valid) {
     let msg = confirmParams();
     if (msg == "true") {
+
+      const deployPackageDTO = {
+        containerId: deployPackage.containerId,
+        containerName: deployPackage.containerName,
+        msName: configForm.serviceName,
+        relativeDir: deployPackage.relativeDir,
+        mdlFilePath: configForm.mdlFilePath,
+        encapScriptPath: configForm.encapsulationFilePath
+      };
+
+      proxy.$modal.confirm("是否发布模型服务")
+        .then(() => {
+
+          // console.log("deployPackageDTO:", deployPackageDTO);
+          createModelService(deployPackageDTO)
+            .then(res => {
+              ElMessage({
+                type: 'success',
+                message: '服务发布成功！',
+              })
+
+            });
+            router.push({path: "/lab/serviceList"});
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: '取消操作',
+          })
+        })
+
+
+
     } else {
       proxy.$modal.alertError(msg);
     }
@@ -285,12 +326,6 @@ const confirmParams: () => string = () => {
   }
   return "true";
 };
-
-//测试模型调用
-const testInvoke = () => {
-  invoke();
-}
-
 
 </script>
 
@@ -329,7 +364,7 @@ const testInvoke = () => {
     margin-right: 10px;
   }
 }
-.config-dialog{
+.config-dialog {
   //width: 30vw;
 }
 .dialog-footer button:first-child {

@@ -10,17 +10,24 @@ import org.opengms.admin.entity.SerializableEntity;
 @Data
 public class Parameter extends SerializableEntity {
 
+    String id;
+
     /** text 文本类型
      *  file 文件类型
      *  unknown 未知类型*/
     String dataMIME;
 
+    String name;
+
     String description;
 
+    /** dataMIME是文件类型存文件路径 */
+    String value;
+
     /** dataMIME是文本类型的话数据存放在该字段 */
-    String textValue;
+    // String textValue;
 
     /** dataMIME是文件类型的话数据存放在该字段 */
-    String filePath;
+    // String filePath;
 
 }

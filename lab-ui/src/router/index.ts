@@ -72,8 +72,6 @@ export const constantRoutes = [
       }
     ]
   },
-
-
   // {
   //   path: "/lab",
   //   component: Layout,
@@ -98,6 +96,20 @@ export const constantRoutes = [
         component: () => import("@/views/lab/workspace/index.vue"),
         name: "instance",
         meta: { title: "工作空间", icon: "user" }
+      }
+    ]
+  },
+  {
+    path: "/service",
+    component: Layout,
+    hidden: true,
+    redirect: "noredirect",
+    children: [
+      {
+        path: "invoke",
+        component: () => import("@/views/lab/service/InvokePage.vue"),
+        name: "invoke",
+        meta: { title: "服务调用", icon: "user" }
       }
     ]
   },

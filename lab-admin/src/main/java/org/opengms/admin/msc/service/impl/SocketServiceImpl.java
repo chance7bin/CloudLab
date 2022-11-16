@@ -130,7 +130,7 @@ public class SocketServiceImpl implements ISocketService {
                                 // }
 
 
-                                log.info("current connecting client number :" + msInsService.getMsrInsColl().size());
+                                // log.info("current connecting client number :" + msInsService.getMsrInsColl().size());
                             }
                         }
 
@@ -164,7 +164,7 @@ public class SocketServiceImpl implements ISocketService {
                             }
 
                         }
-                        log.info("current connecting client number: " + msInsService.getMsrInsColl().size());
+                        log.info("socket closed....... current connecting client number: " + msInsService.getMsrInsColl().size());
                     }finally {
                         // remove handled key from selected keys
                         iterator.remove();

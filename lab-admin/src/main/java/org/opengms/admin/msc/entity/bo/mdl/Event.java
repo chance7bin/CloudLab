@@ -10,6 +10,8 @@ import org.opengms.admin.entity.SerializableEntity;
 @Data
 public class Event extends SerializableEntity {
 
+    String id;
+
     String name;
 
     /** true 可交互;

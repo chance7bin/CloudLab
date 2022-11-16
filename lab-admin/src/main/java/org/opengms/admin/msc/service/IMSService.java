@@ -1,5 +1,10 @@
 package org.opengms.admin.msc.service;
 
+import org.opengms.admin.msc.entity.dto.ModelServiceDTO;
+import org.opengms.admin.msc.entity.po.ModelService;
+
+import java.util.List;
+
 /**
  * moxingfuw
  *
@@ -8,6 +13,12 @@ package org.opengms.admin.msc.service;
  */
 public interface IMSService {
 
-    void invoke();
+    void invoke(ModelService modelService);
 
+    int insertModelService(ModelServiceDTO ModelServiceDTO);
+
+
+    List<ModelService> selectServiceList();
+
+    ModelService getModelServiceById(String msId);
 }

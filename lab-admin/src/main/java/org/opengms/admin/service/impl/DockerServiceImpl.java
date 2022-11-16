@@ -124,6 +124,11 @@ public class DockerServiceImpl implements IDockerService {
 
     }
 
+    @Override
+    public void execCommand() {
+
+    }
+
 
     //初始化容器
     private CreateContainerResponse initContainer(DockerClient client, ContainerInfo containerInfo){

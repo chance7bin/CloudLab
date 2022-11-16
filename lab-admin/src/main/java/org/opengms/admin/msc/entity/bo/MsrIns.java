@@ -2,6 +2,7 @@ package org.opengms.admin.msc.entity.bo;
 
 import lombok.Data;
 import org.opengms.admin.msc.entity.bo.mdl.ModelClass;
+import org.opengms.admin.msc.entity.po.ModelService;
 import org.opengms.admin.msc.enums.ProcessState;
 
 import java.nio.channels.SocketChannel;
@@ -28,13 +29,16 @@ public class MsrIns {
     ProcessState currentState;
 
     /** 该客户端对应的mdl对象 */
-    ModelClass modelClass;
+    // ModelClass modelClass;
+
+    /** 该客户端对应的mdl对象 */
+    ModelService modelService;
 
     /** 输入数据 */
-    List<String> inputs;
+    // List<String> inputs;
 
     /** 输出数据 */
-    List<String> outputs;
+    // List<String> outputs;
 
     /** 日志记录 */
     List<Log> logs = new ArrayList<>();

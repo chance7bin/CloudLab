@@ -1,6 +1,8 @@
 package org.opengms.admin.msc.entity.bo.mdl;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.opengms.admin.entity.SerializableEntity;
 
 /**
@@ -8,7 +10,9 @@ import org.opengms.admin.entity.SerializableEntity;
  * @date 2022/11/04
  */
 @Data
-public class ModelClass extends SerializableEntity {
+// @AllArgsConstructor
+// @NoArgsConstructor
+public class ModelClass {
 
     String id;
 

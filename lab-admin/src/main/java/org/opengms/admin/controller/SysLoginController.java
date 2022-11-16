@@ -53,7 +53,7 @@ public class SysLoginController extends BaseController {
      * @return 结果
      */
     @ApiImplicitParams({
-        @ApiImplicitParam(paramType = "body", dataType = "LoginDTO", name = "loginDTO", value = "登录信息")
+        @ApiImplicitParam(paramType = "body", dataTypeClass = LoginDTO.class, name = "loginDTO", value = "登录信息")
     })
     @ApiOperation(value = "登录方法", notes = "登录方法", httpMethod = "POST")
     @PostMapping("/login")
@@ -68,7 +68,7 @@ public class SysLoginController extends BaseController {
     }
 
     @ApiImplicitParams({
-        @ApiImplicitParam(paramType = "body", dataType = "RegisterDTO", name = "user", value = "")
+        @ApiImplicitParam(paramType = "body", dataTypeClass = RegisterDTO.class, name = "user", value = "")
     })
     @ApiOperation(value = "注册方法", notes = "", httpMethod = "POST")
     @PostMapping("/register")

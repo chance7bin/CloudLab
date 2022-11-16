@@ -6,6 +6,7 @@ import org.opengms.admin.msc.entity.bo.Log;
 import org.opengms.admin.msc.entity.bo.MsrIns;
 import org.opengms.admin.msc.entity.bo.SubIdentifier;
 import org.opengms.admin.msc.entity.bo.mdl.ModelClass;
+import org.opengms.admin.msc.entity.po.ModelService;
 import org.opengms.admin.msc.entity.socket.Client;
 import org.opengms.admin.msc.enums.DataMIME;
 import org.opengms.admin.msc.enums.ProcessState;
@@ -51,7 +52,7 @@ public class MSInsServiceImpl implements IMSInsService {
     // 模型容器根目录
     private final String ROOT_PATH = "E:/opengms-lab/msc";
 
-    // 模型容器映射库目录
+    // 模型容器映射库目录 一些系统依赖的文件 msyh.ttf
     private final String MAPPING_LIB_DIR = ROOT_PATH + "/mapping_lib_dir";
 
     // 模型服务目录
@@ -353,8 +354,9 @@ public class MSInsServiceImpl implements IMSInsService {
         String templateInputData = "";
 
         MsrIns msrIns = getCurrentMsrIns(insId);
-        ModelClass modelClass = msrIns.getModelClass();
-        String parameter = mdlService.getParameter(modelClass, state, event);
+        ModelService modelService = msrIns.getModelService();
+        // ModelClass modelClass = msrIns.getModelClass();
+        String parameter = mdlService.getParameter(modelService, state, event);
 
         // if (event.equals("语言")){
         //     templateInputData = "English";
@@ -422,7 +424,7 @@ public class MSInsServiceImpl implements IMSInsService {
     }
 
     private void sendMessage2Client(SocketChannel channel, String message) {
-        log.info(message);
+        log.info("send: " + message);
         try {
             // message = message + "(" + msrIns.getMsri_id() + ")";
             // 将消息发回给该client

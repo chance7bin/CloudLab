@@ -6,10 +6,12 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.opengms.admin.msc.entity.bo.mdl.*;
+import org.opengms.admin.msc.entity.po.ModelService;
 import org.opengms.admin.msc.enums.DataMIME;
 import org.opengms.admin.msc.enums.MDLStructure;
 import org.opengms.admin.msc.service.IMdlService;
 import org.opengms.common.utils.ReflectUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -24,6 +26,8 @@ import java.util.List;
 @Slf4j
 public class MdlServiceImpl implements IMdlService {
 
+    @Value(value = "${lab.repository.workspace}")
+    private String workspace;
 
     @Override
     public ModelClass parseMdlFile(String mdlFilePath) throws Exception {
@@ -95,7 +99,9 @@ public class MdlServiceImpl implements IMdlService {
     }
 
     @Override
-    public String getParameter(ModelClass modelClass, String state, String event) {
+    public String getParameter(ModelService modelService, String state, String event) {
+
+        ModelClass modelClass = modelService.getModelClass();
 
         String parameter = null;
 
@@ -107,9 +113,9 @@ public class MdlServiceImpl implements IMdlService {
                 for (Event eve : events) {
                     if (event.equals(eve.getName())){
                         if (eve.getInputParameter() != null){
-                            parameter = getValueByParamProp(eve.getInputParameter());
+                            parameter = getValueByParamProp(eve.getInputParameter(), modelService.getRelativeDir());
                         } else if (eve.getOutputParameter() != null){
-                            parameter = getValueByParamProp(eve.getOutputParameter());
+                            parameter = getValueByParamProp(eve.getOutputParameter(), modelService.getRelativeDir());
                         }
                         return parameter;
                     }
@@ -122,7 +128,7 @@ public class MdlServiceImpl implements IMdlService {
     }
 
     // 根据Parameter的属性获取输入输出的值
-    private String getValueByParamProp(Parameter parameter){
+    private String getValueByParamProp(Parameter parameter, String relativeDir){
         String param = null;
         String dataMIME = parameter.getDataMIME();
         DataMIME mime = DataMIME.getDataMIMEByValue(dataMIME);
@@ -131,11 +137,19 @@ public class MdlServiceImpl implements IMdlService {
         }
         switch (mime){
             case TEXT:{
-                param = parameter.getTextValue();
+                // param = parameter.getTextValue();
+                param = parameter.getValue();
                 break;
             }
             case FILE:{
-                param = parameter.getFilePath();
+                // TODO: 2022/11/14 还没做这个
+                // 如果是file的话要根据url地址下载数据到本地然后返回文件路径
+                // param = parameter.getFilePath();
+                // param = parameter.getValue();
+                // param = workspace + relativeDir + parameter.getValue();
+                String value = parameter.getValue();
+                String[] split = value.split("/");
+                param = split[split.length - 1];
                 break;
             }
             case UNKNOWN:{
