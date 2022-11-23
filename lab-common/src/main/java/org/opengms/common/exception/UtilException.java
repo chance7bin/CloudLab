@@ -3,7 +3,7 @@ package org.opengms.common.exception;
 /**
  * 工具类异常
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class UtilException extends RuntimeException
 {

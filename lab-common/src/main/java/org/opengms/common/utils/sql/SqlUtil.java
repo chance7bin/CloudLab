@@ -6,7 +6,7 @@ import org.opengms.common.utils.StringUtils;
 /**
  * sql操作工具类
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class SqlUtil
 {

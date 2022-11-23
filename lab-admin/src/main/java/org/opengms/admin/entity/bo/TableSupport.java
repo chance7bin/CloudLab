@@ -7,7 +7,7 @@ import org.opengms.common.utils.text.Convert;
 /**
  * 表格数据处理
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class TableSupport
 {

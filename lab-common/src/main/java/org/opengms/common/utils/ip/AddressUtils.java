@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 /**
  * 获取地址类
  * 
- * @author ruoyi
+ * @author 7bin
  */
 @Slf4j
 public class AddressUtils

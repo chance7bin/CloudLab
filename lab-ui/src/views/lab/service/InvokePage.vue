@@ -77,11 +77,11 @@
 
 <script setup lang="ts">
 import useCurrentInstance from "@/utils/currentInstance";
-import { getModelServiceById, invokeService } from "@/api/msc";
+import { getModelServiceById, invokeService } from "@/api/container/modelService";
 import { ref } from "vue";
 import type { FormInstance, FormRules } from "element-plus";
 import { FolderOpened } from "@element-plus/icons-vue";
-import { getJupyterContainerById } from "@/api/docker";
+import { getJupyterContainerById } from "@/api/container/docker";
 
 const { proxy } = useCurrentInstance();
 const route = useRoute();

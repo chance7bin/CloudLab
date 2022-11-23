@@ -3,7 +3,7 @@ package org.opengms.common.utils.uuid;
 /**
  * ID生成器工具类
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class IdUtils
 {

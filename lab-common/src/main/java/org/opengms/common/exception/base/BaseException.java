@@ -7,7 +7,7 @@ import org.opengms.common.utils.StringUtils;
 /**
  * 基础异常
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class BaseException extends RuntimeException
 {

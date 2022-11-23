@@ -59,13 +59,13 @@
     </el-form>
     <!--  底部  -->
     <div class="el-login-footer">
-      <!--<span>Copyright © 2018-2022 ruoyi.vip All Rights Reserved.</span>-->
+      <!--<span>Copyright © 2018-2022 OpenGMS All Rights Reserved.</span>-->
     </div>
   </div>
 </template>
 
 <script setup>
-import { getCodeImg } from "@/api/login";
+import { getCodeImg } from "@/api/admin/login";
 import Cookies from "js-cookie";
 import { encrypt, decrypt } from "@/utils/jsencrypt";
 import useUserStore from '@/stores/modules/user'

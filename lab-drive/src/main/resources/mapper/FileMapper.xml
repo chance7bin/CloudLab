@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengms.drive.mapper.FileMapper">
+
+    <resultMap id="fileResult" type="fileInfo">
+        <id     property="fileId"              column="file_id"     />
+        <result property="fileName"            column="file_name"   />
+        <result property="filePath"            column="file_path"   />
+        <result property="suffix"              column="suffix"      />
+        <result property="md5"                 column="md5"      />
+        <result property="delFlag"             column="del_flag"    />
+        <result property="createBy"            column="create_by"   />
+        <result property="createTime"          column="create_time" />
+        <result property="updateBy"            column="update_by"   />
+        <result property="updateTime"          column="update_time" />
+        <result property="remark"              column="remark"      />
+    </resultMap>
+
+    <insert id="insert" parameterType="fileInfo">
+        insert into files_tb (
+        <if test="fileId != null and fileId != '' ">file_id,</if>
+        <if test="fileName != null and fileName != '' ">file_name,</if>
+        <if test="filePath != null and filePath != '' ">file_path,</if>
+        <if test="suffix != null and suffix != '' ">suffix,</if>
+        <if test="md5 != null and md5 != '' ">md5,</if>
+        <if test="delFlag != null and delFlag != '' ">del_flag,</if>
+        <if test="createBy != null and createBy != ''">create_by,</if>
+        <if test="remark != null and remark != ''">remark,</if>
+        create_time
+        )values(
+        <if test="fileId != null and fileId != ''">#{fileId},</if>
+        <if test="fileName != null and fileName != ''">#{fileName},</if>
+        <if test="filePath != null and filePath != ''">#{filePath},</if>
+        <if test="suffix != null and suffix != ''">#{suffix},</if>
+        <if test="md5 != null and md5 != ''">#{md5},</if>
+        <if test="delFlag != null and delFlag != ''">#{delFlag},</if>
+        <if test="createBy != null and createBy != ''">#{createBy},</if>
+        <if test="remark != null and remark != ''">#{remark},</if>
+        sysdate()
+        )
+    </insert>
+
+
+    <select id="selectFileList" resultMap="fileResult">
+        select * from files_tb
+        where del_flag = false
+    </select>
+
+
+    <select id="selectById" parameterType="Long" resultMap="fileResult">
+        select * from files_tb where file_id = #{id}
+
+    </select>
+
+
+    <select id="fileIsExist" resultType="java.lang.Boolean">
+        select count(file_id) > 0
+        from files_tb
+        where del_flag = false and file_path = #{fileName}
+    </select>
+</mapper>

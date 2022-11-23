@@ -57,7 +57,7 @@ import useCurrentInstance from "@/utils/currentInstance";
 import { Upload, FolderAdd, ArrowLeft, ArrowRight, RefreshRight } from "@element-plus/icons-vue";
 const { proxy } = useCurrentInstance();
 import { ElNotification as notify } from "element-plus";
-import { listWorkspaceDir } from "@/api/drive";
+import { listWorkspaceDir } from "@/api/drive/drive";
 import qs from "qs";
 
 

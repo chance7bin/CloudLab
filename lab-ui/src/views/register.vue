@@ -70,14 +70,14 @@
     </el-form>
     <!--  底部  -->
     <div class="el-register-footer">
-      <!--<span>Copyright © 2018-2022 ruoyi.vip All Rights Reserved.</span>-->
+      <!--<span>Copyright © 2018-2022 OpenGMS All Rights Reserved.</span>-->
     </div>
   </div>
 </template>
 
 <script setup>
 import { ElMessageBox } from "element-plus";
-import { getCodeImg, register } from "@/api/login";
+import { getCodeImg, register } from "@/api/admin/login";
 
 const router = useRouter();
 const { proxy } = getCurrentInstance();

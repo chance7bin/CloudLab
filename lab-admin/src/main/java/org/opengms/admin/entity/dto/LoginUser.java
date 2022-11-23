@@ -12,7 +12,7 @@ import java.util.Set;
 /**
  * 登录用户身份权限
  * 
- * @author ruoyi
+ * @author 7bin
  */
 @JsonIgnoreProperties({
     "enabled","accountNonExpired", "accountNonLocked", "credentialsNonExpired", "authorities","username","password"

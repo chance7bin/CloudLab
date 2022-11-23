@@ -3,7 +3,7 @@ package org.opengms.common.utils;
 /**
  * 处理并记录日志文件
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class LogUtils
 {

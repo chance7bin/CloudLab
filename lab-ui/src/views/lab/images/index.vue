@@ -14,8 +14,8 @@
 </template>
 
 <script name="images" setup lang="ts">
-import { listImages } from "@/api/docker";
-import { initWorkspace } from "@/api/workspace";
+import { listImages } from "@/api/container/docker";
+import { initWorkspace } from "@/api/container/workspace";
 import useCurrentInstance from "@/utils/currentInstance";
 import { ElMessageBox } from "element-plus";
 const { proxy } = useCurrentInstance();

@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import useCurrentInstance from "@/utils/currentInstance";
-import { listWorkspaceDirContainChildren } from "@/api/drive";
+import { listWorkspaceDirContainChildren } from "@/api/drive/drive";
 
 const { proxy } = useCurrentInstance();
 

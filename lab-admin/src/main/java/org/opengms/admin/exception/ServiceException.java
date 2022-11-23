@@ -3,7 +3,7 @@ package org.opengms.admin.exception;
 /**
  * 业务异常
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public final class ServiceException extends RuntimeException
 {

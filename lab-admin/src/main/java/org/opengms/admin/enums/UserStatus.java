@@ -3,7 +3,7 @@ package org.opengms.admin.enums;
 /**
  * 用户状态
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public enum UserStatus
 {

@@ -1,4 +1,4 @@
-import { login, logout, getInfo } from "@/api/login";
+import { login, logout, getInfo } from "@/api/admin/login";
 import { getToken, setToken, removeToken } from "@/utils/auth";
 import defAva from "@/assets/images/profile.jpg";
 
@@ -35,7 +35,8 @@ const useUserStore = defineStore("user", {
         getInfo()
           .then((res: any) => {
             const user = res.user;
-            const avatar = user.avatar == "" || user.avatar == null ? defAva : import.meta.env.VITE_APP_BASE_API + user.avatar;
+            const avatar =
+              user.avatar == "" || user.avatar == null ? defAva : import.meta.env.VITE_APP_BASE_API + user.avatar;
 
             if (res.roles && res.roles.length > 0) {
               // 验证返回的roles是否是一个非空数组

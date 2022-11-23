@@ -7,7 +7,7 @@
 <script setup>
 const { proxy } = getCurrentInstance();
 
-const url = ref('https://gitee.com/y_project/RuoYi-Vue');
+const url = ref('https://gitee.com/y_project/7bin-Vue');
 
 function goto() {
   // window.open(url.value)

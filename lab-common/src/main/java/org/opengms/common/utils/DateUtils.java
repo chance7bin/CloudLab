@@ -11,7 +11,7 @@ import java.util.Date;
 /**
  * 时间工具类
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class DateUtils extends org.apache.commons.lang3.time.DateUtils
 {
@@ -48,6 +48,11 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
     public static String getDate()
     {
         return dateTimeNow(YYYY_MM_DD);
+    }
+
+    public static String getDateByMonth()
+    {
+        return dateTimeNow(YYYY_MM);
     }
 
     public static final String getTime()

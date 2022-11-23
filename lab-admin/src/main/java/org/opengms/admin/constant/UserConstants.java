@@ -3,7 +3,7 @@ package org.opengms.admin.constant;
 /**
  * 用户常量信息
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class UserConstants
 {

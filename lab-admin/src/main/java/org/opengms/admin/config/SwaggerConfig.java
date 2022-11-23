@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Swagger2的接口配置
  * 
- * @author ruoyi
+ * @author 7bin
  */
 @Configuration
 public class SwaggerConfig implements WebMvcConfigurer

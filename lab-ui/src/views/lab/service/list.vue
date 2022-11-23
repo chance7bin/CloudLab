@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import useCurrentInstance from "@/utils/currentInstance";
-import { selectServiceList } from "@/api/msc";
+import { selectServiceList } from "@/api/container/modelService";
 
 const { proxy } = useCurrentInstance();
 const router = useRouter();

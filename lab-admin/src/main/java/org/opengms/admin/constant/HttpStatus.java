@@ -3,7 +3,7 @@ package org.opengms.admin.constant;
 /**
  * 返回状态码
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class HttpStatus
 {

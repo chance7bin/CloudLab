@@ -27,6 +27,7 @@ public class ScheduleConfig {
         // 设置最大线程数 当队列中存放的任务达到队列容量的时候，当前可以同时运行的线程数量变为最大线程数
         executor.setMaxPoolSize(8);
         // 设置队列容量 当新任务来的时候会先判断当前运行的线程数量是否达到核心线程数，如果达到的话，新任务就会被存放在队列中
+        executor.setQueueCapacity(200);
         // 设置线程活跃时间（秒）
         executor.setKeepAliveSeconds(60);
         // 设置默认线程名称

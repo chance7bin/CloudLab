@@ -8,7 +8,7 @@ import org.opengms.common.utils.sql.SqlUtil;
 /**
  * 分页工具类
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class PageUtils extends PageHelper
 {

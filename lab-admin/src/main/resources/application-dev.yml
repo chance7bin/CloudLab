@@ -8,4 +8,4 @@ lab:
 logging:
   config: classpath:log4j2-config.xml
   file:
-    path: E:/opengms-lab/log
+    path: E:/opengms-lab/admin/log

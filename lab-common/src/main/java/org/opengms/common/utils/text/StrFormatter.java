@@ -6,7 +6,7 @@ import org.opengms.common.utils.StringUtils;
 /**
  * 字符串格式化
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class StrFormatter
 {

@@ -1,0 +1,60 @@
+# 项目相关配置
+container:
+  # 名称
+  name: OpenGMS-Lab-Container
+  # 版本
+  version: 1.0.0
+  # 版权年份
+  copyrightYear: 2022
+  # 文件路径 示例（ Windows配置E:/opengms-lab/uploadPath，Linux配置 /home/opengms-lab/uploadPath）
+#  profile: E:/opengms-lab/uploadPath
+
+# 开发环境配置
+server:
+  # 服务器的HTTP端口，默认为8080(8888是jupyter默认端口)
+  port: 8810
+  servlet:
+    context-path: /container
+
+spring:
+  profiles:
+    active: dev
+  datasource:
+    name: lab_datasource
+    url: jdbc:mysql://127.0.0.1:3306/opengms_container?useUnicode=true&characterEncoding=utf8&autoReconnect=true&useSSL=false&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+      discovery:
+        enabled: false
+  application:
+    name: lab-container
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+# MyBatis配置
+mybatis:
+  # 搜索指定包别名
+  typeAliasesPackage: org.opengms.**.entity.po
+  # 配置mapper的扫描，找到所有的mapper.xml映射文件
+  mapperLocations: classpath*:mapper/**/*Mapper.xml
+  # 加载全局的配置文件
+  configLocation: classpath:mybatis/mybatis-config.xml
+
+
+# Swagger配置
+swagger:
+  # 是否开启swagger
+  enabled: true
+  # 请求前缀
+  pathMapping: /container
+
+#socket配置
+socket:
+  host: 127.0.0.1
+  port: 6001
+

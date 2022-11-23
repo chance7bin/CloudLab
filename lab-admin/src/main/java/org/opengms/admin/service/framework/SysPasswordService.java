@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 登录密码方法
  * 
- * @author ruoyi
+ * @author 7bin
  */
 @Component
 public class SysPasswordService

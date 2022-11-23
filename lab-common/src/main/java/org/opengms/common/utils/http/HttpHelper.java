@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * 通用http工具封装
  * 
- * @author ruoyi
+ * @author 7bin
  */
 @Slf4j
 public class HttpHelper

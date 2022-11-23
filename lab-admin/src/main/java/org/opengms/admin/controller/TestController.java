@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.opengms.admin.annotation.Anonymous;
 import org.opengms.admin.annotation.Log;
+import org.opengms.admin.clients.ContainerClient;
 import org.opengms.admin.entity.po.system.SysOperLog;
 import org.opengms.admin.entity.po.system.SysUser;
 import org.opengms.admin.enums.BusinessType;
@@ -51,6 +52,16 @@ public class TestController extends BaseController{
 
     @Autowired
     private RedisCache redisCache;
+
+    @Autowired
+    ContainerClient containerClient;
+
+    @Anonymous
+    @GetMapping("/testFeign")
+    public ApiResponse listImages(){
+        return containerClient.listImages();
+    }
+
 
     @Anonymous
     @GetMapping("/helloRedis")

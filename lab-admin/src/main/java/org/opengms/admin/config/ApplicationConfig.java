@@ -1,5 +1,6 @@
 package org.opengms.admin.config;
 
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +12,7 @@ import org.springframework.web.context.request.RequestContextListener;
  * @date 2022/08/23
  */
 @Configuration
+@EnableFeignClients(basePackages = "org.opengms.admin.clients")
 // 表示通过aop框架暴露该代理对象,AopContext能够访问
 @EnableAspectJAutoProxy(exposeProxy = true)
 // 扫描common模块的bean

@@ -1,0 +1,18 @@
+drive:
+  profile: E:/opengms-lab/uploadPath
+  # 资源存放路径
+  repository:
+    workspace: E:/opengms-lab/container
+
+#日志配置
+logging:
+  config: classpath:log4j2-config.xml
+  file:
+    path: E:/opengms-lab/drive/log
+
+# 文件配置
+file:
+  # 文件存储路径
+  save-path: E:/opengms-lab/drive/file-manager
+  # 断点续传文件配置路径
+  conf-path: E:/opengms-lab/drive/file-manager/conf

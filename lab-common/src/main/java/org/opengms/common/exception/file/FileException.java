@@ -6,7 +6,7 @@ import org.opengms.common.exception.base.BaseException;
 /**
  * 文件信息异常类
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class FileException extends BaseException
 {

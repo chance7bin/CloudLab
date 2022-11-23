@@ -12,7 +12,7 @@ import javax.validation.constraints.Size;
 /**
  * 角色表 sys_role
  * 
- * @author ruoyi
+ * @author 7bin
  */
 @JsonIgnoreProperties({
     "admin"

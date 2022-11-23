@@ -3,7 +3,7 @@ package org.opengms.admin.entity.bo.server;
 /**
  * 系统文件相关信息
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class SysFile
 {

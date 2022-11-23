@@ -16,7 +16,8 @@ function goTarget(url) {
 .home {
   background-image: url("../assets/images/home_bg.jpg");
   min-height: calc(100vh - 84px);
-  background-size: cover;
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 </style>
 

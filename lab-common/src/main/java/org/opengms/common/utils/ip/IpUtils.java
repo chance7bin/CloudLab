@@ -13,7 +13,7 @@ import java.net.*;
 /**
  * 获取IP方法
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class IpUtils
 {

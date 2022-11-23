@@ -24,7 +24,7 @@ import com.github.pagehelper.PageInfo;
 /**
  * web层通用数据处理
  * 
- * @author ruoyi
+ * @author 7bin
  */
 @Slf4j
 public class BaseController

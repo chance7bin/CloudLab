@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * 通用配置
  * 
- * @author ruoyi
+ * @author 7bin
  */
 @Configuration
 public class ResourcesConfig implements WebMvcConfigurer

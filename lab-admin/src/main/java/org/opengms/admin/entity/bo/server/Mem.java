@@ -6,7 +6,7 @@ import org.opengms.common.utils.Arith;
 /**
  * 內存相关信息
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class Mem
 {

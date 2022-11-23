@@ -6,7 +6,7 @@ import org.opengms.common.utils.Arith;
 /**
  * CPU相关信息
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class Cpu
 {

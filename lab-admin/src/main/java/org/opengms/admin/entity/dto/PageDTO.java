@@ -6,7 +6,7 @@ import org.opengms.common.utils.StringUtils;
 /**
  * 分页数据
  * 
- * @author ruoyi
+ * @author 7bin
  */
 public class PageDTO
 {
