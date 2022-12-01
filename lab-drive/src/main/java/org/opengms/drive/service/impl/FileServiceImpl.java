@@ -1,5 +1,8 @@
 package org.opengms.drive.service.impl;
 
+import cn.hutool.core.io.FileTypeUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.file.FileNameUtil;
 import cn.novelweb.tool.http.Result;
 import cn.novelweb.tool.upload.local.LocalUpload;
 import cn.novelweb.tool.upload.local.pojo.UploadFileParam;
@@ -7,6 +10,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.nacos.common.utils.UuidUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Results;
+import org.opengms.common.utils.DateUtils;
 import org.opengms.common.utils.StringUtils;
 import org.opengms.common.utils.file.FileTypeUtils;
 import org.opengms.common.utils.uuid.SnowFlake;
@@ -23,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.print.DocFlavor;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileInputStream;
@@ -109,6 +114,12 @@ public class FileServiceImpl implements IFileService {
 
     @Override
     public Result<JSONArray> checkFileMd5(String md5, String fileName) {
+
+        boolean exist = fileMapper.fileIsExist(md5);
+        if (exist){
+            return null;
+        }
+
         Result<JSONArray> result;
         try {
             String realFilename = md5 + "_" + fileName;
@@ -143,10 +154,55 @@ public class FileServiceImpl implements IFileService {
     }
 
     @Override
-    public int addFile(FileInfo fileInfo) {
+    public FileInfo addFile(FileInfo fileInfo) {
+
         fileInfo.setFileId(SnowFlake.nextId());
-        fileInfo.setFilePath(fileInfo.getMd5() + "_" + fileInfo.getFileName());
-        fileInfo.setSuffix(FileTypeUtils.getFileType(fileInfo.getFileName()));
-        return fileMapper.insert(fileInfo);
+
+        boolean exist = fileMapper.fileIsExist(fileInfo.getMd5());
+        if (exist){
+            // 如果数据库中已经存在该文件的话
+            // filePath与数据库已存在的文件路径相同
+            FileInfo fileInfo1 = fileMapper.selectFirstByMd5(fileInfo.getMd5());
+            fileInfo.setFilePath(fileInfo1.getFilePath());
+            fileInfo.setSuffix(fileInfo1.getSuffix());
+
+        } else {
+            // 如果数据库不存在该文件, 说明是第一次上传该文件
+            // 1. 移动该文件及该文件的conf 移动到 year/month文件夹中
+            // 2. 将该文件的信息入库
+
+            String separator = "/";
+            int year = DateUtils.getYear();
+            int month = DateUtils.getMonth();
+            String name = fileInfo.getMd5() + "_" + fileInfo.getFileName();
+            FileUtil.move(
+                new File(savePath + separator + name),
+                new File(savePath + separator + year + separator + month + separator + name),
+                false
+            );
+            FileUtil.move(
+                new File(confFilePath + separator + name + ".conf"),
+                new File(savePath + separator + year + separator + month + separator + "conf" + separator + name + ".conf"),
+                false
+            );
+
+            fileInfo.setFilePath(year + separator + month + separator + name);
+            if (StringUtils.isEmpty(fileInfo.getSuffix())){
+                File file = new File(savePath + separator + fileInfo.getFilePath());
+                fileInfo.setSuffix(FileNameUtil.extName(file));
+            }
+        }
+
+        int cnt = fileMapper.insert(fileInfo);
+        return  cnt > 0 ? fileInfo : null;
+
+        // fileInfo.setFileId(SnowFlake.nextId());
+        // fileInfo.setFilePath(fileInfo.getMd5() + "_" + fileInfo.getFileName());
+        // if (StringUtils.isEmpty(fileInfo.getSuffix())){
+        //     File file = new File(savePath + separator + fileInfo.getFilePath());
+        //     fileInfo.setSuffix(FileNameUtil.extName(file));
+        // }
+        // int cnt = fileMapper.insert(fileInfo);
+        // return  cnt > 0 ? fileInfo : null;
     }
 }

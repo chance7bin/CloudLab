@@ -58,3 +58,11 @@ export function getCodeImg() {
     timeout: 20000
   });
 }
+
+// 判断用户是否登录过期
+export function checkAuth() {
+  return request({
+    url: contextPath + "/user/auth",
+    method: "get"
+  });
+}

@@ -53,7 +53,7 @@ public interface IFileService {
 
 
     /**
-     * 检查文件md5
+     * 检查文件md5 返回的为null则说明已经存在该文件
      * @param md5 md5
      * @param fileName 文件名
      * @return {@link Result}
@@ -77,7 +77,7 @@ public interface IFileService {
      * @return {@link int}
      * @author 7bin
      **/
-    int addFile(FileInfo fileInfo);
+    FileInfo addFile(FileInfo fileInfo);
 
 
 }

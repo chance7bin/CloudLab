@@ -15,4 +15,4 @@ file:
   # 文件存储路径
   save-path: E:/opengms-lab/drive/file-manager
   # 断点续传文件配置路径
-  conf-path: E:/opengms-lab/drive/file-manager/conf
+  conf-path: ${file.save-path}/conf

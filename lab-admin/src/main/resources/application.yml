@@ -14,7 +14,7 @@ lab:
 # 开发环境配置
 server:
   # 服务器的HTTP端口，默认为8080(8888是jupyter默认端口)
-  port: 8808
+  port: 8807
   servlet:
     context-path: /admin
 

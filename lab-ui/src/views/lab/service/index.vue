@@ -191,7 +191,7 @@ listContainers().then((res) => {
 
 const selectedContainer = ref<string>("");
 const handleCurrentContainer = (val) => {
-  console.log("val:", val);
+  // console.log("val:", val);
   selectedContainer.value = val.containerName;
   proxy.$modal.msgSuccess("已选择: " + selectedContainer.value);
   deployPackage.containerName = selectedContainer.value;

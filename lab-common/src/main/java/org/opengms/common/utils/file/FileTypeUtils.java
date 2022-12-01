@@ -1,5 +1,6 @@
 package org.opengms.common.utils.file;
 
+import cn.hutool.core.io.FileTypeUtil;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;

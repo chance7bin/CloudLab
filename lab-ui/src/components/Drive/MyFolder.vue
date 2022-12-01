@@ -3,8 +3,10 @@
     <!--头部按钮-->
     <div class="top-btn">
       <div>
-        <el-button class="upload-btn" type="primary" round :icon="Upload">上传</el-button>
-        <el-button class="upload-btn" type="primary" plain round :icon="FolderAdd">新建文件夹</el-button>
+        <el-button class="upload-btn" type="primary" round :icon="Upload" @click="dialogVisible = true">上传</el-button>
+        <el-button class="upload-btn" type="primary" plain round :icon="FolderAdd" @click="openDialog"
+          >新建文件夹</el-button
+        >
       </div>
       <div>
         <el-input v-model="searchText" placeholder="搜索我的云盘文件">
@@ -23,7 +25,7 @@
         <el-icon class="mr10 icon-hover" @click="refreshFolder"><RefreshRight /></el-icon>
         <el-breadcrumb class="folder-breadcrumb" :separator-icon="ArrowRight">
           <el-breadcrumb-item v-for="(item, index) in breadcrumbList" :key="index">
-            <a @click="breadcrumbClick(item)">{{ item }}</a>
+            <a @click="breadcrumbClick(item)">{{ item.name }}</a>
           </el-breadcrumb-item>
         </el-breadcrumb>
       </div>
@@ -31,106 +33,242 @@
 
     <!--文件夹容器-->
     <div class="folder-container">
-      <el-space wrap>
+      <el-empty v-if="folderList.length === 0" description="哎呀, 你怎么一个文件都没有呢 (T_T)" />
+      <el-space v-else wrap>
         <div v-for="(item, index) in folderList" :key="index">
           <!--{{ item.filename }}-->
-          <div
-            class="folder-item"
-            :class="selectedItem == index ? 'folder-active' : ''"
-            @dblclick="folderDbClick(item)"
-            @click="folderSelect(index)"
-          >
-            <svg-icon v-if="item.directory" icon-class="folder" class-name="icon-size"></svg-icon>
-            <svg-icon v-else icon-class="file" class-name="icon-size"></svg-icon>
-            <div class="ellipsis-fixed">
-              <div class="overflow-ellipsis">{{ item.filename }}</div>
+
+          <el-tooltip :content="item.filename" placement="bottom" effect="light" :show-after="600">
+            <div
+              class="folder-item"
+              :class="selectedItem == index ? 'folder-active' : ''"
+              @dblclick="folderDbClick(item)"
+              @click="folderSelect(index)"
+              @mouseover="item['showPlugin'] = true"
+              @mouseleave="item['showPlugin'] = false"
+            >
+              <!--下载按钮-->
+              <div class="item-plugin">
+                <!--<el-icon><Download /></el-icon>-->
+                <svg-icon
+                  class="icon-hover"
+                  icon-class="download-file"
+                  @click="downloadFile(item)"
+                  v-show="!item.directory && item['showPlugin']"
+                ></svg-icon>
+              </div>
+
+              <!--图标-->
+              <!--<svg-icon v-if="item.directory" icon-class="folder" class-name="icon-size"></svg-icon>-->
+              <!--<svg-icon v-else icon-class="file" class-name="icon-size"></svg-icon>-->
+              <svg-icon :icon-class="selectTypeIcon(item)" class-name="icon-size"></svg-icon>
+
+              <!--文件名-->
+              <div class="ellipsis-fixed">
+                <div class="overflow-ellipsis">{{ item.filename }}</div>
+              </div>
+
             </div>
-          </div>
+          </el-tooltip>
         </div>
       </el-space>
+    </div>
+
+    <!--新建文件夹-->
+
+    <!--上传文件对话框-->
+    <div>
+      <el-dialog v-model="dialogVisible" title="上传文件" width="30%" draggable>
+        <span>支持上传一个或多个文件</span>
+        <simple-uploader @uploadSuccess="uploadSuccess"></simple-uploader>
+      </el-dialog>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import useCurrentInstance from "@/utils/currentInstance";
-import { Upload, FolderAdd, ArrowLeft, ArrowRight, RefreshRight } from "@element-plus/icons-vue";
+import { Download, Upload, FolderAdd, ArrowLeft, ArrowRight, RefreshRight } from "@element-plus/icons-vue";
 const { proxy } = useCurrentInstance();
-import { ElNotification as notify } from "element-plus";
-import { listWorkspaceDir } from "@/api/drive/drive";
-import qs from "qs";
+import { ElNotification as notify, ElMessageBox, ElMessage } from "element-plus";
+import { getFileList, addFile } from "@/api/drive/drive";
+import type { FileInfoDTO } from "@/api/drive/drive";
+import { checkAuth } from "@/api/admin/login";
 
+// 云盘路径
+interface FilePath {
+  name: string;
+  parentId: string;
+}
+
+const dialogVisible = ref(false);
 
 // 导航部分
-const breadcrumbList = ref<string[]>(["我的云盘"]);
+const breadcrumbList = ref<FilePath[]>([{ name: "我的云盘", parentId: "root" }]);
 let searchText = ref<string>("");
+// 当前展示的文件夹位置
+let currentFile: FilePath = { name: "我的云盘", parentId: "root" };
 const onBack = () => {
   notify("Back");
 };
 const breadcrumbClick = (item) => {
   // console.log("breadcrumbClick:", item);
+  // console.log("breadcrumbList:", breadcrumbList);
 
   //定位到当前文件夹
-  let tempList = [] as string[];
+  let tempList = [] as FilePath[];
   for (let i = 0; i < breadcrumbList.value.length; i++) {
-    tempList.push(item as string);
-    if (breadcrumbList.value[i] == item){
+    tempList.push(breadcrumbList.value[i]);
+    if (breadcrumbList.value[i].parentId == item.parentId) {
       break;
     }
   }
 
   breadcrumbList.value = tempList;
 
+  currentFile = item;
+
   getFolder();
-}
+};
 
 const refreshFolder = () => {
   getFolder();
-}
+};
 
+// 根据breadcrumbList获取该文件夹下的文件
+const getFolder = () => {
+  selectedItem.value = null;
+  getFileList(currentFile.parentId).then((res) => {
+    // console.log("listWorkspaceDir:", res);
+    folderList.value = res.data;
+  });
+};
 
 // 文件夹部分
 
 const folderList = ref<any[]>([]);
 const selectedItem = ref<number | null>();
-listWorkspaceDir().then((res) => {
-  // console.log("listWorkspaceDir:", res);
-  folderList.value = res.data;
-});
+getFolder();
 
 const folderSelect = (index) => {
   selectedItem.value = index;
 };
 
 const folderDbClick = (item) => {
-  if (item.directory == false){
+  if (item.directory == false) {
     return;
   }
-  breadcrumbList.value.push(item.filename);
+  // console.log("item:", item);
+  const nextFile = { name: item.filename, parentId: item.fileId };
+  breadcrumbList.value.push(nextFile);
+  currentFile = nextFile;
   getFolder();
-
 };
 
+const uploadFile = () => {};
+const validateFileName = () => {};
 
-// 根据breadcrumbList获取该文件夹下的文件
-const getFolder = () => {
+const openDialog = () => {
+  ElMessageBox.prompt("", "新建", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    inputValidator: (value) => {
+      let reg = new RegExp('[\\\\/:*?"<>|]');
+      return !reg.test(value);
+    },
+    inputErrorMessage: "非法的文件夹名称"
+  })
+    .then(({ value }) => {
+      addFileDir(value);
 
-  selectedItem.value = null;
-
-  // 弹出根路径 "我的云盘"
-  breadcrumbList.value.shift();
-
-  let params = { pathList: breadcrumbList.value };
-  let paramsStr = qs.stringify(params, {arrayFormat:"repeat"})
-
-  // 恢复根路径
-  breadcrumbList.value.unshift("我的云盘");
-  listWorkspaceDir(paramsStr).then((res) => {
-    // console.log("listWorkspaceDir:", res);
-    folderList.value = res.data;
+      // ElMessage({
+      //   type: 'success',
+      //   message: `Your email is:${value}`,
+      // })
+    })
+    .catch(() => {
+      // ElMessage({
+      //   type: 'info',
+      //   message: 'Input canceled',
+      // })
+    });
+};
+const addFileDir = (filename: string) => {
+  const fileInfoDTO: FileInfoDTO = {
+    parentId: currentFile.parentId,
+    filename: filename,
+    directory: true,
+    md5: null,
+    size: null,
+    type: null,
+    driveFileId: null
+  };
+  addFile(fileInfoDTO).then(() => {
+    proxy.$modal.msgSuccess("文件夹添加成功");
+    getFolder();
   });
-}
+};
 
+// 上传组件上传成功后的事件传递
+const uploadSuccess = (file) => {
+  console.log("uploadSuccess:", file);
+  const fileInfoDTO: FileInfoDTO = {
+    parentId: currentFile.parentId,
+    filename: file.name,
+    directory: false,
+    md5: file.uniqueIdentifier,
+    size: file.size,
+    type: file.fileType,
+    driveFileId: null
+  };
+  addFile(fileInfoDTO).then(() => {
+    proxy.$modal.msgSuccess("文件夹添加成功");
+    dialogVisible.value = false;
+    getFolder();
+  });
+};
+
+// 下载文件
+const downloadFile = async (item) => {
+  // console.log(item);
+  await checkAuth();
+
+  window.location.href = import.meta.env.VITE_APP_DRIVE_API + "/file/download/" + item.driveFileId;
+};
+
+// 选择文件展示的图标
+const selectTypeIcon = (item): string => {
+  if (item.directory) {
+    return "folder";
+  } else {
+    let icon;
+    switch (item.type) {
+      case "pdf":
+        icon = "pdf_big";
+        break;
+      case "doc":
+      case "docx":
+        icon = "doc_big";
+        break;
+      case "xls":
+      case "xlsx":
+        icon = "xlsx_big";
+        break;
+      case "jpg":
+      case "png":
+      case "gif":
+        icon = "jpg_big";
+        break;
+      case "zip":
+      case "tar.gz":
+        icon = "zip_big"
+        break;
+      default:
+        icon = "file";
+    }
+    return icon;
+  }
+};
 </script>
 
 <style scoped lang="scss">
@@ -168,6 +306,7 @@ $padding-horizontal: 20px;
   height: $icon-size;
 }
 .folder-item {
+  //position: relative;
   width: calc($icon-size + $padding-horizontal * 2 + 20px);
   padding: 10px $padding-horizontal;
   display: flex;
@@ -239,4 +378,12 @@ $padding-horizontal: 20px;
   }
 }
 
+.item-plugin {
+  height: 20px;
+  margin: 0 !important;
+  //display: flex !important;
+  //justify-content: right !important;
+  //float: right !important;
+  padding: 0 !important;
+}
 </style>

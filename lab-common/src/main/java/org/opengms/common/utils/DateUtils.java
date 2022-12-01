@@ -1,11 +1,13 @@
 package org.opengms.common.utils;
 
+import com.sun.org.apache.bcel.internal.generic.RET;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.lang.management.ManagementFactory;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.*;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -231,4 +233,29 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils
     }
 
 
+    /**
+     * 获取当前年份
+     *
+     * @param
+     * @return {@link int}
+     * @author 7bin
+     **/
+    public static int getYear(){
+        Calendar cale = Calendar.getInstance();
+        return cale.get(Calendar.YEAR);
+    }
+
+    /**
+     * 获取当前月份
+     *
+     * @param
+     * @return {@link int}
+     * @author 7bin
+     **/
+    public static int getMonth(){
+        Calendar cale = Calendar.getInstance();
+        return cale.get(Calendar.MONTH) + 1;
+    }
+
 }
+

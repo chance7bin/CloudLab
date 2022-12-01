@@ -29,7 +29,10 @@ public class FileInfo extends BaseEntity {
     /** md5 */
     private String md5;
 
-    /** 删除标志 */
-    private String delFlag;
+    /** 文件大小 */
+    private String size;
+
+    /** 删除标志 0false  1true */
+    private Boolean delFlag;
 
 }

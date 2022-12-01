@@ -1,5 +1,7 @@
 <template>
-  <div>传输完成</div>
+  <div>
+
+  </div>
 </template>
 
 <script setup lang="ts">

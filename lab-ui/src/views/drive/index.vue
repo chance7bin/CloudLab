@@ -11,23 +11,24 @@
             active-text-color="#0db2ff"
             background-color="#f9fafb"
             text-color="#000"
-            default-active="1"
+            :default-active=currentIndex
             class="drive-menu"
             @select="handleSelect"
+            :collapse="isCollapse"
           >
             <el-menu-item index="1">
               <el-icon><Folder /></el-icon>
               <span>我的文件</span>
             </el-menu-item>
-            <el-menu-item index="2">
+            <el-menu-item index="2" disabled>
               <el-icon><UploadFilled /></el-icon>
               <span>正在上传</span>
             </el-menu-item>
-            <el-menu-item index="3">
+            <el-menu-item index="3" >
               <el-icon><CircleCheck /></el-icon>
               <span>传输完成</span>
             </el-menu-item>
-            <el-menu-item index="4">
+            <el-menu-item index="4" disabled>
               <el-icon><Delete /></el-icon>
               <span>回收站</span>
             </el-menu-item>
@@ -69,6 +70,7 @@ import RecycleBin from "@/views/drive/RecycleBin.vue";
 
 //导航栏部分
 const currentIndex = ref<string>("1");
+const isCollapse = ref(false)
 
 const handleSelect = (index: string, indexPath: string[]) => {
   currentIndex.value = index;
@@ -97,5 +99,9 @@ $layout-height: calc(100vh - 84px - 20px - 20px);
   border-left: 5px solid #06a3f8;
   //font-weight: bold;
   padding: 0 20px 0 15px !important;
+}
+.el-menu-vertical-demo:not(.el-menu--collapse) {
+  width: 200px;
+  min-height: 400px;
 }
 </style>

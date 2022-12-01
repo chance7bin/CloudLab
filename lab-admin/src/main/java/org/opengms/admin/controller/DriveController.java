@@ -4,7 +4,10 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.opengms.admin.clients.DriveClient;
+import org.opengms.admin.controller.common.BaseController;
 import org.opengms.admin.entity.dto.ApiResponse;
+import org.opengms.admin.entity.po.drive.FileInfo;
+import org.opengms.admin.service.IDriveService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +21,10 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/drive")
-public class DriveController {
+public class DriveController extends BaseController {
+
+    @Autowired
+    IDriveService driveService;
 
     @Autowired
     DriveClient driveClient;
@@ -36,6 +42,20 @@ public class DriveController {
         @PathVariable(value = "containerName") String containerName) {
 
         return driveClient.listWorkspaceDirByContainerName(containerName);
+    }
+
+
+    @GetMapping(value = "/list")
+    public ApiResponse getFileList(@RequestParam("parentId") String parentId) {
+        String username = getUsername();
+        return ApiResponse.success(driveService.getFileList(parentId, username));
+
+    }
+
+    @PostMapping(value = "/file")
+    public ApiResponse addFile(@RequestBody FileInfo fileInfo){
+        fileInfo.setCreateBy(getUsername());
+        return driveService.addFile(fileInfo) > 0 ? ApiResponse.success() : ApiResponse.error();
     }
 
 }

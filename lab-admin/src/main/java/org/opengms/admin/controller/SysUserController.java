@@ -1,5 +1,6 @@
 package org.opengms.admin.controller;
 
+import org.opengms.admin.entity.dto.ApiResponse;
 import org.opengms.admin.entity.po.system.SysUser;
 import org.opengms.admin.service.ISysUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,5 +26,12 @@ public class SysUserController {
         // Long userId = 101L;
         return userService.selectUserById(userId);
     }
+
+    @GetMapping(value = "/auth" )
+    public ApiResponse auth(){
+        // Long userId = 101L;
+        return ApiResponse.success();
+    }
+
 
 }

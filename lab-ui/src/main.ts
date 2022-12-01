@@ -64,6 +64,18 @@ app.config.globalProperties.download = download;
 // app.component("ImagePreview", ImagePreview);
 // app.component("RightToolbar", RightToolbar);
 
+// 注册vue-simple-uploader
+//引入大文件分片上传
+import uploader from "vue-simple-uploader";
+import "vue-simple-uploader/dist/style.css";
+app.use(uploader);
+
+// 引入jquery
+// import $ from "jquery";
+// app.use($);
+// 引入webuploader
+// import WebUploader from "webuploader";
+
 app.use(router);
 app.use(store);
 app.use(plugins);

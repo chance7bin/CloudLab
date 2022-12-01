@@ -1,15 +1,14 @@
 <template>
-  <div>正在上传</div>
+  <div>
+    <simple-uploader />
+  </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import useCurrentInstance from "@/utils/currentInstance";
-
+import SimpleUploader from "@/components/Uploader/SimpleUploader.vue";
 const { proxy } = useCurrentInstance();
-
 
 </script>
 
-<style scoped lang="scss">
-
-</style>
+<style scoped lang="scss"></style>

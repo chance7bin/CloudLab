@@ -7,6 +7,7 @@ import org.opengms.drive.entity.po.FileInfo;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 
@@ -25,5 +26,8 @@ public interface FileMapper {
 
     int insert(FileInfo fileInfo);
 
-    boolean fileIsExist(String fileName);
+    boolean fileIsExist(String md5);
+
+    FileInfo selectFirstByMd5(String md5);
+
 }

@@ -83,7 +83,8 @@ public class FileController {
     // @PostMapping("/add")
     @PostMapping("")
     public ApiResponse addFile(@RequestBody FileInfo fileInfo) {
-        return fileService.addFile(fileInfo) > 0 ? ApiResponse.success() : ApiResponse.error();
+        FileInfo file = fileService.addFile(fileInfo);
+        return file == null ?  ApiResponse.error(): ApiResponse.success(file);
     }
 
     /**
@@ -96,8 +97,9 @@ public class FileController {
      **/
     @GetMapping(value = "/check")
     public ApiResponse checkFileMd5(String md5, String fileName) {
-        Result result = fileService.checkFileMd5(md5, fileName);
-        return NovelWebUtils.forReturn(result);
+        // Result result = fileService.checkFileMd5(md5, fileName);
+        // return NovelWebUtils.forReturn(result);
+        return ApiResponse.success();
     }
 
     /**
@@ -125,6 +127,12 @@ public class FileController {
         return NovelWebUtils.forReturn(result);
     }
 
+    /**
+     * 检查文件MD5（文件MD5若已存在进行秒传）
+     * @param chunkMap
+     * @return {@link ApiResponse}
+     * @author 7bin
+     **/
     @GetMapping(value = "/breakpoint-upload")
     public ApiResponse breakpointResumeUploadPre(
         @RequestParam Map<String, String> chunkMap) {
@@ -133,7 +141,14 @@ public class FileController {
         String filename = chunkMap.get("filename");
         Result<JSONArray> result = fileService.checkFileMd5(md5, filename);
 
+
         JSONObject res = new JSONObject();
+
+        // 数据库中存在该md5则秒传
+        if (result == null){
+            res.put("skipUpload",true);
+            return ApiResponse.success(res);
+        }
 
         boolean skipUpload = false;
         if ("200".equals(result.getCode()) || "201".equals(result.getCode())) {
@@ -188,7 +203,7 @@ public class FileController {
             if (fileDetails == null){
                 throw new ServiceException("未找到该文件");
             }
-            String filename = (isSource != null && isSource) ? fileDetails.getFileName() : fileDetails.getFilePath();
+            String filename = (isSource != null && isSource) ? fileDetails.getFilePath() : fileDetails.getFileName();
             inputStream = fileService.getFileInputStream(id);
             response.setHeader("Content-Disposition", "attachment;filename=" + EncodingUtils.convertToFileName(request, filename));
             // 获取输出流

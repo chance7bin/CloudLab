@@ -1,11 +1,9 @@
 package org.opengms.admin.clients;
 
 import org.opengms.admin.entity.dto.ApiResponse;
+import org.opengms.admin.entity.dto.drive.FileInfoDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.lang.Nullable;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,5 +21,9 @@ public interface DriveClient {
 
     @GetMapping(value = "/workspace/{containerName}")
     ApiResponse listWorkspaceDirByContainerName(@PathVariable(value = "containerName") String containerName);
+
+
+    @PostMapping("/file")
+    ApiResponse addFile(@RequestBody FileInfoDTO fileInfoDTO);
 
 }
