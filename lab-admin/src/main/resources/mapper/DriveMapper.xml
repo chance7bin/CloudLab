@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengms.admin.mapper.DriveMapper">
+
+    <resultMap id="fileResult" type="org.opengms.admin.entity.po.drive.FileInfo">
+        <id     property="fileId"              column="file_id"     />
+        <result property="parentId"            column="parent_id"     />
+        <result property="filename"            column="file_name"   />
+        <result property="directory"           column="directory"   />
+        <result property="md5"                 column="md5"      />
+        <result property="path"                column="path"      />
+        <result property="size"                column="size"      />
+        <result property="type"                column="type"      />
+        <result property="driveFileId"         column="drive_file_id"      />
+        <result property="createBy"            column="create_by"   />
+        <result property="createTime"          column="create_time" />
+        <result property="updateBy"            column="update_by"   />
+        <result property="updateTime"          column="update_time" />
+        <result property="remark"              column="remark"      />
+    </resultMap>
+
+    <insert id="insert" parameterType="fileInfo">
+
+        insert into file_info (
+        <if test="fileId != null and fileId != '' ">file_id,</if>
+        <if test="parentId != null and parentId != '' ">parent_id,</if>
+        <if test="filename != null and filename != '' ">filename,</if>
+        <if test="directory != null">directory,</if>
+        <if test="md5 != null and md5 != '' ">md5,</if>
+        <if test="path != null and path != '' ">path,</if>
+        <if test="size != null and size != '' ">size,</if>
+        <if test="type != null and type != '' ">type,</if>
+        <if test="driveFileId != null and driveFileId != '' ">drive_file_id,</if>
+        <if test="createBy != null and createBy != ''">create_by,</if>
+        <if test="remark != null and remark != ''">remark,</if>
+        create_time
+        )values(
+        <if test="fileId != null and fileId != ''">#{fileId},</if>
+        <if test="parentId != null and parentId != ''">#{parentId},</if>
+        <if test="filename != null and filename != ''">#{filename},</if>
+        <if test="directory != null">#{directory},</if>
+        <if test="md5 != null and md5 != ''">#{md5},</if>
+        <if test="path != null and path != ''">#{path},</if>
+        <if test="size != null and size != ''">#{size},</if>
+        <if test="type != null and type != ''">#{type},</if>
+        <if test="driveFileId != null and driveFileId != ''">#{driveFileId},</if>
+        <if test="createBy != null and createBy != ''">#{createBy},</if>
+        <if test="remark != null and remark != ''">#{remark},</if>
+        sysdate()
+        )
+
+    </insert>
+
+    <select id="selectFileByUser" resultType="org.opengms.admin.entity.po.drive.FileInfo">
+        select *
+        from file_info
+        where parent_id = #{parentId} and create_by = #{username}
+    </select>
+
+    <select id="existFileInPath" resultType="java.lang.Integer">
+        select count(filename) > 0
+        from file_info
+        where parent_id=#{parentId} and filename=#{filename}
+    </select>
+
+
+</mapper>
