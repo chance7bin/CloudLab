@@ -1,6 +1,10 @@
-package org.opengms.container.entity.bo;
+package org.opengms.container.entity.po;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.opengms.container.entity.BaseEntity;
+import org.opengms.container.entity.bo.InOutParam;
+import org.opengms.container.entity.bo.Log;
 import org.opengms.container.entity.po.ModelService;
 import org.opengms.container.enums.ProcessState;
 
@@ -16,9 +20,10 @@ import java.util.List;
  * @date 2022/10/21
  */
 @Data
-public class MsrIns {
+public class MsrIns extends BaseEntity {
 
     /** 客户端channel */
+    @JsonIgnore
     SocketChannel socketChannel;
 
     /** 模型运行实例id  */
@@ -30,22 +35,33 @@ public class MsrIns {
     /** 该客户端对应的mdl对象 */
     // ModelClass modelClass;
 
-    /** 该客户端对应的mdl对象 */
+    /** 该客户端对应的模型服务对象 */
     ModelService modelService;
+    Long msId;
+
+    /** 该客户端对应的实例路径 */
+    String instanceDir;
 
     /** 输入数据 */
-    // List<String> inputs;
+    List<InOutParam> inputs;
 
     /** 输出数据 */
-    // List<String> outputs;
+    List<InOutParam> outputs;
 
     /** 日志记录 */
     List<Log> logs = new ArrayList<>();
 
-    /** 模型开始运行时间 */
-    Date createTime;
+    // String state;
 
-    String state;
+    // String event;
 
-    String event;
+    /** 实例执行状态 */
+    String status;
+
+    /** 任务开始时间 */
+    Date startTime;
+
+    /** 任务执行时间 */
+    Integer spanTime;
+
 }

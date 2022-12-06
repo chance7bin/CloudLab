@@ -4,20 +4,22 @@
 
 <script setup lang="ts">
 import useCurrentInstance from "@/utils/currentInstance";
-import { listWorkspaceDirContainChildren } from "@/api/drive/drive";
+import { listWorkspaceDirContainChildren } from "@/api/container/workspace";
 
 const { proxy } = useCurrentInstance();
 
 const props = defineProps({
   containerName: {
     type: String,
+    required: false
+  },
+  containerId:{
+    type:String,
     required: true
   }
 })
 
 const emit = defineEmits(["selectedItem"]);
-
-
 
 
 interface Tree {
@@ -34,7 +36,7 @@ const handleNodeClick = (data: Tree) => {
 const folderTree = ref<Tree[]>([]);
 
 // "jupyter_cus_5.0_8268889755334766592"
-listWorkspaceDirContainChildren(props.containerName).then(res => {
+listWorkspaceDirContainChildren(props.containerId).then(res => {
   // let data = res.data;
   folderTree.value = res.data;
 });

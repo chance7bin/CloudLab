@@ -43,7 +43,7 @@
               class="folder-item"
               :class="selectedItem == index ? 'folder-active' : ''"
               @dblclick="folderDbClick(item)"
-              @click="folderSelect(index)"
+              @click="folderSelect(item, index)"
               @mouseover="item['showPlugin'] = true"
               @mouseleave="item['showPlugin'] = false"
             >
@@ -94,6 +94,10 @@ import { ElNotification as notify, ElMessageBox, ElMessage } from "element-plus"
 import { getFileList, addFile } from "@/api/drive/drive";
 import type { FileInfoDTO } from "@/api/drive/drive";
 import { checkAuth } from "@/api/admin/login";
+
+const emit = defineEmits(["selectedItem"]);
+
+
 
 // 云盘路径
 interface FilePath {
@@ -150,8 +154,9 @@ const folderList = ref<any[]>([]);
 const selectedItem = ref<number | null>();
 getFolder();
 
-const folderSelect = (index) => {
+const folderSelect = (item, index) => {
   selectedItem.value = index;
+  emit("selectedItem", item);
 };
 
 const folderDbClick = (item) => {
@@ -176,10 +181,18 @@ const openDialog = () => {
       let reg = new RegExp('[\\\\/:*?"<>|]');
       return !reg.test(value);
     },
+    inputPlaceholder: "新建文件夹",
     inputErrorMessage: "非法的文件夹名称"
   })
     .then(({ value }) => {
-      addFileDir(value);
+
+      if (value == "" || value == null){
+        proxy.$modal.msgWarning("请填写文件夹名称")
+      }
+
+      else {
+        addFileDir(value);
+      }
 
       // ElMessage({
       //   type: 'success',
@@ -385,5 +398,11 @@ $padding-horizontal: 20px;
   //justify-content: right !important;
   //float: right !important;
   padding: 0 !important;
+}
+
+.newFolderClass{
+  //position: absolute !important;
+  //margin-top: 15vh !important;
+  //background-color: #1ab394 !important;
 }
 </style>

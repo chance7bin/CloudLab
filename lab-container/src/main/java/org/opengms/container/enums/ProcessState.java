@@ -21,6 +21,9 @@ public enum ProcessState {
     ON_POST_MESSAGE_INFO("onPostMessageInfo"),
     ON_LEAVE_STATE("onLeaveState"),
     ON_FINALIZE("onFinalize"),
+    KILL("kill"),
+    SOCKET_CLOSE("socketClose"),
+    RUN_SCRIPT("runScript"),
     ;
 
     public String getState() {

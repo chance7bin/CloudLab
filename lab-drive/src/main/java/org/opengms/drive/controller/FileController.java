@@ -195,7 +195,7 @@ public class FileController {
      * @param response 响应
      */
     @GetMapping(value = "/download/{id}")
-    public void viewFilesImage(@PathVariable Long id, @RequestParam(required = false) Boolean isSource, HttpServletRequest request, HttpServletResponse response) {
+    public void download(@PathVariable Long id, @RequestParam(required = false) Boolean isSource, HttpServletRequest request, HttpServletResponse response) {
         OutputStream outputStream = null;
         InputStream inputStream = null;
         try {
@@ -223,6 +223,18 @@ public class FileController {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * 获取文件信息
+     * @param id 文件id
+     * @return {@link ApiResponse} 
+     * @author 7bin
+     **/
+    @GetMapping(value = "/info/{id}")
+    public ApiResponse getFileInfo(@PathVariable Long id){
+        FileInfo fileDetails = fileService.getFileDetails(id);
+        return fileDetails == null ? ApiResponse.error() : ApiResponse.success(fileDetails);
     }
 
 }

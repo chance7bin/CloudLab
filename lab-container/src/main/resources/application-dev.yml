@@ -1,11 +1,13 @@
 container:
   profile: E:/opengms-lab/uploadPath
   # 资源存放路径
-  repository:
-    workspace: E:/opengms-lab/container
+  repository: E:/opengms-lab/container
 
 #日志配置
 logging:
   config: classpath:log4j2-config.xml
   file:
     path: E:/opengms-lab/container/log
+
+
+labDriveUrl: localhost:8809/drive

@@ -25,4 +25,8 @@ public class AppConfig
 
     /** 上传路径 */
     private static String profile;
+
+    /** 资源存储路径 */
+    private String repository;
+
 }

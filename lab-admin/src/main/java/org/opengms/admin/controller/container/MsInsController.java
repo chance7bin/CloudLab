@@ -1,6 +1,7 @@
 package org.opengms.admin.controller.container;
 
 import org.opengms.admin.clients.ContainerClient;
+import org.opengms.admin.controller.common.BaseController;
 import org.opengms.admin.entity.dto.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,29 +10,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * docker容器控制层
+ * 模型运行实例控制层
  *
- * @author bin
- * @date 2022/09/20
+ * @author 7bin
+ * @date 2022/12/05
  */
 @RestController
-@RequestMapping("/container/container")
-public class ContainerController{
+@RequestMapping("/container/instance")
+public class MsInsController extends BaseController {
 
     @Autowired
     ContainerClient containerClient;
 
-    // @Anonymous
-    @GetMapping(value = "/list/image")
-    public ApiResponse listImages() {
-        return containerClient.listImages();
+    @GetMapping(value = "/{msriId}")
+    public ApiResponse getMsInsById(@PathVariable("msriId") String msriId){
+        ApiResponse ins = containerClient.getMsInsById(msriId);
+        return ins;
     }
-
-    // @Anonymous
-    @GetMapping(value = "/list/container")
-    public ApiResponse listContainers() {
-        return containerClient.listContainers();
-    }
-
 
 }

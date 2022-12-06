@@ -1,16 +1,22 @@
 package org.opengms.container.service.impl;
 
+import cn.hutool.core.io.FileUtil;
 import com.github.dockerjava.api.exception.InternalServerErrorException;
+import org.opengms.common.utils.file.FileUtils;
 import org.opengms.common.utils.ip.IpUtils;
 import org.opengms.common.utils.uuid.SnowFlake;
 import org.opengms.common.utils.uuid.UUID;
+import org.opengms.container.constant.ContainerConstants;
 import org.opengms.container.entity.bo.docker.LaunchParams;
+import org.opengms.container.entity.dto.docker.JupyterInfoDTO;
+import org.opengms.container.entity.dto.workspace.TreeDTO;
 import org.opengms.container.entity.po.docker.JupyterContainer;
 import org.opengms.container.exception.ServiceException;
 import org.opengms.container.mapper.DockerOperMapper;
 import org.opengms.container.service.IDockerService;
 import org.opengms.container.service.IJupyterService;
 import org.opengms.container.service.IWorkspaceService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -38,44 +44,48 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
     DockerOperMapper dockerOperMapper;
 
 
-    @Value(value = "${container.repository.workspace}")
-    private String workspace;
+    @Value(value = "${container.repository}")
+    private String repository;
 
-    private static final String INNER_CONFIG_PATH = "/jupyter_lab_config.py";
-    private static final String INNER_WORKSPACE_DIR = "/opt/notebooks";
     private static final int JUPYTER_CONTAINER_EXPORT_PORT = 8888;
     private static final int[] HOST_BIND_PORT_LIMIT = {7001, 8000};
 
 
     @Override
-    public boolean initWorkspace(String username, String imageName) {
+    public boolean initWorkspace(String username, String imageName, String containerName) {
 
-        // 工作空间的用户文件存放在 lab.repository.container 目录的workspace文件夹下
-        // 工作空间的jupyter配置文件存放在 lab.repository.container 目录的config文件夹下
-        String configDir = workspace + "/config";
-        String workspaceDir = workspace + "/workspace";
 
         //初始化jupyter实例
         JupyterContainer jupyterContainer = new JupyterContainer();
         jupyterContainer.setContainerId(SnowFlake.nextId());
         // jupyterContainer.setImageName("jupyter_cus:5.0");
         jupyterContainer.setImageName(imageName);
-        jupyterContainer.setContainerName(jupyterContainer.getImageName().replaceAll(":","_") + "_" + jupyterContainer.getContainerId());
+        // jupyterContainer.setContainerName(jupyterContainer.getImageName().replaceAll(":","_") + "_" + jupyterContainer.getContainerId());
+        jupyterContainer.setContainerName(containerName);
         jupyterContainer.setContainerExportPort(JUPYTER_CONTAINER_EXPORT_PORT);
 
         // 创建者为该登录用户
         jupyterContainer.setCreateBy(username);
 
 
+        // 工作空间的jupyter配置文件存放在 container.repository 目录的pod/{containerId}/config文件夹下
+        String configDir = "/pod/" + jupyterContainer.getContainerId() + "/config";
+        // 工作空间的用户文件存放在 container.repository 目录的pod/{containerId}/data文件夹下
+        String workspaceDir = "/pod/" + jupyterContainer.getContainerId() + "/data";
+        // 该工作空间所在的容器创建的模型服务都在 container.repository 目录的 pod/{containerId}/service 下
+        String serviceDir = "/pod/" + jupyterContainer.getContainerId() + "/service";
+
         // 生成jupyter的配置文件
         String jupyterToken = UUID.fastUUID().toString();
         jupyterContainer.setJupyterToken(jupyterToken);
-        String configPath = jupyterService.generateJupyterConfig(configDir, jupyterContainer.getContainerId().toString(), jupyterToken);
+        String configPath = jupyterService.generateJupyterConfig(repository + configDir, jupyterContainer.getContainerId().toString(), jupyterToken);
         if (configPath == null){
             return false;
+        } else {
+            configPath = (configPath.split(repository))[1];
         }
         // 生成工作空间
-        String workspacePath = workspaceDir + File.separator + jupyterContainer.getContainerName();
+        String workspacePath = workspaceDir;
 
         //设置绑定的主机端口
         // jupyterContainer.setHostBindPort(8826);
@@ -87,13 +97,18 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
         }
 
         // 解决 "Invalid volume specification" 问题，需将路径改成 /e/...
-        jupyterContainer.setConfigVolume(formatPathSupportDocker(configPath + ":" + INNER_CONFIG_PATH));
-        jupyterContainer.setWorkspaceVolume(formatPathSupportDocker(workspacePath + ":" + INNER_WORKSPACE_DIR));
+        // jupyterContainer.setConfigVolume(formatPathSupportDocker(configPath + ":" + INNER_CONFIG_PATH));
+        // jupyterContainer.setWorkspaceVolume(formatPathSupportDocker(workspacePath + ":" + INNER_WORKSPACE_DIR));
+        // jupyterContainer.setServiceVolume(formatPathSupportDocker(serviceDir + ":" + INNER_SERVICE_DIR));
+        jupyterContainer.setConfigVolume(configPath + ":" + ContainerConstants.INNER_CONFIG_PATH);
+        jupyterContainer.setWorkspaceVolume(workspacePath + ":" + ContainerConstants.INNER_WORKSPACE_DIR);
+        jupyterContainer.setServiceVolume(serviceDir + ":" + ContainerConstants.INNER_SERVICE_DIR);
 
 
         List<String> volumeList = jupyterContainer.getVolumeList();
         volumeList.add(jupyterContainer.getConfigVolume());
         volumeList.add(jupyterContainer.getWorkspaceVolume());
+        volumeList.add(jupyterContainer.getServiceVolume());
 
         //对创建容器抛出的异常做处理
         try {
@@ -143,24 +158,7 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
     }
 
 
-    /**
-     * 将数据卷目录修改成适合docker的格式 [ /e/... ]
-     * @param path
-     * @return java.lang.String
-     * @Author bin
-     **/
-    private String formatPathSupportDocker(String path){
-        // E:\opengms-lab\container\workspace\test:/opt/notebooks
-        // String path = "E:\\opengms-lab\\container\\workspace\\test:/opt/notebooks";
-        path = path.replaceAll("\\\\","/");
-        int index = path.indexOf(":");
-        String outputPath = path;
-        if (index == 1){
-            // 只有 E: 这种形式的才要进行处理
-            outputPath = "/" + Character.toString(path.charAt(0)).toLowerCase() + path.substring(index + 1);
-        }
-        return outputPath;
-    }
+
 
 
     /**
@@ -182,5 +180,48 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
 
     }
 
+
+    @Override
+    public List<TreeDTO> getFileInfoByPathContainChildren(String path){
+        return getFileInfoByPathContainChildren(path, path);
+    }
+
+    public List<TreeDTO> getFileInfoByPathContainChildren(String path, String rootPath){
+        if (rootPath == null){
+            rootPath = path;
+        }
+
+        List<File> files = FileUtils.ls(path);
+        List<TreeDTO> fileDTOList = new ArrayList<>();
+        for (File file : files) {
+            TreeDTO fileDTO = new TreeDTO();
+            fileDTO.setLabel(file.getName());
+            fileDTO.setRelativePath(FileUtils.getFileRelativePath(file,rootPath));
+            // fileDTO.setDirectory(file.isDirectory());
+            if (!file.isDirectory()){
+                // fileDTO.setFileType(FileTypeUtils.getFileType(file));
+                // fileDTO.setFileSize(FileUtils.calcSize(FileUtil.size(file)));
+            } else {
+                fileDTO.setChildren(getFileInfoByPathContainChildren(FileUtil.getCanonicalPath(file), rootPath));
+            }
+            fileDTOList.add(fileDTO);
+
+        }
+        return fileDTOList;
+    }
+
+
+
+    @Override
+    public JupyterInfoDTO getJupyterContainerById(Long id) {
+
+        JupyterContainer jc = dockerOperMapper.getContainerInfoById(id);
+        JupyterInfoDTO jupyterInfoDTO = new JupyterInfoDTO();
+        if (jc != null){
+            BeanUtils.copyProperties(jc, jupyterInfoDTO);
+        }
+        return jupyterInfoDTO;
+
+    }
 
 }

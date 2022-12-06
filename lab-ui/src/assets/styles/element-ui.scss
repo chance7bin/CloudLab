@@ -94,3 +94,15 @@
 .el-dropdown .el-dropdown-link{
   color: var(--el-color-primary) !important;
 }
+
+.el-message-box{
+  //position: relative;
+  //margin-top: 15vh
+  //top: 15vh;
+  //bottom: 15vh;
+  position: absolute;
+  top: 15vh;
+  left: 0;
+  right: 0;
+  margin: auto;
+}

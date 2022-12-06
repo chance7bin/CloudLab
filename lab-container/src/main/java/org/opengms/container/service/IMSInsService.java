@@ -1,6 +1,6 @@
 package org.opengms.container.service;
 
-import org.opengms.container.entity.bo.MsrIns;
+import org.opengms.container.entity.po.MsrIns;
 import org.opengms.container.entity.socket.Client;
 import org.opengms.container.enums.ProcessState;
 
@@ -22,11 +22,15 @@ public interface IMSInsService {
 
     void stateSelector(SocketChannel channel);
 
-    void kill(String msg);
+    // void kill(String msg);
 
-    void kill(SocketChannel channel, String msg);
+    void kill(SocketChannel channel, String msg, ProcessState processState);
 
-    void kill(String msg, ProcessState state);
+    void kill(SocketChannel channel, String msg, ProcessState processState, String state, String event);
+
+    void kill(String msg, ProcessState processState, String state, String event);
+
+    void kill(String msg, ProcessState processState);
 
     Map<String, Client> getClients();
 
@@ -39,6 +43,12 @@ public interface IMSInsService {
     MsrIns getCurrentMsrIns(String msInsId);
 
     void removeSocketChannel(SocketChannel clientChannel);
+
+    MsrIns getMsrInsById(String msInsId);
+
+    MsrIns getMsrInsFromMsrInsColl(String msriId);
+
+    void removeChannelAndMsrInsColl(SocketChannel channel);
 
     // void initialize(String id);
     //

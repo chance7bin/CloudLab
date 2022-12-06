@@ -42,9 +42,7 @@ public class ModelServiceController extends BaseController {
     @PostMapping(value = "/invoke")
     public ApiResponse invoke(@RequestBody ModelService modelService){
 
-        msService.invoke(modelService);
-
-        return ApiResponse.success();
+        return ApiResponse.success("调用成功", msService.invoke(modelService));
     }
 
 }

@@ -19,22 +19,24 @@ public interface ContainerClient {
     String CONTAINER_MODULE = "/container";
     String WORKSPACE_MODULE = "/workspace";
     String MODEL_SERVICE_MODULE = "/service";
+    String INSTANCE_MODULE = "/instance";
 
     @GetMapping(value = CONTAINER_MODULE + "/list/image")
-    public ApiResponse listImages();
+    ApiResponse listImages();
 
     @GetMapping(value = CONTAINER_MODULE + "/list/container")
     ApiResponse listContainers();
 
 
-    @GetMapping(value = CONTAINER_MODULE + "/jupyter/item/{id}")
+    @GetMapping(value = WORKSPACE_MODULE + "/jupyter/item/{id}")
     ApiResponse getJupyterContainerById(@PathVariable("id")Long id);
 
 
-
-    @GetMapping(WORKSPACE_MODULE + "/initialization/{username}/{imageName}")
-    ApiResponse initWorkspace(@PathVariable("username") String username,
-        @PathVariable("imageName") String imageName);
+    @GetMapping(WORKSPACE_MODULE + "/initialization/{username}/{imageName}/{containerName}")
+    ApiResponse initWorkspace(
+        @PathVariable("username") String username,
+        @PathVariable("imageName") String imageName,
+        @PathVariable("containerName") String containerName);
 
 
     @PostMapping(value = MODEL_SERVICE_MODULE + "")
@@ -49,4 +51,12 @@ public interface ContainerClient {
 
     @PostMapping(value = MODEL_SERVICE_MODULE + "/invoke")
     ApiResponse invoke(@RequestBody ModelService modelService);
+
+    @GetMapping(value = WORKSPACE_MODULE + "/dir/{containerId}")
+    ApiResponse listWorkspaceDirByContainerId(@PathVariable(value = "containerId") String containerId);
+
+
+    @GetMapping(value = INSTANCE_MODULE + "/{msriId}")
+    ApiResponse getMsInsById(@PathVariable("msriId") String msriId);
+
 }

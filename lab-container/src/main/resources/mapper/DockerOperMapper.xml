@@ -13,8 +13,9 @@
         <result property="hostBindPort"        column="host_bind_port"    />
         <result property="jupyterToken"        column="jupyter_token"/>
         <result property="workspaceVolume"     column="workspace_volume"    />
+        <result property="serviceVolume"       column="service_volume"    />
         <result property="configVolume"        column="config_volume"/>
-        <result property="volumeList"          column="volume_list"  typeHandler="org.opengms.container.handler.ListTypeHandler"/>
+        <!--<result property="volumeList"          column="volume_list"  typeHandler="org.opengms.container.handler.ListTypeHandler"/>-->
         <result property="createBy"            column="create_by"      />
         <result property="createTime"          column="create_time"    />
         <result property="updateBy"            column="update_by"      />
@@ -33,8 +34,9 @@
         <if test="hostBindPort != null">host_bind_port,</if>
         <if test="jupyterToken != null and jupyterToken != ''">jupyter_token,</if>
         <if test="workspaceVolume != null and workspaceVolume != ''">workspace_volume,</if>
+        <if test="serviceVolume != null and serviceVolume != ''">service_volume,</if>
         <if test="configVolume != null and configVolume != ''">config_volume,</if>
-        <if test="volumeList != null and volumeList.size != 0">volume_list,</if>
+        <!--<if test="volumeList != null and volumeList.size != 0">volume_list,</if>-->
         <if test="createBy != null and createBy != ''">create_by,</if>
         <if test="remark != null and remark != ''">remark,</if>
         create_time
@@ -47,8 +49,9 @@
         <if test="hostBindPort != null">#{hostBindPort},</if>
         <if test="jupyterToken != null and jupyterToken != ''">#{jupyterToken},</if>
         <if test="workspaceVolume != null and workspaceVolume != ''">#{workspaceVolume},</if>
+        <if test="serviceVolume != null and serviceVolume != ''">#{serviceVolume},</if>
         <if test="configVolume != null and configVolume != ''">#{configVolume},</if>
-        <if test="volumeList != null and volumeList.size != 0">#{volumeList,typeHandler=org.opengms.container.handler.ListTypeHandler},</if>
+        <!--<if test="volumeList != null and volumeList.size != 0">#{volumeList,typeHandler=org.opengms.container.handler.ListTypeHandler},</if>-->
         <if test="createBy != null and createBy != ''">#{createBy},</if>
         <if test="remark != null and remark != ''">#{remark},</if>
         sysdate()

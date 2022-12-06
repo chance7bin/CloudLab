@@ -72,6 +72,7 @@
     <el-dialog class="config-dialog" v-model="configDialogVisible" width="20%" title="选择文件" draggable>
       <file-select-modal
         :container-name="deployPackage.containerName"
+        :container-id="deployPackage.containerId"
         @selectedItem="fillInputValue"
       ></file-select-modal>
       <template #footer>
@@ -209,8 +210,26 @@ const configForm = reactive({
   encapsulationFile: "",
   encapsulationFilePath: ""
 });
+
+// 服务名称校验器
+const nameValidator = (rule: any, value: any, callback: any) => {
+  if (value === '') {
+    callback(new Error('请输入服务名称'))
+  }
+  else {
+    let reg = new RegExp('[\\\\/:*?"<>|]');
+    let validate = !reg.test(value);
+    if (validate){
+      callback();
+    } else {
+      callback("服务名称不能包含非法字符")
+    }
+    return !reg.test(value);
+  }
+}
+
 const rules = reactive<FormRules>({
-  serviceName: [{ required: true, message: "请输入服务名称", trigger: "change" }],
+  serviceName: [{ required: true, validator: nameValidator, trigger: "change" }],
   mdlFile: [{ required: true, message: "请选择mdl文件", trigger: "change" }],
   encapsulationFile: [{ required: true, message: "请选择封装脚本", trigger: "change" }]
 });
@@ -261,6 +280,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
     } else {
       proxy.$modal.alertError("服务配置未填写完整");
       // console.log('error submit!', fields)
+      return false;
     }
     // return valid;
   });
@@ -301,8 +321,8 @@ const createService = async () => {
                 message: '服务发布成功！',
               })
 
+              router.push({path: "/lab/serviceList"});
             });
-            router.push({path: "/lab/serviceList"});
         })
         .catch(() => {
           ElMessage({

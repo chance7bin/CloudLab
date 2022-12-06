@@ -27,9 +27,43 @@ listImages().then((res) => {
   // console.log("images:", images.value);
 });
 
+
 function init(row) {
   let imageName = row.repoTags;
 
+  ElMessageBox.prompt("", "新建空间", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    inputValidator: (value) => {
+      let reg = new RegExp('[\\\\/:*?"<>|]');
+      return !reg.test(value);
+    },
+    inputPlaceholder: "工作空间名称",
+    inputErrorMessage: "非法的工作空间名称",
+
+  })
+    .then(({ value }) => {
+
+      if (value == "" || value == null){
+         proxy.$modal.msgWarning("请填写工作空间名称")
+      }
+
+      else {
+        createWorkspace(imageName ,value);
+      }
+
+    })
+    .catch(() => {
+      // ElMessage({
+      //   type: 'info',
+      //   message: 'Input canceled',
+      // })
+    });
+
+}
+
+
+const createWorkspace = (imageName: string, containerName: string) => {
   ElMessageBox({
     title: "系统提示",
     message: "是否初始化工作空间",
@@ -43,7 +77,7 @@ function init(row) {
         instance.confirmButtonText = "初始化中...";
 
         // 初始化工作空间
-        initWorkspace(imageName)
+        initWorkspace(imageName, containerName)
           .then((res) => {
             proxy.$modal.msgSuccess("初始化工作空间成功");
             done();
@@ -78,6 +112,7 @@ function init(row) {
       proxy.$modal.msg("未进行操作");
     }); */
 }
+
 </script>
 
 <style scoped lang="scss"></style>

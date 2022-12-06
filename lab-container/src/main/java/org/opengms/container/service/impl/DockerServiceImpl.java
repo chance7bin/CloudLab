@@ -40,6 +40,9 @@ public class DockerServiceImpl implements IDockerService {
     @Autowired
     DockerOperMapper dockerOperMapper;
 
+    @Value(value = "${container.repository}")
+    private String repository;
+
     @Value("${socket.port}")
     private int socketPort;
 
@@ -109,17 +112,6 @@ public class DockerServiceImpl implements IDockerService {
 
     }
 
-    @Override
-    public JupyterInfoDTO getJupyterContainerById(Long id) {
-
-        JupyterContainer jc = dockerOperMapper.getContainerInfoById(id);
-        JupyterInfoDTO jupyterInfoDTO = new JupyterInfoDTO();
-        if (jc != null){
-            BeanUtils.copyProperties(jc, jupyterInfoDTO);
-        }
-        return jupyterInfoDTO;
-
-    }
 
     @Override
     public void execCommand() {
@@ -133,6 +125,7 @@ public class DockerServiceImpl implements IDockerService {
         //数据卷 Bind.parse
         List<Bind> binds = new ArrayList<>();
         for (String volume : containerInfo.getVolumeList()) {
+            volume = formatPathSupportDocker(repository + volume);
             binds.add(Bind.parse(volume));
         }
 
@@ -164,6 +157,23 @@ public class DockerServiceImpl implements IDockerService {
     }
 
 
-
+    /**
+     * 将数据卷目录修改成适合docker的格式 [ /e/... ]
+     * @param path
+     * @return java.lang.String
+     * @Author bin
+     **/
+    private String formatPathSupportDocker(String path){
+        // E:\opengms-lab\container\workspace\test:/opt/notebooks
+        // String path = "E:\\opengms-lab\\container\\workspace\\test:/opt/notebooks";
+        path = path.replaceAll("\\\\","/");
+        int index = path.indexOf(":");
+        String outputPath = path;
+        if (index == 1){
+            // 只有 E: 这种形式的才要进行处理
+            outputPath = "/" + Character.toString(path.charAt(0)).toLowerCase() + path.substring(index + 1);
+        }
+        return outputPath;
+    }
 
 }

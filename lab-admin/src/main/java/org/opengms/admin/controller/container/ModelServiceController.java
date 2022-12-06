@@ -1,6 +1,7 @@
 package org.opengms.admin.controller.container;
 
 import org.opengms.admin.clients.ContainerClient;
+import org.opengms.admin.controller.common.BaseController;
 import org.opengms.admin.entity.dto.ApiResponse;
 import org.opengms.admin.entity.dto.container.ModelService;
 import org.opengms.admin.entity.dto.container.ModelServiceDTO;
@@ -13,13 +14,14 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/container/service")
-public class ModelServiceController {
+public class ModelServiceController extends BaseController {
 
     @Autowired
     ContainerClient containerClient;
 
     @PostMapping(value = "")
     public ApiResponse insert(@RequestBody ModelServiceDTO modelServiceDTO){
+        modelServiceDTO.setCreateBy(getUsername());
         return containerClient.insertModelService(modelServiceDTO);
     }
 

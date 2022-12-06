@@ -1,7 +1,13 @@
 package org.opengms.container.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.opengms.container.entity.bo.MsrIns;
+import org.opengms.common.utils.DateUtils;
+import org.opengms.container.constant.TaskStatus;
+import org.opengms.container.entity.bo.Log;
+import org.opengms.container.entity.po.MsrIns;
+import org.opengms.container.enums.ProcessState;
+import org.opengms.container.enums.ProcessStatus;
+import org.opengms.container.mapper.MsrInsMapper;
 import org.opengms.container.service.IMSCAsyncService;
 import org.opengms.container.service.IMSInsService;
 import org.opengms.common.utils.TerminalUtils;
@@ -10,6 +16,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Date;
 
 /**
  * @author 7bin
@@ -22,6 +29,9 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
     @Autowired
     IMSInsService msInsService;
 
+    @Autowired
+    MsrInsMapper msrInsMapper;
+
     /**
      * 调用终端执行封装脚本
      *
@@ -33,7 +43,10 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
     @Async
     public void exec(String[] cmdArr) {
 
-        String msInsId = cmdArr[cmdArr.length - 1];
+        String encapsulationCMD = cmdArr[cmdArr.length - 1];
+        String[] encap = encapsulationCMD.split(" ");
+        String msrid = encap[encap.length - 1];
+        MsrIns ins = msInsService.getMsrInsFromMsrInsColl(msrid);
 
         long start = System.currentTimeMillis();
         // String exe = "python";
@@ -63,21 +76,52 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
             if (exitVal == 0) {
                 log.info("Exec done, cost: " + ((end - start) / 1000) + "s");
                 log.info("[程序正常退出] " + response);
-                // System.out.println(response);
-                // currentMsrIns.getLogs().add(new Log("程序执行完成, 用时: " + ((end - start) / 1000) + "s"));
             } else if (exitVal == -1) {
-                log.error("[程序自定义错误] " + response);
-                // currentMsrIns.getLogs().add(new Log("程序自定义错误: " + response));
+                String msg = "[程序自定义错误] " + response;
+                log.error(msg);
+                execError(ins, msg);
             } else {
-                log.error("[程序内部错误] " + error);
-                // currentMsrIns.getLogs().add(new Log("程序内部错误: " + error));
+                String msg = "[程序内部错误] " + error;
+                log.error(msg);
+                execError(ins, msg);
             }
         } catch (Exception e) {
-            log.error("[执行终端命令出错] " + e.getMessage());
+            String msg = "[执行终端命令出错] " + e.getMessage();
+            log.error(msg);
+            execError(ins, msg);
             // if (currentMsrIns != null){
                 // currentMsrIns.getLogs().add(new Log("执行终端命令出错: " + e.getMessage()));
             // }
         }
+
+    }
+
+    /**
+     * 脚本执行出错的话调用统一方法给模型实例添加日志
+     * @param ins 模型实例
+     * @param msg 错误信息
+     * @author 7bin
+     **/
+    private void execError(MsrIns ins, String msg){
+        ins.setStatus(TaskStatus.ERROR);
+
+        ins.getLogs().add(new Log(
+            ProcessState.RUN_SCRIPT,
+            null, null,
+            ProcessStatus.ERROR,
+            msg,
+            new Date()
+        ));
+
+        if (ins.getStartTime() == null){
+            ins.setSpanTime(0);
+        } else {
+            int second = DateUtils.differentSecondsByMillisecond(new Date(), ins.getStartTime());
+            ins.setSpanTime(second);
+        }
+        msrInsMapper.updateMsrIns(ins);
+
+        msInsService.removeChannelAndMsrInsColl(ins.getSocketChannel());
 
     }
 }

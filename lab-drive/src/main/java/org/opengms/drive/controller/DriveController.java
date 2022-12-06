@@ -55,22 +55,5 @@ public class DriveController {
         return ApiResponse.success(fileDTOList);
     }
 
-    @ApiImplicitParams({
-        @ApiImplicitParam(paramType = "path", dataType = "string", dataTypeClass = String.class,name = "containerName", value = "", required = true)
-    })
-    @ApiOperation(value = "", notes = "", httpMethod = "GET")
-    @GetMapping(value = "/workspace/{containerName}")
-    public ApiResponse listWorkspaceDirByContainerName(
-        @PathVariable(value = "containerName") String containerName) {
-
-        String workspaceDir = workspace + "/workspace/" + containerName;
-
-        List<TreeDTO> fileList = driveService.getFileInfoByPathContainChildren(workspaceDir);
-
-        return ApiResponse.success(fileList);
-    }
-
-
-
 
 }

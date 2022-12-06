@@ -1,21 +1,29 @@
 package org.opengms.container.service.impl;
 
+import cn.hutool.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.opengms.common.utils.uuid.UUID;
+import org.opengms.container.clients.DriveClient;
+import org.opengms.container.constant.ContainerConstants;
 import org.opengms.container.entity.bo.mdl.*;
+import org.opengms.container.entity.dto.ApiResponse;
 import org.opengms.container.entity.po.ModelService;
 import org.opengms.container.enums.DataMIME;
 import org.opengms.container.enums.MDLStructure;
+import org.opengms.container.exception.ServiceException;
 import org.opengms.container.service.IMdlService;
 import org.opengms.common.utils.ReflectUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -26,8 +34,14 @@ import java.util.List;
 @Slf4j
 public class MdlServiceImpl implements IMdlService {
 
-    @Value(value = "${container.repository.workspace}")
-    private String workspace;
+    @Value(value = "${labDriveUrl}")
+    String labDriveUrl;
+
+    @Autowired
+    DriveClient driveClient;
+
+    @Value(value = "${container.repository}")
+    private String repository;
 
     @Override
     public ModelClass parseMdlFile(String mdlFilePath) throws Exception {
@@ -99,7 +113,7 @@ public class MdlServiceImpl implements IMdlService {
     }
 
     @Override
-    public String getParameter(ModelService modelService, String state, String event) {
+    public String getParameter(ModelService modelService, String state, String event, String insDir) {
 
         ModelClass modelClass = modelService.getModelClass();
 
@@ -113,9 +127,9 @@ public class MdlServiceImpl implements IMdlService {
                 for (Event eve : events) {
                     if (event.equals(eve.getName())){
                         if (eve.getInputParameter() != null){
-                            parameter = getValueByParamProp(eve.getInputParameter(), modelService.getRelativeDir());
+                            parameter = getValueByParamProp(eve.getInputParameter(), modelService, insDir);
                         } else if (eve.getOutputParameter() != null){
-                            parameter = getValueByParamProp(eve.getOutputParameter(), modelService.getRelativeDir());
+                            parameter = getValueByParamProp(eve.getOutputParameter(), modelService, insDir);
                         }
                         return parameter;
                     }
@@ -128,7 +142,7 @@ public class MdlServiceImpl implements IMdlService {
     }
 
     // 根据Parameter的属性获取输入输出的值
-    private String getValueByParamProp(Parameter parameter, String relativeDir){
+    private String getValueByParamProp(Parameter parameter, ModelService ms, String insDir){
         String param = null;
         String dataMIME = parameter.getDataMIME();
         DataMIME mime = DataMIME.getDataMIMEByValue(dataMIME);
@@ -147,9 +161,19 @@ public class MdlServiceImpl implements IMdlService {
                 // param = parameter.getFilePath();
                 // param = parameter.getValue();
                 // param = workspace + relativeDir + parameter.getValue();
+                // String[] split = value.split("/");
+                // param = split[split.length - 1];
+
+                // 该工作空间所在的容器创建的模型服务都在 container.repository 目录的 pod/{containerId}/service 下
+                String hostDir = "/pod/" + ms.getContainerId() + "/service";
+                hostDir = repository + hostDir + insDir;
+
                 String value = parameter.getValue();
-                String[] split = value.split("/");
-                param = split[split.length - 1];
+                String url = labDriveUrl + "/file/download/" + value;
+                // destDir是宿主机目录
+                String filename = downloadFile(url, hostDir);
+
+                param = ContainerConstants.INNER_SERVICE_DIR + insDir + "/" + filename;
                 break;
             }
             case UNKNOWN:{
@@ -163,5 +187,30 @@ public class MdlServiceImpl implements IMdlService {
         }
 
         return param;
+    }
+
+
+    /**
+     * 根据url地址下载数据到本地然后返回文件路径
+     *
+     * @param url 下载链接
+     * @param destDir 目标文件夹
+     * @return {@link String} 下载的文件名
+     * @author 7bin
+     **/
+    private String downloadFile(String url, String destDir){
+        // String url = labDriveUrl + "/file/download/" + 8286661556551323648L;
+        String[] split = url.split("/");
+        Long fileId = Long.valueOf(split[split.length - 1]);
+        ApiResponse fileInfo = driveClient.getFileInfo(fileId);
+        if (!ApiResponse.reqSuccess(fileInfo)){
+            throw new ServiceException("指定文件下载失败, [url: " + url + "]");
+            // return null;
+        }
+        HashMap<String, Object> responseData = ApiResponse.getResponseData(fileInfo);
+        String suffix = (String)responseData.get("suffix");
+        String filename = "gd_" + UUID.fastUUID() + "." + suffix;
+        HttpUtil.downloadFile(url, new File(destDir + "/" + filename));
+        return filename;
     }
 }

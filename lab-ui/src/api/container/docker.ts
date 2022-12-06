@@ -18,9 +18,3 @@ export function listContainers() {
   });
 }
 
-export function getJupyterContainerById(id: string) {
-  return request({
-    url: contextPath + "/container/jupyter/item/" + id,
-    method: "get"
-  });
-}

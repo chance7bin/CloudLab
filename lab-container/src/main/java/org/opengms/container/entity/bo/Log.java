@@ -19,7 +19,7 @@ import java.util.Date;
 @Data
 public class Log {
 
-    ProcessState Type;
+    ProcessState type;
 
     String state;
 
@@ -32,6 +32,12 @@ public class Log {
     Date createTime;
 
     public Log(String message) {
+        this.message = message;
+    }
+
+
+    public Log(ProcessStatus status, String message) {
+        this.status = status;
         this.message = message;
     }
 }

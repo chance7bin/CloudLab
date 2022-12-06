@@ -34,16 +34,5 @@ public class ContainerController extends BaseController {
         return ApiResponse.success(dockerService.listContainers());
     }
 
-    /**
-     * 根据containerId获取容器信息
-     * @param id
-     * @return org.opengms.admin.entity.dto.ApiResponse
-     * @author bin
-     **/
-    @GetMapping(value = "/jupyter/item/{id}")
-    public ApiResponse getJupyterContainerById(@PathVariable("id")Long id) {
-        return ApiResponse.success(dockerService.getJupyterContainerById(id));
-    }
-
 
 }

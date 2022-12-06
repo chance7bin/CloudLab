@@ -49,22 +49,55 @@
 
                 </el-collapse-item>
               </el-collapse>
+
+              <!--输出结果-->
+              <div>
+                <el-alert style="margin-bottom: 10px"  title="输出结果" type="success" :closable="false"/>
+                
+              </div>
+
             </el-form>
           </div>
         </div>
 
-        <el-button style="margin-top: 20px; float: right" type="primary" round plain @click="invoke">运行</el-button>
+        <el-button style="margin-top: 20px; float: right" type="primary" round plain @click="invoke" :disabled="forbidInvoke">运行</el-button>
+
+        <!--模型运行结果部分-->
+        <div style="margin-top: 40px;" v-if="showProcess">
+          <h3>模型运行日志</h3>
+          <!--<el-progress :percentage="30" :indeterminate="true" :duration="2" status="success"/>-->
+          <!--日志信息-->
+          <div v-if="logs.length != 0" >
+            <ul>
+              <li
+                v-for='(log, index) in logs'
+                :style="logColor(log)"
+                style="white-space: pre-wrap;"
+              >
+                {{ log.type }}
+                {{ log.state != null ? ' -- ' + log.state : '' }}
+                {{ log.event != null ? ' -- ' + log.event : '' }}
+                {{ log.message != null ? ' -- ' + log.message : '' }}
+              </li>
+            </ul>
+          </div>
+          <p v-if="showResult">用时：{{insInfo['spanTime']}} 秒</p>
+        </div>
 
       </template>
     </el-skeleton>
     <el-empty v-else :image-size="200" description="糟糕 X﹏X ... 模型服务不见了 (；′⌒`)" />
 
 
-    <el-dialog class="config-dialog" v-model="fileDialogVisible" width="20%" title="选择文件" draggable>
-      <file-select-modal
-        :container-name="containerName"
+    <el-dialog class="config-dialog" v-model="fileDialogVisible" width="70%" title="选择文件" draggable>
+      <!--<file-select-modal-->
+      <!--  :container-name="containerName"-->
+      <!--  :container-id="containerId"-->
+      <!--  @selectedItem="fillInputValue"-->
+      <!--&gt;</file-select-modal>-->
+      <my-folder
         @selectedItem="fillInputValue"
-      ></file-select-modal>
+      ></my-folder>
       <template #footer>
         <div class="dialog-footer">
           <el-button type="primary" @click="confirmInputValue"> 确定 </el-button>
@@ -77,15 +110,24 @@
 
 <script setup lang="ts">
 import useCurrentInstance from "@/utils/currentInstance";
-import { getModelServiceById, invokeService } from "@/api/container/modelService";
-import { ref } from "vue";
+import { getModelServiceById, getMsInsById, invokeService } from "@/api/container/modelService";
+import { onBeforeUnmount, ref } from "vue";
 import type { FormInstance, FormRules } from "element-plus";
 import { FolderOpened } from "@element-plus/icons-vue";
-import { getJupyterContainerById } from "@/api/container/docker";
+import { getJupyterContainerById } from "@/api/container/workspace";
+
 
 const { proxy } = useCurrentInstance();
+
 const route = useRoute();
 const msId = route.query && route.query.msId;
+
+let timer;
+onBeforeUnmount(() => {
+  // 在页面销毁时，销毁定时器
+  clearInterval(timer)
+})
+
 
 const loading = ref<boolean>(true);
 const serviceExist = ref<boolean>(true);
@@ -98,6 +140,7 @@ const mdlModelClass = ref({});
 
 //参数设置
 const containerName = ref("");
+const containerId = ref("");
 const fileDialogVisible = ref(false);
 const ruleFormRef = ref<FormInstance>();
 
@@ -155,7 +198,10 @@ function initParams() {
   // console.log("params:", params);
   // console.log("rules:", rules);
 
-  getJupyterContainerById(modelService.value["containerId"]).then(res => {containerName.value = res.data["containerName"]});
+  // getJupyterContainerById(modelService.value["containerId"]).then(res => {
+  //   containerName.value = res.data["containerName"]
+  //   containerId.value = res.data["containerId"]
+  // });
 
 }
 
@@ -174,13 +220,21 @@ const fillInputValue = (data) => {
   currentSelectedItem = data;
 }
 const confirmInputValue = () => {
-  params[currentEvent] = currentSelectedItem["label"];
-  fileParamsStorage[currentEvent] = currentSelectedItem["relativePath"];
+  params[currentEvent] = currentSelectedItem["filename"];
+  fileParamsStorage[currentEvent] = currentSelectedItem["driveFileId"];
+  // fileParamsStorage[currentEvent] = currentSelectedItem["fileId"];
   fileDialogVisible.value = false;
 }
 
 
 // 运行服务
+const forbidInvoke = ref(false);
+let currentInsId = "";
+const showProcess = ref(false);
+const showResult = ref(false);
+const insInfo = ref<object>();
+const logs = ref<object[]>([]);
+
 const invoke = async () => {
   const valid = await submitForm(ruleFormRef.value);
   if (valid){
@@ -188,15 +242,47 @@ const invoke = async () => {
     //将输入数据绑定到mdl中
     copyData2Mdl();
 
-    invokeService(modelService.value);
+    invokeService(modelService.value).then((res) => {
+      proxy.$modal.notifySuccess("开始运行");
+      // forbidInvoke.value = true;
+      // console.log("invokeService: ",data["data"]);
+      showProcess.value = true;
+      showResult.value = false;
+      currentInsId = res["data"];
 
-    proxy.$modal.alert("运行");
+      // getMsInsById(currentInsId).then((data) => {
+      //   console.log("getMsInsById: ",data);
+      // });
+
+      // 运行服务后开启定时器，定时请求该任务的实例信息
+      timer = setInterval(()=>{
+        // 这里调用调用需要执行的方法
+        getMsInsById(currentInsId).then((res) => {
+          // console.log("getMsInsById: ",res);
+
+          if (res["data"] != null){
+            insInfo.value = res["data"];
+            logs.value = res["data"]["logs"];
+          }
+
+          //任务结束删除定时任务
+          if (res["data"] == null || res["data"]["status"] == "FINISHED" || res["data"]["status"] == "ERROR"){
+            clearInterval(timer)
+            showResult.value = true;
+          }
+        });
+      }, 1000) // 每1秒执行1次
+    });
 
 
   } else {
     proxy.$modal.alertError("服务配置未填写完整");
   }
 }
+
+// getMsInsById("8d317950-32cd-4c61-a7fd-094865f2be89").then((data) => {
+//   console.log("getMsInsById: ",data);
+// });
 
 //提交表单校验
 const submitForm = async (formEl: FormInstance | undefined) => {
@@ -224,6 +310,29 @@ const copyData2Mdl = () => {
 
 }
 
+
+//模型运行结果
+const startTaskListener = () => {
+
+}
+
+const logColor = (log) => {
+  let color = "#67c23a";
+  if (log['status'] == 'ERROR'){
+    color = "#f56c6c"
+  }
+  if (log["type"] == "ON_POST_ERROR_INFO") {
+    color = "#f56c6c"
+  }
+  if (log["type"] == "ON_POST_WARNING_INFO") {
+    color = "#e6a23c"
+  }
+  if (log["type"] == "ON_POST_MESSAGE_INFO") {
+    color = "#909399"
+  }
+
+  return "color:" + color;
+}
 
 </script>
 

@@ -1,13 +1,17 @@
 package org.opengms.container.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.opengms.container.entity.bo.MsrIns;
+import org.opengms.container.constant.TaskStatus;
+import org.opengms.container.entity.po.MsrIns;
 import org.opengms.container.entity.bo.mdl.*;
 import org.opengms.container.entity.dto.ModelServiceDTO;
 import org.opengms.container.entity.po.ModelService;
+import org.opengms.container.entity.po.docker.JupyterContainer;
 import org.opengms.container.enums.ProcessState;
 import org.opengms.container.exception.ServiceException;
+import org.opengms.container.mapper.DockerOperMapper;
 import org.opengms.container.mapper.ModelServiceMapper;
+import org.opengms.container.mapper.MsrInsMapper;
 import org.opengms.container.service.IMSCAsyncService;
 import org.opengms.container.service.IMSInsService;
 import org.opengms.container.service.IMSService;
@@ -35,8 +39,8 @@ public class MSServiceImpl implements IMSService {
 
     private final static String MSC_PORT = "6001";
 
-    @Value(value = "${container.repository.workspace}")
-    private String workspace;
+    @Value(value = "${container.repository}")
+    private String repository;
 
     @Autowired
     IMSInsService msInsService;
@@ -50,12 +54,18 @@ public class MSServiceImpl implements IMSService {
     @Autowired
     ModelServiceMapper modelServiceMapper;
 
+    @Autowired
+    DockerOperMapper dockerOperMapper;
+
+    @Autowired
+    MsrInsMapper msrInsMapper;
+
     @Override
-    public void invoke(ModelService modelService) {
+    public String invoke(ModelService modelService) {
 
 
         // String mdlPath = "E:\\Projects\\pythonProject\\ogmslab\\test\\createWordCloud.mdl";
-        String mdlPath = workspace + modelService.getRelativeDir() + modelService.getMdlFilePath();
+        String mdlPath = repository + modelService.getRelativeDir() + modelService.getMdlFilePath();
 
         String exe = "python";
         // String script = "E:/Projects/pythonProject/ogmslab/test/encapsulation.py";
@@ -69,7 +79,11 @@ public class MSServiceImpl implements IMSService {
         msrIns.setMsriId(instanceId);
         msrIns.setCurrentState(ProcessState.INIT);
         msrIns.setModelService(modelService);
+        msrIns.setMsId(modelService.getMsId());
+        msrIns.setStatus(TaskStatus.INIT);
         // msrIns.setModelClass(modelService.getModelClass());
+
+        msrInsMapper.insertMsrIns(msrIns);
 
         // 解析mdl文档
         // try {
@@ -98,7 +112,7 @@ public class MSServiceImpl implements IMSService {
         String pythonCMD = String.join(" ", cmdArr);
 
         // TODO: 2022/11/15 运行容器的路径与宿主机之间的映射
-        cmdArr = new String[] {"docker", "exec", "jupyter_cus_5.0_8268889755334766592", "/bin/bash", "-c", pythonCMD};
+        cmdArr = new String[] {"docker", "exec", "test5", "/bin/bash", "-c", pythonCMD};
         // String[] cmdArr = new String[] {exe, "-m", script, MSC_HOST, MSC_PORT, instanceId};
 
         asyncService.exec(cmdArr);
@@ -109,6 +123,8 @@ public class MSServiceImpl implements IMSService {
         //     msrInsColl.put(instanceId,msrIns);
         // }
 
+        return instanceId;
+
     }
 
     @Override
@@ -116,12 +132,13 @@ public class MSServiceImpl implements IMSService {
 
         // TODO: 2022/11/12 服务关联的文件夹暂时用containerId对应的文件夹
         // TODO: 2022/11/12 模型服务暂时不创建新的镜像，暂时先用工作空间的镜像
-        String workspaceDir = "/workspace/" + modelServiceDTO.getContainerName();
-        modelServiceDTO.setRelativeDir(workspaceDir);
+        // String workspaceDir = "/workspace/" + modelServiceDTO.getContainerName();
+        // modelServiceDTO.setRelativeDir(workspaceDir);
 
         ModelService modelService = new ModelService();
         modelService.setMsId(SnowFlake.nextId());
         BeanUtils.copyProperties(modelServiceDTO,modelService);
+        modelService.setRelativeDir(modelService.getMsName() + "_" + modelService.getMsId());
         return modelServiceMapper.insertModelService(modelService);
 
 
@@ -137,13 +154,20 @@ public class MSServiceImpl implements IMSService {
 
         //根据mdl的文件路径返回mdl对象，并更新到数据库中
         ModelService service = modelServiceMapper.getModelServiceById(msId);
+
+        Long containerId = service.getContainerId();
+        JupyterContainer container = dockerOperMapper.getContainerInfoById(containerId);
+
         if (service != null){
             if (StringUtils.isNull(service.getModelClass())){
                 // 如果没有mdl对象则解析mdl文件
 
                 try {
                     // 解析mdl文档
-                    String mdlPath = workspace + service.getRelativeDir() + service.getMdlFilePath();
+                    String workspaceVolume = container.getWorkspaceVolume();
+                    String[] split = workspaceVolume.split(":");
+                    String workspaceDir = split[0];
+                    String mdlPath = repository + workspaceDir + service.getMdlFilePath();
                     ModelClass modelClass = mdlService.parseMdlFile(mdlPath);
                     service.setModelClass(modelClass);
 

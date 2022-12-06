@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengms.container.mapper.MsrInsMapper">
+
+    <resultMap id="MsrInsResult" type="msrIns">
+        <id property="msriId" column="msri_id"/>
+        <result property="msId" column="ms_id"/>
+        <result property="currentState" column="current_state" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="instanceDir" column="instance_dir"/>
+        <result property="status" column="status"/>
+        <result property="spanTime" column="span_time"/>
+        <result property="inputs" column="inputs" typeHandler="org.opengms.container.handler.InOutHandler"/>
+        <result property="outputs" column="outputs" typeHandler="org.opengms.container.handler.InOutHandler"/>
+        <result property="logs" column="logs" typeHandler="org.opengms.container.handler.LogsHandler"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <insert id="insertMsrIns" parameterType="msrIns">
+        insert into ms_run_instance (
+        <if test="msriId != null and msriId != '' ">msri_id,</if>
+        <if test="msId != null">ms_id,</if>
+        <if test="currentState != null ">current_state,</if>
+        <if test="instanceDir != null and instanceDir != '' ">instance_dir,</if>
+        <if test="status != null and status != '' ">status,</if>
+        <if test="spanTime != null">span_time,</if>
+        <if test="inputs != null and inputs.size != 0 ">inputs,</if>
+        <if test="outputs != null and outputs.size != 0 ">outputs,</if>
+        <if test="logs != null and logs.size != 0 ">logs,</if>
+        <if test="createBy != null and createBy != ''">create_by,</if>
+        <if test="remark != null and remark != ''">remark,</if>
+        create_time
+        )values(
+        <if test="msriId != null and msriId != '' ">#{msriId},</if>
+        <if test="msId != null">#{msId},</if>
+        <if test="currentState != null ">#{currentState,typeHandler=org.apache.ibatis.type.EnumTypeHandler},</if>
+        <if test="instanceDir != null and instanceDir != '' ">#{instanceDir},</if>
+        <if test="status != null and status != '' ">#{status},</if>
+        <if test="spanTime != null">#{spanTime},</if>
+        <if test="inputs != null and inputs.size != 0 ">
+            #{inputs,typeHandler=org.opengms.container.handler.InOutHandler},
+        </if>
+        <if test="outputs != null and outputs.size != 0 ">
+            #{outputs,typeHandler=org.opengms.container.handler.InOutHandler},
+        </if>
+        <if test="logs != null and logs.size != 0 ">#{logs,typeHandler=org.opengms.container.handler.LogsHandler},</if>
+        <if test="createBy != null and createBy != ''">#{createBy},</if>
+        <if test="remark != null and remark != ''">#{remark},</if>
+        sysdate()
+        )
+    </insert>
+
+    <update id="updateMsrInsLogs" parameterType="msrIns">
+        update ms_run_instance
+        <set>
+            <if test="logs != null">logs = #{logs,typeHandler=org.opengms.container.handler.LogsHandler},</if>
+            update_time = sysdate()
+        </set>
+        where msri_id = #{msriId}
+    </update>
+
+    <update id="updateMsrIns" parameterType="msrIns">
+        update ms_run_instance
+        <set>
+            <if test="currentState != null ">current_state = #{currentState,typeHandler=org.apache.ibatis.type.EnumTypeHandler},</if>
+            <if test="instanceDir != null and instanceDir != '' ">instance_dir = #{instanceDir},</if>
+            <if test="logs != null">logs = #{logs,typeHandler=org.opengms.container.handler.LogsHandler},</if>
+            <if test="status != null and status != '' ">status = #{status},</if>
+            <if test="spanTime != null">span_time = #{spanTime},</if>
+            <if test="inputs != null and inputs.size != 0 ">
+                inputs = #{inputs,typeHandler=org.opengms.container.handler.InOutHandler},
+            </if>
+            <if test="outputs != null and outputs.size != 0 ">
+                outputs = #{outputs,typeHandler=org.opengms.container.handler.InOutHandler},
+            </if>
+            update_time = sysdate()
+        </set>
+        where msri_id = #{msriId}
+    </update>
+
+    <update id="updateMsrInsLogsAndStatus">
+        update ms_run_instance
+        <set>
+            <if test="logs != null">logs = #{logs,typeHandler=org.opengms.container.handler.LogsHandler},</if>
+            <if test="status != null and status != '' ">status = #{status},</if>
+            update_time = sysdate()
+        </set>
+        where msri_id = #{msriId}
+    </update>
+
+    <select id="selectMsrInsById" resultMap="MsrInsResult">
+        select *
+        from ms_run_instance
+        where msri_id = #{id}
+    </select>
+</mapper>

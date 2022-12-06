@@ -161,6 +161,14 @@ public class ApiResponse extends HashMap<String, Object> {
         super.put(key, value);
         return this;
     }
-    
+
+    public static boolean reqSuccess(ApiResponse response){
+        return (Integer) response.get(ApiResponse.CODE_TAG) == HttpStatus.SUCCESS;
+    }
+
+    public static HashMap<String, Object> getResponseData(ApiResponse response){
+        return (HashMap<String, Object>) response.get(ApiResponse.DATA_TAG);
+    }
+
     
 }

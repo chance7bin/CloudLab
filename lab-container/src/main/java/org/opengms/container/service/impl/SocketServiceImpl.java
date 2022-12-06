@@ -1,6 +1,7 @@
 package org.opengms.container.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.opengms.container.enums.ProcessState;
 import org.opengms.container.exception.ServiceException;
 import org.opengms.container.service.IMSInsService;
 import org.opengms.container.service.ISocketService;
@@ -151,17 +152,17 @@ public class SocketServiceImpl implements ISocketService {
                             try {
                                 //出错的信息发送给客户端
                                 // msInsService.stateSelector(clientChannel);
-                                msInsService.kill(clientChannel, e.getMessage());
+                                msInsService.kill(clientChannel, e.getMessage(), ProcessState.SOCKET_CLOSE);
 
                             } catch (ServiceException ex){
 
                             } finally {
-                                clientChannel.close();
-                                msInsService.removeSocketChannel(clientChannel);
+                                // clientChannel.close();
+                                // msInsService.removeSocketChannel(clientChannel);
                             }
 
                         }
-                        log.info("socket closed....... current connecting client number: " + msInsService.getMsrInsColl().size());
+                        // log.info("socket closed....... current connecting client number: " + msInsService.getMsrInsColl().size());
                     }finally {
                         // remove handled key from selected keys
                         iterator.remove();

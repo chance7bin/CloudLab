@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface IMSService {
 
-    void invoke(ModelService modelService);
+    String invoke(ModelService modelService);
 
     int insertModelService(ModelServiceDTO ModelServiceDTO);
 

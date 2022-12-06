@@ -13,6 +13,6 @@ public interface IDriveService {
 
     List<FileDTO> getFileInfoByPath(String path);
 
-    List<TreeDTO> getFileInfoByPathContainChildren(String path);
+
 
 }

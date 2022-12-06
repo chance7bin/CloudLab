@@ -37,12 +37,7 @@ public class DriveController extends BaseController {
 
     }
 
-    @GetMapping(value = "/workspace/{containerName}")
-    public ApiResponse listWorkspaceDirByContainerName(
-        @PathVariable(value = "containerName") String containerName) {
 
-        return driveClient.listWorkspaceDirByContainerName(containerName);
-    }
 
 
     @GetMapping(value = "/list")

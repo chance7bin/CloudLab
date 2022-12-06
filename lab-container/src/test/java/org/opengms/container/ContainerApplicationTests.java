@@ -147,8 +147,8 @@ public class ContainerApplicationTests {
     @Test
     void testStartContainer(){
         //插入
-        Boolean success = workspaceService.initWorkspace("admin", "jupyter_cus:5.0");
-        System.out.println(success);
+        // Boolean success = workspaceService.initWorkspace("admin", "jupyter_cus:5.0");
+        // System.out.println(success);
 
         //查找
         // List<JupyterContainer> jupyterContainers = dockerOperMapper.listAll();
@@ -246,8 +246,6 @@ public class ContainerApplicationTests {
         // log.info("123");
     }
 
-    @Value(value = "${container.repository.workspace}")
-    private String workspace;
 
     //测试读取xml
     @Test
@@ -327,6 +325,12 @@ public class ContainerApplicationTests {
                 log.error(e.getMessage());
             }
         }
+    }
+
+
+    @Test
+    void uploadFile(){
+
     }
 
 }

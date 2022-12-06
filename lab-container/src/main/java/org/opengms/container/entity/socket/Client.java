@@ -3,7 +3,7 @@ package org.opengms.container.entity.socket;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.opengms.container.entity.bo.MsrIns;
+import org.opengms.container.entity.po.MsrIns;
 
 import java.nio.channels.SocketChannel;
 

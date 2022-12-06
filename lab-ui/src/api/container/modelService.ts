@@ -41,3 +41,10 @@ export function getModelServiceById(msId: string) {
     method: "get"
   });
 }
+
+export function getMsInsById(msriId: string) {
+  return request({
+    url: contextPath + "/instance/" + msriId,
+    method: "get"
+  });
+}

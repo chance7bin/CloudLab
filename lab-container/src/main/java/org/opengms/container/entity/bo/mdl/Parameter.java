@@ -21,7 +21,8 @@ public class Parameter extends SerializableEntity {
 
     String description;
 
-    /** dataMIME是文件类型存文件路径 */
+    /** 文本类型：值
+     *  文件类型：fileId */
     String value;
 
     /** dataMIME是文本类型的话数据存放在该字段 */

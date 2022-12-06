@@ -1,7 +1,7 @@
-package org.opengms.admin.clients;
+package org.opengms.container.clients;
 
-import org.opengms.admin.entity.dto.ApiResponse;
-import org.opengms.admin.entity.dto.drive.FileInfoDTO;
+import org.opengms.container.entity.dto.ApiResponse;
+import org.opengms.container.entity.dto.drive.FileInfoDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 

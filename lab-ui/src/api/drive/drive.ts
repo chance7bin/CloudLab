@@ -12,13 +12,6 @@ export function listWorkspaceDir(params?: any) {
   });
 }
 
-export function listWorkspaceDirContainChildren(containerName: string) {
-  return request({
-    url: contextPath + "/workspace/" + containerName,
-    method: "get"
-  });
-}
-
 export function getFileList(parentId: string) {
   return request({
     url: contextPath + "/list",

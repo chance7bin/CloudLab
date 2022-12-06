@@ -35,7 +35,7 @@ public class ContainerInfo extends BaseEntity {
     /** 容器绑定端口 */
     Integer hostBindPort;
 
-    /** 挂载数据卷列表 */
+    /** 挂载数据卷列表 宿主机目录中表示的只是相对路径 实际路径需加上${repository} */
     List<String> volumeList = new ArrayList<>();
 
 

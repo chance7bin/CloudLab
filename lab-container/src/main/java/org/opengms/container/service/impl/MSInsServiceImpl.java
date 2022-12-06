@@ -1,7 +1,12 @@
 package org.opengms.container.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.opengms.container.entity.bo.MsrIns;
+import org.opengms.common.utils.DateUtils;
+import org.opengms.container.constant.ContainerConstants;
+import org.opengms.container.constant.TaskStatus;
+import org.opengms.container.entity.bo.InOutParam;
+import org.opengms.container.entity.bo.Log;
+import org.opengms.container.entity.po.MsrIns;
 import org.opengms.container.entity.bo.SubIdentifier;
 import org.opengms.container.entity.po.ModelService;
 import org.opengms.container.entity.socket.Client;
@@ -9,15 +14,18 @@ import org.opengms.container.enums.DataMIME;
 import org.opengms.container.enums.ProcessState;
 import org.opengms.container.enums.ProcessStatus;
 import org.opengms.container.exception.ServiceException;
+import org.opengms.container.mapper.MsrInsMapper;
 import org.opengms.container.service.IMSInsService;
 import org.opengms.container.service.IMdlService;
 import org.opengms.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,6 +39,12 @@ public class MSInsServiceImpl implements IMSInsService {
 
     @Autowired
     IMdlService mdlService;
+
+    @Value(value = "${container.repository}")
+    private String repository;
+
+    @Autowired
+    MsrInsMapper msrInsMapper;
 
     // 当前socket通信实例
     private SocketChannel channel;
@@ -142,9 +156,19 @@ public class MSInsServiceImpl implements IMSInsService {
             insId = recvMessage.substring(opRight + 1, idRight);
         }
 
+
+        MsrIns ins = getMsrInsFromMsrInsColl(insId);
+        if (ins == null) {
+            kill("未找到模型运行实例", ProcessState.INIT);
+            throw new ServiceException("未找到模型运行实例");
+        }
+
         // msrInsSingleton.setMsriId(insId);
         // 绑定socket channel到模型运行实例中
         MsrIns msrIns = bindChannel2MsrIns(insId, channel);
+
+        // 记录日志信息到模型运行实例中
+        // msrIns.getLogs().add(new Log(ProcessStatus.FINISH, recvMessage));
 
         opLeft = recvMessage.indexOf('}');
         // 剩余字符串
@@ -308,6 +332,11 @@ public class MSInsServiceImpl implements IMSInsService {
         }
     }
 
+    @Override
+    public MsrIns getMsrInsById(String msInsId) {
+        return msrInsMapper.selectMsrInsById(msInsId);
+    }
+
     /**
      * 抽取标识符 根据{}分隔
      * @param operMsg 用来操作分隔的字符串
@@ -330,18 +359,62 @@ public class MSInsServiceImpl implements IMSInsService {
 
     // @Override
     private void initialize(String insId) {
-        String msg = "{Initialized}" + insId + "[" + MAPPING_LIB_DIR + "]" + "[" + MODEL_SERVICE_PATH + "/" + MODEL_NAME + "/instance/" + insId + "]";
+        MsrIns ins = getMsrInsFromMsrInsColl(insId);
+        ins.setStatus(TaskStatus.STARTED);
+        ins.setStartTime(new Date());
+
+        ins.getLogs().add(new Log(
+            ProcessState.INIT,
+            null, null,
+            ProcessStatus.FINISH,
+            null,
+            new Date()
+        ));
+        msrInsMapper.updateMsrIns(ins);
+
+        ModelService ms = ins.getModelService();
+        if (ms.getRelativeDir() == null){
+            ms.setRelativeDir(ms.getMsName() + "_" + ms.getMsId());
+        }
+
+        ins.setInstanceDir("/" + ms.getRelativeDir() + "/instance/" + insId);
+        // TODO: 2022/12/2 MAPPING_LIB_DIR要放在哪里？
+        String msg = "{Initialized}" + insId
+            + "[" + MAPPING_LIB_DIR + "]"
+            + "[" + ContainerConstants.INNER_SERVICE_DIR + ins.getInstanceDir() + "]";
         sendMessage2Client(msg);
     }
 
     // @Override
     private void enterState(String insId, String state) {
+        MsrIns ins = getMsrInsFromMsrInsColl(insId);
+
+        ins.getLogs().add(new Log(
+            ProcessState.ON_ENTER_STATE,
+            state, null,
+            ProcessStatus.FINISH,
+            null,
+            new Date()
+        ));
+        msrInsMapper.updateMsrIns(ins);
+
         String msg = "{Enter State Notified}";
         sendMessage2Client(msg);
     }
 
     // @Override
     private void fireEvent(String insId, String state, String event) {
+        MsrIns ins = getMsrInsFromMsrInsColl(insId);
+
+        ins.getLogs().add(new Log(
+            ProcessState.ON_FIRE_EVENT,
+            state, event,
+            ProcessStatus.FINISH,
+            null,
+            new Date()
+        ));
+        msrInsMapper.updateMsrIns(ins);
+
         String msg = "{Fire Event Notified}";
         sendMessage2Client(msg);
     }
@@ -354,61 +427,199 @@ public class MSInsServiceImpl implements IMSInsService {
         MsrIns msrIns = getCurrentMsrIns(insId);
         ModelService modelService = msrIns.getModelService();
         // ModelClass modelClass = msrIns.getModelClass();
-        String parameter = mdlService.getParameter(modelService, state, event);
 
+        String parameter = null;
+        try {
+            parameter = mdlService.getParameter(modelService, state, event, msrIns.getInstanceDir());
+
+            msrIns.getLogs().add(new Log(
+                ProcessState.ON_REQUEST_DATA,
+                state, event,
+                ProcessStatus.FINISH,
+                "Get input parameter: [ " + parameter + " ]",
+                new Date()
+            ));
+
+            msrIns.getInputs().add(new InOutParam(state, event, dataMIME.getInfo(), parameter));
+
+            msrInsMapper.updateMsrIns(msrIns);
+
+            sendMessage2Client("{Request Data Notified}[" + ProcessStatus.FINISH + "][" + dataMIME + "]" + parameter);
+        }catch (ServiceException se){
+            kill(se.getMessage(), ProcessState.ON_REQUEST_DATA, state, event);
+        }
         // if (event.equals("语言")){
         //     templateInputData = "English";
         // } else if (event.equals("文本")){
         //     templateInputData = "E:\\opengms-lab\\container\\workspace\\jupyter_cus_5.0_8268889755334766592\\hamlet.txt";
         // }
 
-        sendMessage2Client("{Request Data Notified}[" + ProcessStatus.FINISH + "][" + dataMIME + "]" + parameter);
 
     }
 
     // @Override
     private void responseData(String insId, String state, String event, String dataSignal, DataMIME dataMIME, String data) {
+        MsrIns ins = getMsrInsFromMsrInsColl(insId);
+        ins.getLogs().add(new Log(
+            ProcessState.ON_RESPONSE_DATA,
+            state, event,
+            ProcessStatus.FINISH,
+            "Get output data: [ " + data + " ]",
+            new Date()
+        ));
+
+        ins.getInputs().add(new InOutParam(state, event, dataMIME.getInfo(), data));
+
+        msrInsMapper.updateMsrIns(ins);
+
         sendMessage2Client("{Response Data Received}" + insId);
     }
 
     // @Override
     private void postErrorInfo(String insId, String errorInfo) {
+        MsrIns ins = getMsrInsFromMsrInsColl(insId);
+        ins.getLogs().add(new Log(
+            ProcessState.ON_POST_ERROR_INFO,
+            null, null,
+            ProcessStatus.FINISH,
+            errorInfo,
+            new Date()
+        ));
+        msrInsMapper.updateMsrIns(ins);
         sendMessage2Client("{Post Error Info Notified}" + insId);
     }
 
     // @Override
     private void postWarningInfo(String insId, String warningInfo) {
+        MsrIns ins = getMsrInsFromMsrInsColl(insId);
+        ins.getLogs().add(new Log(
+            ProcessState.ON_POST_WARNING_INFO,
+            null, null,
+            ProcessStatus.FINISH,
+            warningInfo,
+            new Date()
+        ));
+        msrInsMapper.updateMsrIns(ins);
         sendMessage2Client("{Post Warning Info Notified}" + insId);
     }
 
     // @Override
     private void postMessageInfo(String insId, String messageInfo) {
+        MsrIns ins = getMsrInsFromMsrInsColl(insId);
+        ins.getLogs().add(new Log(
+            ProcessState.ON_POST_MESSAGE_INFO,
+            null, null,
+            ProcessStatus.FINISH,
+            messageInfo,
+            new Date()
+        ));
+        msrInsMapper.updateMsrIns(ins);
         sendMessage2Client("{Post Message Info Notified}" + insId);
     }
 
     // @Override
     private void leaveState(String insId, String state) {
+        MsrIns ins = getMsrInsFromMsrInsColl(insId);
+        ins.getLogs().add(new Log(
+            ProcessState.ON_LEAVE_STATE,
+            state, null,
+            ProcessStatus.FINISH,
+            null,
+            new Date()
+        ));
+        msrInsMapper.updateMsrIns(ins);
         sendMessage2Client("{Leave State Notified}");
     }
 
     // @Override
     private void eFinalize(String insId) {
+        MsrIns ins = getMsrInsFromMsrInsColl(insId);
+        ins.getLogs().add(new Log(
+            ProcessState.ON_FINALIZE,
+            null, null,
+            ProcessStatus.FINISH,
+            null,
+            new Date()
+        ));
+        ins.setStatus(TaskStatus.FINISHED);
+        int second = DateUtils.differentSecondsByMillisecond(new Date(), ins.getStartTime());
+        ins.setSpanTime(second);
+        msrInsMapper.updateMsrIns(ins);
         sendMessage2Client("{Finalize Notified}");
     }
 
+
+
+
+    /**
+     * 移除socket实例以及该socket对应的模型运行实例
+     * @param channel socket
+     * @author 7bin
+     **/
     @Override
-    public void kill(String msg){
-        kill(channel, msg);
+    public void removeChannelAndMsrInsColl(SocketChannel channel){
+        try {
+            if (channel != null){
+                channel.close();
+            }
+        } catch (IOException e) {
+            log.error("removeChannelAndMsrInsColl error: " + e.getMessage());
+        } finally {
+            // 将该client从clientMap中移除
+            removeSocketChannel(channel);
+            log.info("socket closed....... current connecting client number: " + getMsrInsColl().size());
+        }
+    }
+
+    // @Override
+    // public void kill(String msg){
+    //     kill(channel, msg);
+    // }
+
+    @Override
+    public void kill(String msg, ProcessState processState, String state, String event){
+        // kill("[" + state + "]" + msg);
+        kill(channel, msg, processState, state, event);
     }
 
     @Override
-    public void kill(SocketChannel channel, String msg) {
-        sendMessage2Client(channel, msg);
+    public void kill(String msg, ProcessState processState){
+        // kill("[" + state + "]" + msg);
+        kill(msg, processState, null, null);
     }
 
     @Override
-    public void kill(String msg, ProcessState state){
-        sendMessage2Client("{kill}[" + state + "]" + msg);
+    public void kill(SocketChannel channel, String msg, ProcessState processState){
+        // kill("[" + state + "]" + msg);
+        kill(channel, msg, processState, null, null);
+    }
+
+    @Override
+    public void kill(SocketChannel channel, String msg, ProcessState processState, String state, String event) {
+        MsrIns ins = getCurrentMsrIns(channel);
+        ins.setStatus(TaskStatus.ERROR);
+
+        ins.getLogs().add(new Log(
+            processState,
+            state, event,
+            ProcessStatus.ERROR,
+            msg,
+            new Date()
+        ));
+
+        if (ins.getStartTime() == null){
+            ins.setSpanTime(0);
+        } else {
+            int second = DateUtils.differentSecondsByMillisecond(new Date(), ins.getStartTime());
+            ins.setSpanTime(second);
+        }
+
+        msrInsMapper.updateMsrIns(ins);
+
+        sendMessage2Client(channel, "{kill}" + msg);
+
+        removeChannelAndMsrInsColl(channel);
+
     }
 
     /**
@@ -423,6 +634,7 @@ public class MSInsServiceImpl implements IMSInsService {
 
     private void sendMessage2Client(SocketChannel channel, String message) {
         log.info("send: " + message);
+
         try {
             // message = message + "(" + msrIns.getMsri_id() + ")";
             // 将消息发回给该client
@@ -430,5 +642,18 @@ public class MSInsServiceImpl implements IMSInsService {
         } catch (IOException e){
             throw new ServiceException("socket 发送给 client 出错: " + e.getMessage());
         }
+    }
+
+
+    /**
+     * 根据msrid从msrInsColl得到该模型运行实例的信息
+     *
+     * @param msriId
+     * @return {@link MsrIns}
+     * @author 7bin
+     **/
+    @Override
+    public MsrIns getMsrInsFromMsrInsColl(String msriId){
+        return msrInsColl.get(msriId);
     }
 }

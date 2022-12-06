@@ -21,6 +21,15 @@ public interface IMdlService {
     void setElementAttributes(List<Attribute> attributes, Object obj) throws Exception;
 
 
-    // 获取Parameter步骤的参数值
-    String getParameter(ModelService modelService, String state, String event);
+    /**
+     * 获取Parameter步骤的参数值
+     *
+     * @param modelService
+     * @param state
+     * @param event
+     * @param insDir 实例相对路径
+     * @return {@link String} 值类型: 值; 文件类型: 文件名
+     * @author 7bin
+     **/
+    String getParameter(ModelService modelService, String state, String event, String insDir);
 }
