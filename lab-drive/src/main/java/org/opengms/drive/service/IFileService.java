@@ -20,9 +20,9 @@ public interface IFileService {
      * 小文件上传
      *
      * @param file 文件
-     * @return {@link FileInfo}
+     * @return {@link Long} 上传后返回的fileId
      */
-    int uploadFiles(MultipartFile file);
+    Long uploadFiles(MultipartFile file);
 
     /**
      * 获取文件输入流

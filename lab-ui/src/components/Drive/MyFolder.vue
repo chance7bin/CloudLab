@@ -267,6 +267,15 @@ const selectTypeIcon = (item): string => {
       case "xlsx":
         icon = "xlsx_big";
         break;
+      case "csv":
+        icon = "csv_big";
+        break;
+      case "txt":
+        icon = "txt_big";
+        break;
+      case "exe":
+        icon = "exe_big";
+        break;
       case "jpg":
       case "png":
       case "gif":

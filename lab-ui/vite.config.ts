@@ -36,18 +36,18 @@ export default defineConfig(({ mode, command }) => {
       proxy: {
         // https://cn.vitejs.dev/config/#server-proxy
         "/dev-api-base": {
-          target: "http://localhost:8807/admin",
+          target: "http://172.21.212.240:8807/admin",
           changeOrigin: true,
           rewrite: (p) => p.replace(/^\/dev-api-base/, "")
           // rewrite: (p) => p.replace("^" + process.env.VITE_APP_BASE_API, "")
         },
         "/dev-api-drive": {
-          target: "http://localhost:8809/drive",
+          target: "http://172.21.212.240:8809/drive",
           changeOrigin: true,
           rewrite: (p) => p.replace(/^\/dev-api-drive/, "")
         },
         "/dev-api-container": {
-          target: "http://localhost:8810/container",
+          target: "http://172.21.212.240:8810/container",
           changeOrigin: true,
           rewrite: (p) => p.replace(/^\/dev-api-container/, "")
         }

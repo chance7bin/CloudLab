@@ -2,7 +2,7 @@ package org.opengms.container.handler;
 
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
-import org.opengms.common.GsonUtils;
+import org.opengms.common.utils.GsonUtils;
 import org.opengms.common.utils.StringUtils;
 
 import java.sql.CallableStatement;

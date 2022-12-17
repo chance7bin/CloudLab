@@ -1,20 +1,37 @@
 package org.opengms.container.service.impl;
 
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.file.FileNameUtil;
+import cn.hutool.core.util.ZipUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.opengms.common.TerminalRes;
 import org.opengms.common.utils.DateUtils;
+import org.opengms.common.utils.uuid.SnowFlake;
+import org.opengms.common.utils.uuid.UUID;
+import org.opengms.container.constant.ContainerConstants;
 import org.opengms.container.constant.TaskStatus;
 import org.opengms.container.entity.bo.Log;
+import org.opengms.container.entity.dto.docker.JupyterInfoDTO;
+import org.opengms.container.entity.po.ModelService;
 import org.opengms.container.entity.po.MsrIns;
+import org.opengms.container.entity.po.docker.ImageInfo;
 import org.opengms.container.enums.ProcessState;
 import org.opengms.container.enums.ProcessStatus;
+import org.opengms.container.exception.ServiceException;
+import org.opengms.container.mapper.DockerOperMapper;
+import org.opengms.container.mapper.ModelServiceMapper;
 import org.opengms.container.mapper.MsrInsMapper;
+import org.opengms.container.service.IDockerService;
 import org.opengms.container.service.IMSCAsyncService;
 import org.opengms.container.service.IMSInsService;
 import org.opengms.common.utils.TerminalUtils;
+import org.opengms.container.service.IWorkspaceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -31,6 +48,21 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
 
     @Autowired
     MsrInsMapper msrInsMapper;
+
+    @Value(value = "${container.repository}")
+    private String repository;
+
+    @Autowired
+    IDockerService dockerService;
+
+    @Autowired
+    ModelServiceMapper modelServiceMapper;
+
+    @Autowired
+    IWorkspaceService workspaceService;
+
+    @Autowired
+    DockerOperMapper dockerOperMapper;
 
     /**
      * 调用终端执行封装脚本
@@ -93,6 +125,82 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
                 // currentMsrIns.getLogs().add(new Log("执行终端命令出错: " + e.getMessage()));
             // }
         }
+
+    }
+
+    // @Async
+    @Override
+    public void pkgDispatcher(ModelService modelService) {
+
+        // 把压缩包解压到 /service 文件夹下
+        File zipFile = new File(repository + modelService.getDeployPkgPath());
+        String outFilePathStr = repository + "/service/" + FileNameUtil.mainName(zipFile);
+        File outFileDir = new File(outFilePathStr);
+        ZipUtil.unzip(zipFile, outFileDir);
+
+        // 将镜像导入到docker中
+        String inputPath = outFilePathStr + "/" + modelService.getImageTar();
+        int cnt = dockerOperMapper.countImageByRepository(modelService.getMsName());
+        String tag = String.valueOf((cnt + 1)) + ".0";
+        TerminalRes res = dockerService.importContainer(inputPath, modelService.getMsName() + ":" + tag);
+        if (TerminalRes.SUCCESS_CODE.equals(res.getCode())){
+            modelService.setDeployStatus(true);
+            modelService.setImageName(modelService.getMsName() + ":" + tag);
+            // 重置模型服务关联的容器id
+            modelService.setContainerId(null);
+            modelServiceMapper.updateModelService(modelService);
+
+            ImageInfo imageInfo = new ImageInfo();
+            imageInfo.setId(SnowFlake.nextId());
+            imageInfo.setImageId(res.getMsg());
+            imageInfo.setRepository(modelService.getMsName());
+            imageInfo.setTag(tag);
+            dockerOperMapper.insertImage(imageInfo);
+
+            // 删除镜像包
+            FileUtil.del(inputPath);
+        }
+
+    }
+
+    @Async
+    @Override
+    public void createNewEnv(ModelService modelService) {
+        // 根据当前环境生成镜像包
+        JupyterInfoDTO container = workspaceService.getJupyterContainerById(modelService.getContainerId());
+        if (container == null){
+            throw new ServiceException("未找到对应的容器");
+        }
+        // 导出镜像的uuid
+        String pkgUUID = UUID.fastUUID().toString();
+        String imgOutName = pkgUUID + ".tar";
+        TerminalRes terminalRes = dockerService.exportContainer(container.getContainerInsId(),
+            repository + ContainerConstants.IMAGE_PATH + "/" + imgOutName);
+        if (terminalRes.getCode().equals(TerminalRes.ERROR_CODE)){
+            throw new ServiceException("导出镜像出错");
+        }
+
+        // 压缩打包
+        String zipFile = ContainerConstants.PACKAGE_PATH + "/" + modelService.getMsName() + "_" + pkgUUID + ".zip";
+        ZipUtil.zip(
+            new File(repository + zipFile),
+            true,
+            new File(repository + "/workspace/" + modelService.getContainerId() + "/config"),
+            new File(repository + ContainerConstants.serviceDir(modelService.getContainerId()) + "/" + modelService.getRelativeDir() + "/model"),
+            new File(repository + ContainerConstants.IMAGE_PATH + "/" + imgOutName));
+
+        // 打包后删除该镜像tar包
+        FileUtil.del(new File(repository + ContainerConstants.IMAGE_PATH + "/" + pkgUUID + ".tar"));
+
+        // TODO: 2022/12/15 把生成的部署包发送给所有计算节点
+        modelService.setNewPkgId(pkgUUID);
+        modelService.setRelativeDir("");
+        modelService.setDeployPkgPath(zipFile);
+        modelService.setImageTar(imgOutName);
+        modelServiceMapper.updateModelService(modelService);
+        // 部署包分发器
+        pkgDispatcher(modelService);
+
 
     }
 

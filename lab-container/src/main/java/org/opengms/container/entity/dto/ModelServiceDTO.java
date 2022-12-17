@@ -28,4 +28,7 @@ public class ModelServiceDTO extends BaseEntity {
     /** 封装脚本路径 */
     String encapScriptPath;
 
+    /** 是否基于当前环境创建新镜像 */
+    Boolean newImage;
+
 }

@@ -27,9 +27,10 @@ public interface IMdlService {
      * @param modelService
      * @param state
      * @param event
+     * @param serviceDir 服务相对路径
      * @param insDir 实例相对路径
      * @return {@link String} 值类型: 值; 文件类型: 文件名
      * @author 7bin
      **/
-    String getParameter(ModelService modelService, String state, String event, String insDir);
+    String getParameter(ModelService modelService, String state, String event, String serviceDir, String insDir);
 }

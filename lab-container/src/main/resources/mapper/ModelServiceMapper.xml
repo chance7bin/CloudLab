@@ -12,6 +12,9 @@
         <result property="mdlFilePath" column="mdl_file_path"    />
         <result property="encapScriptPath"       column="encap_script_path"           />
         <result property="modelClass"       column="model_class"    typeHandler="org.opengms.container.handler.ModelClassHandler"       />
+        <result property="deployStatus"            column="deploy_status"                />
+        <result property="deployPkgPath"            column="deploy_pkg_path"                />
+        <result property="imageTar"            column="image_tar"                />
         <result property="createBy"            column="create_by"                />
         <result property="createTime"           column="create_time"               />
     </resultMap>
@@ -22,20 +25,32 @@
         insert into model_service(
         <if test="msId != null and msId != 0">ms_id,</if>
         <if test="containerId != null and containerId != 0">container_id,</if>
+        <if test="imageName != null and imageName != ''">image_name,</if>
         <if test="msName != null and msName != ''">ms_name,</if>
-        <if test="relativeDir != null and relativeDir != ''">relative_dir,</if>
+        <if test="relativeDir != null">relative_dir,</if>
         <if test="mdlFilePath != null and mdlFilePath != ''">mdl_file_path,</if>
         <if test="encapScriptPath != null and encapScriptPath != ''">encap_script_path,</if>
+        <if test="modelClass != null">model_class,</if>
+        <if test="newPkgId != null and newPkgId != ''">new_pkg_id,</if>
+        <if test="deployPkgPath != null and deployPkgPath != ''">deploy_pkg_path,</if>
+        <if test="imageTar != null and imageTar != ''">image_tar,</if>
+        <if test="newImage != null">new_image,</if>
         <if test="createBy != null and createBy != ''">create_by,</if>
         <if test="remark != null and remark != ''">remark,</if>
         create_time
         )values(
         <if test="msId != null and msId != ''">#{msId},</if>
         <if test="containerId != null and containerId != ''">#{containerId},</if>
+        <if test="imageName != null and imageName != ''">#{imageName},</if>
         <if test="msName != null and msName != ''">#{msName},</if>
-        <if test="relativeDir != null and relativeDir != ''">#{relativeDir},</if>
+        <if test="relativeDir != null">#{relativeDir},</if>
         <if test="mdlFilePath != null and mdlFilePath != ''">#{mdlFilePath},</if>
         <if test="encapScriptPath != null and encapScriptPath != ''">#{encapScriptPath},</if>
+        <if test="modelClass != null">#{modelClass,typeHandler=org.opengms.container.handler.ModelClassHandler},</if>
+        <if test="newPkgId != null and newPkgId != ''">#{newPkgId},</if>
+        <if test="deployPkgPath != null and deployPkgPath != ''">#{deployPkgPath},</if>
+        <if test="imageTar != null and imageTar != ''">#{imageTar},</if>
+        <if test="newImage != null">#{newImage},</if>
         <if test="createBy != null and createBy != ''">#{createBy},</if>
         <if test="remark != null and remark != ''">#{remark},</if>
         sysdate()
@@ -53,7 +68,14 @@
     <update id="updateModelService" parameterType="ModelService">
         update model_service
         <set>
+            <if test="newPkgId != null and newPkgId != ''">new_pkg_id = #{newPkgId},</if>
+            <if test="imageName != null and imageName != ''">image_name = #{imageName},</if>
+            <if test="relativeDir != null">relative_dir = #{relativeDir},</if>
             <if test="modelClass != null">model_class = #{modelClass,typeHandler=org.opengms.container.handler.ModelClassHandler},</if>
+            <if test="deployStatus != null">deploy_status = #{deployStatus},</if>
+            <if test="deployPkgPath != null and deployPkgPath != ''">deploy_pkg_path = #{deployPkgPath},</if>
+            <if test="imageTar != null and imageTar != ''">image_tar = #{imageTar},</if>
+            container_id = #{containerId},
             update_time = sysdate()
         </set>
         where ms_id = #{msId}

@@ -51,7 +51,7 @@ public class WorkspaceController {
     public ApiResponse listWorkspaceDirByContainerId(
         @PathVariable(value = "containerId") String containerId) {
 
-        String workspaceDir = repository + "/pod/" + containerId + "/data";
+        String workspaceDir = repository + "/workspace/" + containerId + "/data";
 
         List<TreeDTO> fileList = workspaceService.getFileInfoByPathContainChildren(workspaceDir);
 

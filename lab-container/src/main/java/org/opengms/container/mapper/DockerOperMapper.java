@@ -1,6 +1,9 @@
 package org.opengms.container.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.opengms.container.entity.po.MsrIns;
+import org.opengms.container.entity.po.docker.ContainerInfo;
+import org.opengms.container.entity.po.docker.ImageInfo;
 import org.opengms.container.entity.po.docker.JupyterContainer;
 
 import java.util.List;
@@ -23,6 +26,18 @@ public interface DockerOperMapper {
      */
     int insertJupyterContainer(JupyterContainer jupyterContainer);
 
+    int insertContainer(ContainerInfo containerInfo);
+
+    /**
+     * 新增镜像
+     * @param imageInfo 镜像实体类
+     * @return {@link int}
+     * @author 7bin
+     **/
+    int insertImage(ImageInfo imageInfo);
+
+    int countImageByRepository(String imageName);
+
     /**
      * 获取容器列表
      * @param
@@ -39,8 +54,11 @@ public interface DockerOperMapper {
      **/
     List<Integer> listAllUsedPort();
 
+    ContainerInfo getContainerInfoById(Long containerId);
 
-    JupyterContainer getContainerInfoById(Long containerId);
+    int updateContainer(ContainerInfo containerInfo);
 
-    JupyterContainer getContainerInfoByInsId(String containerInsId);
+    JupyterContainer getJupyterContainerInfoById(Long containerId);
+
+    JupyterContainer getJupyterContainerInfoByInsId(String containerInsId);
 }

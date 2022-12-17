@@ -27,7 +27,7 @@ getJupyterContainerById(containerId as string)
   .then((res) => {
     if (notEmptyString(res.data.containerName)){
       let container = res.data;
-      url.value = "http://127.0.0.1:" + container.hostBindPort + "/lab?token=" + container.jupyterToken;
+      url.value = "http://172.21.212.240:" + container.hostBindPort + "/lab?token=" + container.jupyterToken;
       console.log("jupyter url:",url.value);
     }
     proxy.$modal.closeLoading();

@@ -44,11 +44,13 @@ public class DriveServiceImpl implements IDriveService {
     @Override
     public int addFile(FileInfo fileInfo) {
 
+        FileInfo file = existFileInPath(fileInfo.getFilename(), fileInfo.getParentId());
+        if (file != null && file.getDirectory()){
+            throw new ServiceException("指定的文件夹和已有的某个文件重名，请指定其他名称");
+        }
+
         if (fileInfo.getDirectory()){
             //添加的是文件夹的话走这里
-            if (existFileInPath(fileInfo.getFilename(), fileInfo.getParentId())){
-                throw new ServiceException("指定的文件夹和已有的某个文件重名，请指定其他名称");
-            }
             fileInfo.setFileId(SnowFlake.nextId());
             return driveMapper.insert(fileInfo);
         } else {
@@ -70,10 +72,14 @@ public class DriveServiceImpl implements IDriveService {
                 String oriFilename = fileInfo.getFilename();
                 String extName = fileInfo.getType() == null ? FileNameUtil.extName(oriFilename) : fileInfo.getType();
                 // 判断是否有同名的，有的话在文件后面 + (1) 命名
-                while (existFileInPath(filename ,fileInfo.getParentId())){
-                    int extNameIndex = oriFilename.lastIndexOf(extName);
-                    String mainName = oriFilename.substring(0, extNameIndex - 1);
-                    filename = mainName + " (" + cnt + ")" + "." + extName;
+                while (existFileInPath(filename ,fileInfo.getParentId()) != null){
+                    if (extName == null || "".equals(extName)){
+                        filename = oriFilename + " (" + cnt + ")";
+                    } else {
+                        int extNameIndex = oriFilename.lastIndexOf(extName);
+                        String mainName = oriFilename.substring(0, extNameIndex - 1);
+                        filename = mainName + " (" + cnt + ")" + "." + extName;
+                    }
                     cnt++;
                 }
                 fileInfo.setFilename(filename);
@@ -86,12 +92,16 @@ public class DriveServiceImpl implements IDriveService {
 
     }
 
-    private Boolean existFileInPath(String filename, String parentId){
-        if (driveMapper.existFileInPath(filename, parentId) > 0){
-            return true;
-        } else {
-            return false;
-        }
+    // private Boolean existFileInPath(String filename, String parentId){
+    //     if (driveMapper.existFileInPath(filename, parentId) > 0){
+    //         return true;
+    //     } else {
+    //         return false;
+    //     }
+    // }
+
+    private FileInfo existFileInPath(String filename, String parentId){
+        return driveMapper.existFileInPath(filename, parentId);
     }
 
 }

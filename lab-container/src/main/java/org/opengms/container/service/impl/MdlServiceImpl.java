@@ -113,7 +113,7 @@ public class MdlServiceImpl implements IMdlService {
     }
 
     @Override
-    public String getParameter(ModelService modelService, String state, String event, String insDir) {
+    public String getParameter(ModelService modelService, String state, String event, String serviceDir, String insDir) {
 
         ModelClass modelClass = modelService.getModelClass();
 
@@ -127,9 +127,9 @@ public class MdlServiceImpl implements IMdlService {
                 for (Event eve : events) {
                     if (event.equals(eve.getName())){
                         if (eve.getInputParameter() != null){
-                            parameter = getValueByParamProp(eve.getInputParameter(), modelService, insDir);
+                            parameter = getValueByParamProp(eve.getInputParameter(), modelService, serviceDir, insDir);
                         } else if (eve.getOutputParameter() != null){
-                            parameter = getValueByParamProp(eve.getOutputParameter(), modelService, insDir);
+                            parameter = getValueByParamProp(eve.getOutputParameter(), modelService, serviceDir, insDir);
                         }
                         return parameter;
                     }
@@ -142,7 +142,7 @@ public class MdlServiceImpl implements IMdlService {
     }
 
     // 根据Parameter的属性获取输入输出的值
-    private String getValueByParamProp(Parameter parameter, ModelService ms, String insDir){
+    private String getValueByParamProp(Parameter parameter, ModelService ms, String serviceDir, String insDir){
         String param = null;
         String dataMIME = parameter.getDataMIME();
         DataMIME mime = DataMIME.getDataMIMEByValue(dataMIME);
@@ -164,9 +164,10 @@ public class MdlServiceImpl implements IMdlService {
                 // String[] split = value.split("/");
                 // param = split[split.length - 1];
 
-                // 该工作空间所在的容器创建的模型服务都在 container.repository 目录的 pod/{containerId}/service 下
-                String hostDir = "/pod/" + ms.getContainerId() + "/service";
-                hostDir = repository + hostDir + insDir;
+                // 该工作空间所在的容器创建的模型服务都在 container.repository 目录的 workspace/{containerId}/service 下
+                // String hostDir = "/workspace/" + ms.getContainerId() + "/service";
+                // String hostDir = ContainerConstants.serviceDir(ms.getContainerId());
+                String hostDir = repository + serviceDir + insDir;
 
                 String value = parameter.getValue();
                 String url = labDriveUrl + "/file/download/" + value;
@@ -207,7 +208,7 @@ public class MdlServiceImpl implements IMdlService {
             throw new ServiceException("指定文件下载失败, [url: " + url + "]");
             // return null;
         }
-        HashMap<String, Object> responseData = ApiResponse.getResponseData(fileInfo);
+        HashMap<String, Object> responseData = (HashMap<String, Object>) ApiResponse.getResponseData(fileInfo);
         String suffix = (String)responseData.get("suffix");
         String filename = "gd_" + UUID.fastUUID() + "." + suffix;
         HttpUtil.downloadFile(url, new File(destDir + "/" + filename));

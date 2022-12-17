@@ -17,6 +17,9 @@ public class ModelService extends BaseEntity {
     /** 关联容器id */
     Long containerId;
 
+    /** 镜像名 */
+    String imageName;
+
     /** 模型服务名称 */
     String msName;
 
@@ -31,4 +34,19 @@ public class ModelService extends BaseEntity {
 
     /** mdl解析实体类 */
     ModelClass modelClass;
+
+    /** 是否部署完成 */
+    Boolean deployStatus;
+
+    /** 新部署包的id */
+    String newPkgId;
+
+    /** 部署包路径 */
+    String deployPkgPath;
+
+    /** 镜像名 */
+    String imageTar;
+
+    /** 是否基于当前环境创建新镜像 */
+    Boolean newImage;
 }

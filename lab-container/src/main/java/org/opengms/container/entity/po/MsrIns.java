@@ -43,10 +43,10 @@ public class MsrIns extends BaseEntity {
     String instanceDir;
 
     /** 输入数据 */
-    List<InOutParam> inputs;
+    List<InOutParam> inputs = new ArrayList<>();
 
     /** 输出数据 */
-    List<InOutParam> outputs;
+    List<InOutParam> outputs = new ArrayList<>();
 
     /** 日志记录 */
     List<Log> logs = new ArrayList<>();
@@ -63,5 +63,8 @@ public class MsrIns extends BaseEntity {
 
     /** 任务执行时间 */
     Integer spanTime;
+
+    /** 任务所运行的docker容器id */
+    Long containerId;
 
 }

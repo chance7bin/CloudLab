@@ -92,6 +92,8 @@ async function onFileAdded(file) {
   // 判断用户是否已经登录了，登录才可以添加
   await checkAuth();
 
+
+
   // 暂停文件
   // 选择文件后暂停文件上传，上传时手动启动
   file.pause()

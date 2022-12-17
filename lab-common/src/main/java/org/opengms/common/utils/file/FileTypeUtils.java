@@ -1,6 +1,7 @@
 package org.opengms.common.utils.file;
 
 import cn.hutool.core.io.FileTypeUtil;
+import cn.hutool.core.io.file.FileNameUtil;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -26,7 +27,8 @@ public class FileTypeUtils
         {
             return StringUtils.EMPTY;
         }
-        return getFileType(file.getName());
+        // return getFileType(file.getName());
+        return FileNameUtil.extName(file);
     }
 
     /**

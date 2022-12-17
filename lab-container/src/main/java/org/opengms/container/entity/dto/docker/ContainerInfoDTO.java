@@ -15,6 +15,9 @@ public class ContainerInfoDTO {
     /** 容器名 */
     private String containerName;
 
+    /** 容器实例id */
+    String containerInsId;
+
     /** 镜像名 */
     private String imageName;
 

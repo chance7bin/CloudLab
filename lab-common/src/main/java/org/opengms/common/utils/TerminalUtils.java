@@ -1,6 +1,7 @@
 package org.opengms.common.utils;
 
 import lombok.extern.slf4j.Slf4j;
+import org.opengms.common.TerminalRes;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,7 +31,7 @@ public class TerminalUtils {
      * @return long 退出状态码 0:[成功]; -1 or 其他:[失败]
      * @author 7bin
      **/
-    public static long exec(String[] cmdArr) {
+    public static TerminalRes exec(String[] cmdArr) {
 
         long start = System.currentTimeMillis();
         // String exe = "python";
@@ -53,20 +54,27 @@ public class TerminalUtils {
             // exitVal == 0 为程序执行成功
             // exitVal == 1 为程序异常终止
             // exitVal == -1 为程序执行成功, 但自定义返回错误代码
+            // if (exitVal == 0) {
+            //     log.info("Exec done, cost: " + ((end - start) / 1000) + "s");
+            // } else if (exitVal == -1){
+            //     log.error("程序自定义错误:\n " + response);
+            //     setErrorMsg(response);
+            // } else {
+            //     log.error("执行终端命令出错:\n " + error);
+            //     setErrorMsg(error);
+            // }
+
             if (exitVal == 0) {
-                log.info("Exec done, cost: " + ((end - start) / 1000) + "s");
-            } else if (exitVal == -1){
-                log.error("程序自定义错误:\n " + response);
-                setErrorMsg(response);
+                return TerminalRes.success(response);
             } else {
-                log.error("执行终端命令出错:\n " + error);
-                setErrorMsg(error);
+                // exitVal = 1
+                return TerminalRes.error(error);
             }
-            return exitVal;
         } catch (Exception e) {
-            log.error("执行终端命令出错:\n " + e.getMessage());
-            setErrorMsg(e.getMessage());
-            return -1;
+            // log.error("执行终端命令出错:\n " + e.getMessage());
+            // setErrorMsg(e.getMessage());
+            // return new TerminalRes(-1, "Terminal command is wrong: " + e.getMessage());
+            return TerminalRes.error("Terminal command is wrong: " + e.getMessage());
         }
 
     }

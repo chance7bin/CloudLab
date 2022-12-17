@@ -2,19 +2,25 @@ package org.opengms.container.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.opengms.common.utils.DateUtils;
+import org.opengms.common.utils.file.FileUtils;
+import org.opengms.container.clients.DriveClient;
 import org.opengms.container.constant.ContainerConstants;
 import org.opengms.container.constant.TaskStatus;
 import org.opengms.container.entity.bo.InOutParam;
 import org.opengms.container.entity.bo.Log;
+import org.opengms.container.entity.dto.ApiResponse;
 import org.opengms.container.entity.po.MsrIns;
 import org.opengms.container.entity.bo.SubIdentifier;
 import org.opengms.container.entity.po.ModelService;
+import org.opengms.container.entity.po.docker.ContainerInfo;
 import org.opengms.container.entity.socket.Client;
 import org.opengms.container.enums.DataMIME;
 import org.opengms.container.enums.ProcessState;
 import org.opengms.container.enums.ProcessStatus;
 import org.opengms.container.exception.ServiceException;
+import org.opengms.container.mapper.DockerOperMapper;
 import org.opengms.container.mapper.MsrInsMapper;
+import org.opengms.container.service.IDockerService;
 import org.opengms.container.service.IMSInsService;
 import org.opengms.container.service.IMdlService;
 import org.opengms.common.utils.StringUtils;
@@ -22,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -40,11 +47,20 @@ public class MSInsServiceImpl implements IMSInsService {
     @Autowired
     IMdlService mdlService;
 
+    @Autowired
+    DriveClient driveClient;
+
     @Value(value = "${container.repository}")
     private String repository;
 
     @Autowired
     MsrInsMapper msrInsMapper;
+
+    @Autowired
+    IDockerService dockerService;
+
+    @Autowired
+    DockerOperMapper dockerOperMapper;
 
     // 当前socket通信实例
     private SocketChannel channel;
@@ -329,6 +345,13 @@ public class MSInsServiceImpl implements IMSInsService {
         MsrIns currentMsrIns = getCurrentMsrIns(clientChannel);
         if (currentMsrIns != null){
             msrInsColl.remove(currentMsrIns.getMsriId());
+
+            // 删除运行容器
+            ContainerInfo container = dockerOperMapper.getContainerInfoById(currentMsrIns.getContainerId());
+            if (container != null){
+                dockerService.removeContainer(container.getContainerInsId());
+                dockerOperMapper.updateContainer(container);
+            }
         }
     }
 
@@ -373,14 +396,26 @@ public class MSInsServiceImpl implements IMSInsService {
         msrInsMapper.updateMsrIns(ins);
 
         ModelService ms = ins.getModelService();
-        if (ms.getRelativeDir() == null){
-            ms.setRelativeDir(ms.getMsName() + "_" + ms.getMsId());
+        // if (ms.getRelativeDir() == null){
+        //     ms.setRelativeDir(ms.getMsName() + "_" + ms.getMsId());
+        // }
+
+        // 依赖文件
+        String mappingLibDir;
+
+        // 新建环境和基于已有环境分开讨论
+        if (ms.getNewImage() != null && ms.getNewImage()){
+            ins.setInstanceDir("/instance/" + insId);
+            mappingLibDir = ContainerConstants.INNER_SERVICE_DIR + "/model";
+        } else {
+            ins.setInstanceDir("/" + ms.getRelativeDir() + "/instance/" + insId);
+            mappingLibDir = ContainerConstants.INNER_SERVICE_DIR + "/" + ms.getRelativeDir() + "/model";
         }
 
-        ins.setInstanceDir("/" + ms.getRelativeDir() + "/instance/" + insId);
+
         // TODO: 2022/12/2 MAPPING_LIB_DIR要放在哪里？
         String msg = "{Initialized}" + insId
-            + "[" + MAPPING_LIB_DIR + "]"
+            + "[" + mappingLibDir + "]"
             + "[" + ContainerConstants.INNER_SERVICE_DIR + ins.getInstanceDir() + "]";
         sendMessage2Client(msg);
     }
@@ -430,7 +465,16 @@ public class MSInsServiceImpl implements IMSInsService {
 
         String parameter = null;
         try {
-            parameter = mdlService.getParameter(modelService, state, event, msrIns.getInstanceDir());
+            String serviceDir = null;
+            if (msrIns.getModelService().getContainerId() != null){
+                serviceDir = ContainerConstants.serviceDir(msrIns.getModelService().getContainerId());
+            } else {
+                serviceDir = "/service/" + msrIns.getModelService().getMsName() + "_" + msrIns.getModelService().getNewPkgId();
+            }
+
+
+
+            parameter = mdlService.getParameter(modelService, state, event, serviceDir, msrIns.getInstanceDir());
 
             msrIns.getLogs().add(new Log(
                 ProcessState.ON_REQUEST_DATA,
@@ -464,15 +508,45 @@ public class MSInsServiceImpl implements IMSInsService {
             ProcessState.ON_RESPONSE_DATA,
             state, event,
             ProcessStatus.FINISH,
-            "Get output data: [ " + data + " ]",
+            "Get output data: { " + dataSignal + " } [ " + data + " ]",
             new Date()
         ));
 
-        ins.getInputs().add(new InOutParam(state, event, dataMIME.getInfo(), data));
+        try {
+            // 该工作空间所在的容器创建的模型服务都在 container.repository 目录的 workspace/{containerId}/service 下
+            // String serviceDir = "/workspace/" + ins.getModelService().getContainerId() + "/service";
+            String serviceDir = null;
+            if (ins.getModelService().getContainerId() != null){
+                serviceDir = ContainerConstants.serviceDir(ins.getModelService().getContainerId());
+            } else {
+                serviceDir = "/service/" + ins.getModelService().getMsName() + "_" + ins.getModelService().getNewPkgId();
+            }
 
-        msrInsMapper.updateMsrIns(ins);
 
-        sendMessage2Client("{Response Data Received}" + insId);
+            //将数据上传到drive中
+            if (!data.contains(ContainerConstants.INNER_SERVICE_DIR)){
+                throw new ServiceException("数据输出的文件夹路径有误，数据上传失败");
+            }
+            String[] split = data.split(ContainerConstants.INNER_SERVICE_DIR);
+            // 宿主机中真实的文件路径
+            String fileHostFile = repository + serviceDir + split[1];
+            //上传
+            ApiResponse response = driveClient.uploadFiles(FileUtils.file2MultipartFile(new File(fileHostFile)));
+            if (!ApiResponse.reqSuccess(response)){
+                throw new ServiceException("数据上传至文件服务器时出错，数据上传失败");
+            }
+            String responseData = (String) ApiResponse.getResponseData(response);
+            InOutParam inOutParam = new InOutParam(state, event, dataMIME.getInfo(), data);
+            inOutParam.setDriveFileId(responseData);
+            ins.getOutputs().add(inOutParam);
+
+            msrInsMapper.updateMsrIns(ins);
+
+            sendMessage2Client("{Response Data Received}" + insId);
+        } catch (ServiceException se){
+            kill(se.getMessage(), ProcessState.ON_RESPONSE_DATA, state, event);
+        }
+
     }
 
     // @Override

@@ -162,11 +162,24 @@ public class ApiResponse extends HashMap<String, Object> {
         return this;
     }
 
+    /**
+     * 在远程调用时判断请求是否成功
+     * @param response
+     * @return {@link boolean}
+     * @author 7bin
+     **/
     public static boolean reqSuccess(ApiResponse response){
         return (Integer) response.get(ApiResponse.CODE_TAG) == HttpStatus.SUCCESS;
     }
 
-    public static HashMap<String, Object> getResponseData(ApiResponse response){
-        return (HashMap<String, Object>) response.get(ApiResponse.DATA_TAG);
+
+    /**
+     * 获取ApiResponse的data数据
+     * @param response
+     * @return {@link Object>}
+     * @author 7bin
+     **/
+    public static Object getResponseData(ApiResponse response){
+        return response.get(ApiResponse.DATA_TAG);
     }
 }

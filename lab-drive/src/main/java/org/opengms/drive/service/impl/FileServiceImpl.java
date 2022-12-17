@@ -3,6 +3,7 @@ package org.opengms.drive.service.impl;
 import cn.hutool.core.io.FileTypeUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.file.FileNameUtil;
+import cn.hutool.crypto.SecureUtil;
 import cn.novelweb.tool.http.Result;
 import cn.novelweb.tool.upload.local.LocalUpload;
 import cn.novelweb.tool.upload.local.pojo.UploadFileParam;
@@ -13,6 +14,7 @@ import org.apache.ibatis.annotations.Results;
 import org.opengms.common.utils.DateUtils;
 import org.opengms.common.utils.StringUtils;
 import org.opengms.common.utils.file.FileTypeUtils;
+import org.opengms.common.utils.file.FileUtils;
 import org.opengms.common.utils.uuid.SnowFlake;
 import org.opengms.common.utils.uuid.UUID;
 import org.opengms.drive.constant.FileConstants;
@@ -53,7 +55,7 @@ public class FileServiceImpl implements IFileService {
 
 
     @Override
-    public int uploadFiles(MultipartFile file) {
+    public Long uploadFiles(MultipartFile file) {
         String fileName = file.getOriginalFilename();
         // 文件名非空校验
         if (StringUtils.isEmpty(fileName)) {
@@ -61,12 +63,16 @@ public class FileServiceImpl implements IFileService {
         }
         // 大文件判定
         if (file.getSize() > FileConstants.MAX_SIZE) {
-            throw new ServiceException("文件过大，请使用大文件传输");
+            // throw new ServiceException("文件过大，请使用大文件传输");
         }
         // 生成新文件名
         String newName = UUID.fastUUID() + "_" + fileName;
+
+        int year = DateUtils.getYear();
+        int month = DateUtils.getMonth();
+        String separator = "/";
         // 重命名文件
-        File newFile = new File(savePath, fileName);
+        File newFile = new File(savePath + separator + year + separator + month + separator, newName);
         // 如果该存储路径不存在则新建存储路径
         if (!newFile.getParentFile().exists()) {
             newFile.getParentFile().mkdirs();
@@ -83,10 +89,16 @@ public class FileServiceImpl implements IFileService {
         FileInfo fileInfo = new FileInfo();
         fileInfo.setFileId(SnowFlake.nextId());
         fileInfo.setFileName(fileName);
-        fileInfo.setFilePath(newName);
-        fileInfo.setSuffix(FileTypeUtils.getFileType(fileName));
-        fileMapper.insert(fileInfo);
-        return fileMapper.insert(fileInfo);
+        fileInfo.setFilePath(year + separator + month + separator + newName);
+        fileInfo.setMd5(SecureUtil.md5(newFile));
+        fileInfo.setSize(String.valueOf(FileUtil.size(newFile)));
+        fileInfo.setSuffix(FileTypeUtils.getFileType(newFile));
+        int insert = fileMapper.insert(fileInfo);
+        if (insert > 0){
+            return fileInfo.getFileId();
+        } else {
+            throw new ServiceException("插入数据失败");
+        }
     }
 
     @Override

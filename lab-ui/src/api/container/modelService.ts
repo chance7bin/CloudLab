@@ -19,12 +19,17 @@ interface Service {
   relativeDir: string;
   mdlFilePath: string;
   encapScriptPath: string;
+  newImage: boolean;
 }
+
+export type { Service };
+
 export function createModelService(service: Service) {
   return request({
     url: contextPath + "/service",
     method: "post",
-    data: service
+    data: service,
+    timeout: 2 * 60 * 1000
   });
 }
 

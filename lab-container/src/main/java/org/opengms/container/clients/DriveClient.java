@@ -3,7 +3,9 @@ package org.opengms.container.clients;
 import org.opengms.container.entity.dto.ApiResponse;
 import org.opengms.container.entity.dto.drive.FileInfoDTO;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -25,4 +27,7 @@ public interface DriveClient {
 
     @GetMapping(value = "/file/info/{id}")
     ApiResponse getFileInfo(@PathVariable("id") Long id);
+
+    @PostMapping(value = "/file/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ApiResponse uploadFiles(MultipartFile file);
 }

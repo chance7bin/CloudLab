@@ -1,13 +1,19 @@
 package org.opengms.common.utils.file;
 
 import cn.hutool.core.io.FileUtil;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.opengms.common.exception.UtilException;
 import org.opengms.common.utils.DateUtils;
 import org.opengms.common.utils.StringUtils;
 import org.opengms.common.utils.uuid.IdUtils;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,7 +30,7 @@ import java.util.List;
  * 
  * @author 7bin
  */
-public class FileUtils
+public class FileUtils extends org.apache.commons.io.FileUtils
 {
     public static String FILENAME_PATTERN = "[a-zA-Z0-9_\\-\\|\\.\\u4e00-\\u9fa5]+";
 
@@ -470,6 +476,67 @@ public class FileUtils
     public static String transPath(String path){
         return path.replaceAll("\\\\", "/");
     }
-    
+
+
+
+    /**
+     * File类型文件转成MultipartFile
+     * @param file 待转换文件
+     * @return {@link MultipartFile}
+     * @author 7bin
+     **/
+    public static MultipartFile file2MultipartFile(File file) {
+        DiskFileItem item = new DiskFileItem("file"
+            , MediaType.MULTIPART_FORM_DATA_VALUE
+            , true
+            , file.getName()
+            , (int)file.length()
+            , file.getParentFile());
+        try {
+            OutputStream os = item.getOutputStream();
+            os.write(FileUtils.readFileToByteArray(file));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new CommonsMultipartFile(item);
+    }
+
+
+
+    /**
+     * 判断两个文件是否相同
+     * @param file1Path file1路径
+     * @param file2Path file2路径
+     * @return {@link Boolean}
+     * @author 7bin
+     **/
+    public static Boolean isSameFile(String file1Path, String file2Path) {
+        FileInputStream fis1 = null;
+        FileInputStream fis2 = null;
+        try {
+            fis1 = new FileInputStream(file1Path);
+            fis2 = new FileInputStream(file2Path);
+            String md5Hex1 = DigestUtils.md5Hex(fis1);
+            // System.out.println("file1:" + md5Hex1);
+            String md5Hex2 = DigestUtils.md5Hex(fis2);
+            // System.out.println("file2:" + md5Hex2);
+            return md5Hex1.equals(md5Hex2);
+        } catch (IOException e){
+            return false;
+        } finally {
+            // 关流
+            try {
+                if (fis1 != null){
+                    fis1.close();
+                }
+                if (fis2 != null){
+                    fis2.close();
+                }
+            } catch (IOException e){
+                // System.out.println("IOException");
+                e.printStackTrace();
+            }
+        }
+    }
 
 }

@@ -68,7 +68,9 @@
         select *
         from files_tb
         where del_flag = false and md5 = #{md5}
+        order by file_id desc
         limit 1
+
 
     </select>
 </mapper>

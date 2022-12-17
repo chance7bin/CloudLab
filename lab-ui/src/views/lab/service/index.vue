@@ -1,9 +1,9 @@
 <template>
   <div class="app-container">
     <!--步骤条-->
-    <el-steps :active="active" finish-status="success" simple>
+    <el-steps :active="active" finish-status="success" simple :space="200">
       <el-step title="工作空间" :icon="HomeFilled" />
-      <el-step title="相关文件" :icon="UploadFilled" />
+      <!--<el-step title="相关文件" :icon="UploadFilled" />-->
       <el-step title="服务配置" :icon="Edit" />
     </el-steps>
 
@@ -29,16 +29,16 @@
     </div>
 
     <!--相关文件选择-->
-    <div v-show="active == 1">
-      <el-card class="box-card" shadow="hover">
-        <div>
-          <my-folder style="border-radius: 15px; box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px"></my-folder>
-        </div>
-      </el-card>
-    </div>
+    <!--<div v-show="active == 1">-->
+    <!--  <el-card class="box-card" shadow="hover">-->
+    <!--    <div>-->
+    <!--      <my-folder style="border-radius: 15px; box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px"></my-folder>-->
+    <!--    </div>-->
+    <!--  </el-card>-->
+    <!--</div>-->
 
     <!--配置文件-->
-    <div v-show="active == 2">
+    <div v-show="active == 1">
       <el-card class="box-card" shadow="hover">
         <el-form
           ref="ruleFormRef"
@@ -66,9 +66,15 @@
               <el-button type="warning" :icon="FolderOpened" circle @click="selectEncapsulationFile" />
             </div>
           </el-form-item>
+          <el-form-item label="创建新环境" prop="newImage">
+            <div class="config-form-item">
+              <el-switch v-model="configForm.newImage" />
+            </div>
+          </el-form-item>
         </el-form>
       </el-card>
     </div>
+
     <el-dialog class="config-dialog" v-model="configDialogVisible" width="20%" title="选择文件" draggable>
       <file-select-modal
         :container-name="deployPackage.containerName"
@@ -84,7 +90,7 @@
 
     <div class="step-control">
       <el-button style="margin-top: 12px" @click="previous" v-show="active > 0" >上一步</el-button>
-      <el-button style="margin-top: 12px" @click="next" type="primary">{{active === 2 ? "创建" : "下一步"}}</el-button>
+      <el-button style="margin-top: 12px" @click="next" type="primary">{{active === lastStepIndex ? "创建" : "下一步"}}</el-button>
       <!--<el-button style="margin-top: 12px" @click="testInvoke" type="warning">测试</el-button>-->
     </div>
   </div>
@@ -101,7 +107,9 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import MyFolder from "@/components/Drive/MyFolder.vue";
 import { ref } from "vue";
 import { createModelService } from "@/api/container/modelService";
+import type { Service } from "@/api/container/modelService";
 import { useRouter } from "vue-router";
+import { initWorkspace } from "@/api/container/workspace";
 const router = useRouter();
 
 interface Config {
@@ -129,6 +137,8 @@ const deployPackage: DeployPackage = {
 
 // 控制tab切换
 const active = ref<number>(0);
+// 最后一个步骤的tab index
+const lastStepIndex = ref<number>(1);
 const previous = () => {
   if (active.value <= 0) {
     return;
@@ -138,12 +148,12 @@ const previous = () => {
 };
 
 const next = () => {
-  if (active.value == 2) {
+  if (active.value == lastStepIndex.value) {
     //所有步骤都完成了,创建服务
     createService();
     return;
   }
-  if (active.value > 2) {
+  if (active.value > lastStepIndex.value) {
     return;
   } else {
     // 判断该tab是否已经填入参数
@@ -155,14 +165,14 @@ const next = () => {
         }
         break;
       }
+      // case 1: {
+      //   // if (deployPackage.file == null){
+      //   //   proxy.$modal.msgWarning("请选择模型相关文件")
+      //   //   return;
+      //   // }
+      //   break;
+      // }
       case 1: {
-        // if (deployPackage.file == null){
-        //   proxy.$modal.msgWarning("请选择模型相关文件")
-        //   return;
-        // }
-        break;
-      }
-      case 2: {
         if (deployPackage.config.serviceName == "") {
           proxy.$modal.msgWarning("请输入模型服务名称");
           return;
@@ -208,7 +218,8 @@ const configForm = reactive({
   mdlFile: "",
   mdlFilePath: "",
   encapsulationFile: "",
-  encapsulationFilePath: ""
+  encapsulationFilePath: "",
+  newImage: false
 });
 
 // 服务名称校验器
@@ -301,35 +312,40 @@ const createService = async () => {
     let msg = confirmParams();
     if (msg == "true") {
 
-      const deployPackageDTO = {
+      const deployPackageDTO: Service = {
         containerId: deployPackage.containerId,
         containerName: deployPackage.containerName,
         msName: configForm.serviceName,
         relativeDir: deployPackage.relativeDir,
         mdlFilePath: configForm.mdlFilePath,
-        encapScriptPath: configForm.encapsulationFilePath
+        encapScriptPath: configForm.encapsulationFilePath,
+        newImage: configForm.newImage
       };
 
-      proxy.$modal.confirm("是否发布模型服务")
-        .then(() => {
+      if (deployPackageDTO.newImage){
+        createServiceWithNewContainer(deployPackageDTO);
+      } else {
+        proxy.$modal.confirm("是否发布模型服务")
+          .then(() => {
 
-          // console.log("deployPackageDTO:", deployPackageDTO);
-          createModelService(deployPackageDTO)
-            .then(res => {
-              ElMessage({
-                type: 'success',
-                message: '服务发布成功！',
-              })
+            // console.log("deployPackageDTO:", deployPackageDTO);
+            createModelService(deployPackageDTO)
+              .then(res => {
+                ElMessage({
+                  type: 'success',
+                  message: '服务发布成功！',
+                })
 
-              router.push({path: "/lab/serviceList"});
-            });
-        })
-        .catch(() => {
-          ElMessage({
-            type: 'info',
-            message: '取消操作',
+                router.push({path: "/lab/serviceList"});
+              });
           })
-        })
+          .catch(() => {
+            ElMessage({
+              type: 'info',
+              message: '取消操作',
+            })
+          })
+      }
 
 
 
@@ -338,6 +354,50 @@ const createService = async () => {
     }
   }
 };
+
+// 重新创建一个新容器用于该模型服务，这个方式比较慢，所以用这种交互
+const createServiceWithNewContainer = (service: Service) => {
+  ElMessageBox({
+    title: "系统提示",
+    message: "是否发布模型服务",
+    showCancelButton: true,
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+    beforeClose: (action, instance, done) => {
+      if (action === "confirm") {
+        instance.confirmButtonLoading = true;
+        instance.confirmButtonText = "服务创建中...";
+
+        // 创建服务
+        createModelService(service)
+          .then(res => {
+            proxy.$modal.msgSuccess("服务发布成功！");
+            done();
+            setTimeout(() => {
+              instance.confirmButtonLoading = false;
+              router.push({path: "/lab/serviceList"});
+            }, 300);
+
+          })
+          .catch(() => {
+            setTimeout(() => {
+              instance.confirmButtonLoading = false;
+            }, 300);
+            done();
+          });
+
+      } else {
+        done();
+      }
+    }
+  })
+    .then((action) => {})
+    .catch(() => {
+      proxy.$modal.msg("未进行操作");
+    });
+
+}
 
 //双重检验前面的参数是否都填了
 const confirmParams: () => string = () => {
@@ -389,5 +449,9 @@ const confirmParams: () => string = () => {
 }
 .dialog-footer button:first-child {
   margin-right: 10px;
+}
+
+.el-steps--simple{
+  padding: 13px 30% !important;
 }
 </style>

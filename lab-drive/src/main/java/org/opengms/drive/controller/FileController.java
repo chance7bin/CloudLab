@@ -65,12 +65,12 @@ public class FileController {
      * @return {@link ApiResponse}
      * @author 7bin
      **/
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse uploadFiles(MultipartFile file) {
         if (file.isEmpty()) {
             return ApiResponse.error("文件不能为空");
         }
-        return fileService.uploadFiles(file) > 0 ? ApiResponse.success() : ApiResponse.error();
+        return ApiResponse.success(fileService.uploadFiles(file));
     }
 
     /**

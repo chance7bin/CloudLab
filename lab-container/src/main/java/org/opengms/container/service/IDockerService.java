@@ -1,5 +1,6 @@
 package org.opengms.container.service;
 
+import org.opengms.common.TerminalRes;
 import org.opengms.container.entity.dto.docker.ContainerInfoDTO;
 import org.opengms.container.entity.dto.docker.ImageInfoDTO;
 import org.opengms.container.entity.dto.docker.JupyterInfoDTO;
@@ -33,8 +34,20 @@ public interface IDockerService {
     //获取docker容器列表
     List<ContainerInfoDTO> listContainers();
 
-
-
-
     void execCommand();
+
+    void commitContainer();
+
+    void saveContainer();
+
+    TerminalRes exportContainer(String container, String outputPath);
+
+    TerminalRes importContainer(String inputPath, String imageName);
+
+    void startContainer();
+
+    void stopContainer();
+
+    void removeContainer(String containerInsId);
+
 }

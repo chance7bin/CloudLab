@@ -29,7 +29,7 @@ public class FileInfo extends BaseEntity {
     /** md5 */
     private String md5;
 
-    /** 文件大小 */
+    /** 文件大小 (单位: 字节) */
     private String size;
 
     /** 删除标志 0false  1true */

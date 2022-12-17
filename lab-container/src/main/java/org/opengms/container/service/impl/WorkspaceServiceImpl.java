@@ -69,11 +69,14 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
 
 
         // 工作空间的jupyter配置文件存放在 container.repository 目录的pod/{containerId}/config文件夹下
-        String configDir = "/pod/" + jupyterContainer.getContainerId() + "/config";
+        // String configDir = "/workspace/" + jupyterContainer.getContainerId() + "/config";
+        String configDir = ContainerConstants.configDir(jupyterContainer.getContainerId());
         // 工作空间的用户文件存放在 container.repository 目录的pod/{containerId}/data文件夹下
-        String workspaceDir = "/pod/" + jupyterContainer.getContainerId() + "/data";
-        // 该工作空间所在的容器创建的模型服务都在 container.repository 目录的 pod/{containerId}/service 下
-        String serviceDir = "/pod/" + jupyterContainer.getContainerId() + "/service";
+        // String workspaceDir = "/workspace/" + jupyterContainer.getContainerId() + "/data";
+        String workspaceDir = ContainerConstants.workspaceDir(jupyterContainer.getContainerId());
+        // 该工作空间所在的容器创建的模型服务都在 container.repository 目录的 workspace/{containerId}/service 下
+        // String serviceDir = "/workspace/" + jupyterContainer.getContainerId() + "/service";
+        String serviceDir = ContainerConstants.serviceDir(jupyterContainer.getContainerId());
 
         // 生成jupyter的配置文件
         String jupyterToken = UUID.fastUUID().toString();
@@ -113,6 +116,7 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
         //对创建容器抛出的异常做处理
         try {
             // 启动容器
+            jupyterContainer.setCmd(ContainerConstants.RUN_JUPYTER_CMD);
             dockerService.createContainer(jupyterContainer);
         } catch (InternalServerErrorException serverErrorException){
             if (serverErrorException.getMessage().contains("port is already allocated")){
@@ -215,7 +219,7 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
     @Override
     public JupyterInfoDTO getJupyterContainerById(Long id) {
 
-        JupyterContainer jc = dockerOperMapper.getContainerInfoById(id);
+        JupyterContainer jc = dockerOperMapper.getJupyterContainerInfoById(id);
         JupyterInfoDTO jupyterInfoDTO = new JupyterInfoDTO();
         if (jc != null){
             BeanUtils.copyProperties(jc, jupyterInfoDTO);

@@ -1,6 +1,8 @@
 package org.opengms.container;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.file.FileNameUtil;
+import cn.hutool.core.util.ZipUtil;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
@@ -10,6 +12,7 @@ import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -20,8 +23,10 @@ import org.opengms.common.utils.ReflectUtils;
 import org.opengms.common.utils.file.FileTypeUtils;
 import org.opengms.common.utils.file.FileUtils;
 import org.opengms.common.utils.ip.IpUtils;
+import org.opengms.container.clients.DriveClient;
 import org.opengms.container.entity.bo.mdl.*;
 import org.opengms.container.entity.bo.mdl.Event;
+import org.opengms.container.entity.dto.ApiResponse;
 import org.opengms.container.enums.MDLStructure;
 import org.opengms.container.mapper.DockerOperMapper;
 import org.opengms.container.service.IDockerService;
@@ -29,9 +34,13 @@ import org.opengms.container.service.IWorkspaceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.*;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -327,10 +336,74 @@ public class ContainerApplicationTests {
         }
     }
 
+    @Autowired
+    DriveClient driveClient;
 
+    //上传文件
     @Test
     void uploadFile(){
 
+        File file = new File("E:\\opengms-lab\\container\\workspace\\8287025736412860416\\service\\1test2_8288013738125070336\\instance\\cdf640fc-e86d-4b90-ac96-7d13608ecd90\\result.png");
+
+        ApiResponse apiResponse = driveClient.uploadFiles(file2MultipartFile(file));
+
+        System.out.println(apiResponse.toString());
+
+    }
+
+    public MultipartFile file2MultipartFile(File file) {
+        DiskFileItem item = new DiskFileItem("file"
+            , MediaType.MULTIPART_FORM_DATA_VALUE
+            , true
+            , file.getName()
+            , (int)file.length()
+            , file.getParentFile());
+        try {
+            OutputStream os = item.getOutputStream();
+            os.write(FileUtils.readFileToByteArray(file));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new CommonsMultipartFile(item);
+    }
+
+
+    //commit容器
+    @Test
+    void testCommitContainer(){
+        // dockerService.commitContainer();
+        String container = "test6";
+        String outputPath = "E:\\opengms-lab\\container\\package\\test6.tar";
+
+        dockerService.exportContainer(container, outputPath);
+        // dockerService.importContainer();
+    }
+
+    //压缩
+    @Test
+    void compress(){
+        // ZipUtil.zip("E:\\opengms-lab\\container\\package", "E:\\opengms-lab\\container\\pkg\\pkg.zip");
+        ZipUtil.zip(new File("E:\\opengms-lab\\container\\pkg\\pkg2.zip"),true,
+            new File("E:\\opengms-lab\\container\\workspace\\8289087029604552704\\config"),
+            new File("E:\\opengms-lab\\container\\workspace\\8289087029604552704\\data"),
+            new File("E:\\opengms-lab\\container\\image\\test6.tar"));
+    }
+
+    //解压
+    @Test
+    void uncompress(){
+
+        File zipFile = new File("E:\\opengms-lab\\container\\package\\new3_ceaae73a-30d6-4a78-939d-7f799e1204dd.zip");
+        String outFilePathStr = "E:\\opengms-lab\\container\\service\\" + FileNameUtil.mainName(zipFile);
+        File outFileDir = new File(outFilePathStr);
+        ZipUtil.unzip(zipFile, outFileDir);
+
+
+        // 将镜像导入到docker中
+        String[] s = outFileDir.getName().split("_");
+        String inputPath = outFilePathStr + "/" + s[1] + ".tar";
+        dockerService.importContainer(inputPath, "new1" + ":" + 1 + ".0");
+        // ZipUtil.unzip("new3_ceaae73a-30d6-4a78-939d-7f799e1204dd.zip", "E:\\opengms-lab\\container\\pkg");
     }
 
 }

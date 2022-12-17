@@ -21,8 +21,8 @@ public interface DriveMapper {
      * 是否在一个路径中存在相同文件名的文件
      * @param filename
      * @param parentId
-     * @return {@link int}
+     * @return {@link FileInfo}
      * @author 7bin
      **/
-    int existFileInPath(@Param("filename") String filename,@Param("parentId") String parentId);
+    FileInfo existFileInPath(@Param("filename") String filename,@Param("parentId") String parentId);
 }

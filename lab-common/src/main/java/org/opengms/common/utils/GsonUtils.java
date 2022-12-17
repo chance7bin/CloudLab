@@ -1,4 +1,4 @@
-package org.opengms.common;
+package org.opengms.common.utils;
 
 import com.google.gson.Gson;
 

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.opengms.admin.clients.DriveClient;
 import org.opengms.admin.entity.bo.Server;
 import org.opengms.admin.entity.dto.ApiResponse;
+import org.opengms.common.utils.file.FileUtils;
 import org.opengms.common.utils.uuid.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,10 +50,20 @@ public class AdminApplicationTests {
         HashMap<String, Object> responseData = ApiResponse.getResponseData(fileInfo);
         String suffix = (String)responseData.get("suffix");
         String filename = "gd_" + UUID.fastUUID() + "." + suffix;
-        long fileSize = HttpUtil.downloadFile(url, new File("E:\\opengms-lab\\container\\pod\\8287025736412860416\\service\\1test1_8287938606320357376\\" + filename));
+        long fileSize = HttpUtil.downloadFile(url, new File("E:\\opengms-lab\\container\\workspace\\8287025736412860416\\service\\1test1_8287938606320357376\\" + filename));
         System.out.println(fileSize);
 
 
+    }
+
+    // 判断两个文件是否相同
+    @Test
+    void isSameFile(){
+        String file1 = "E:\\opengms-lab\\container\\pod\\test1.tar";
+        String file2 = "E:\\opengms-lab\\container\\pod\\test3.tar";
+
+        Boolean sameFile = FileUtils.isSameFile(file1, file2);
+        System.out.println(sameFile);
     }
 
 }

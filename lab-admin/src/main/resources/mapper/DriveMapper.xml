@@ -59,8 +59,14 @@
         where parent_id = #{parentId} and create_by = #{username}
     </select>
 
-    <select id="existFileInPath" resultType="java.lang.Integer">
-        select count(filename) > 0
+    <!--<select id="existFileInPath" resultType="java.lang.Integer">-->
+    <!--    select count(filename) > 0-->
+    <!--    from file_info-->
+    <!--    where parent_id=#{parentId} and filename=#{filename}-->
+    <!--</select>-->
+
+    <select id="existFileInPath" resultMap="fileResult">
+        select *
         from file_info
         where parent_id=#{parentId} and filename=#{filename}
     </select>

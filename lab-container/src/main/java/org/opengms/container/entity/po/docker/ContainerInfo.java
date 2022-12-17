@@ -29,6 +29,9 @@ public class ContainerInfo extends BaseEntity {
     /** 镜像名 */
     String imageName;
 
+    /** 镜像id */
+    Long imageId;
+
     /** 容器对外暴露端口 */
     Integer containerExportPort;
 
@@ -38,5 +41,13 @@ public class ContainerInfo extends BaseEntity {
     /** 挂载数据卷列表 宿主机目录中表示的只是相对路径 实际路径需加上${repository} */
     List<String> volumeList = new ArrayList<>();
 
+    /** 启动命令 */
+    List<String> cmd;
+
+    /** 容器状态 */
+    String status;
+
+    /** 容器是否被删除 */
+    Boolean delFlag;
 
 }

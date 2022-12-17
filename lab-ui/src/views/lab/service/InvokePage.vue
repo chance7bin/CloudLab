@@ -53,7 +53,25 @@
               <!--输出结果-->
               <div>
                 <el-alert style="margin-bottom: 10px"  title="输出结果" type="success" :closable="false"/>
-                
+                <div v-if="showResult">
+                  <el-table :data="outputs" stripe style="width: 100%" table-layout="auto">
+                    <el-table-column type="index" :index="indexMethod" />
+                    <el-table-column prop="state" label="state" width="180" />
+                    <el-table-column prop="event" label="event" width="180" />
+                    <el-table-column prop="dataMIME" label="dataMIME" width="180" />
+                    <el-table-column label="result" width="200">
+                      <template #default="scope">
+                        <div v-if="scope.row.dataMIME=='file'" class="config-form-item">
+                          <el-input v-model="scope.row.driveFileId" disabled />
+                          <el-button type="success" :icon="Download" circle @click="downloadFile(scope.row.driveFileId)"/>
+                        </div>
+                        <div v-else>
+                          <el-input v-model="scope.row.value" disabled />
+                        </div>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </div>
               </div>
 
             </el-form>
@@ -113,8 +131,10 @@ import useCurrentInstance from "@/utils/currentInstance";
 import { getModelServiceById, getMsInsById, invokeService } from "@/api/container/modelService";
 import { onBeforeUnmount, ref } from "vue";
 import type { FormInstance, FormRules } from "element-plus";
-import { FolderOpened } from "@element-plus/icons-vue";
-import { getJupyterContainerById } from "@/api/container/workspace";
+import { FolderOpened , Download} from "@element-plus/icons-vue";
+import { getJupyterContainerById, initWorkspace } from "@/api/container/workspace";
+import { checkAuth } from "@/api/admin/login";
+import { ElMessageBox } from "element-plus";
 
 
 const { proxy } = useCurrentInstance();
@@ -161,6 +181,10 @@ getModelServiceById(msId as string)
     mdlModelClass.value = res.data.modelClass;
     // console.log("modelClass:", mdlModelClass.value);
 
+    if (!modelService.value["deployStatus"]){
+      proxy.$modal.msgWarning("模型服务正在初始化中...");
+    }
+
     //参数设置页面初始化
     initParams();
 
@@ -168,6 +192,7 @@ getModelServiceById(msId as string)
     proxy.$modal.closeLoading();
   })
   .catch(res => {
+    // console.log(res);
     serviceExist.value = false;
     proxy.$modal.closeLoading();
   });
@@ -234,45 +259,92 @@ const showProcess = ref(false);
 const showResult = ref(false);
 const insInfo = ref<object>();
 const logs = ref<object[]>([]);
+const outputs = ref<object[]>([]);
 
 const invoke = async () => {
+
+  if (!modelService.value["deployStatus"]){
+    proxy.$modal.msgWarning("模型服务正在初始化中...");
+    return;
+  }
+
   const valid = await submitForm(ruleFormRef.value);
   if (valid){
 
     //将输入数据绑定到mdl中
     copyData2Mdl();
 
-    invokeService(modelService.value).then((res) => {
-      proxy.$modal.notifySuccess("开始运行");
-      // forbidInvoke.value = true;
-      // console.log("invokeService: ",data["data"]);
-      showProcess.value = true;
-      showResult.value = false;
-      currentInsId = res["data"];
 
-      // getMsInsById(currentInsId).then((data) => {
-      //   console.log("getMsInsById: ",data);
-      // });
+    ElMessageBox({
+      title: "系统提示",
+      message: "是否开始执行任务",
+      showCancelButton: true,
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+      beforeClose: (action, instance, done) => {
+        if (action === "confirm") {
+          instance.confirmButtonLoading = true;
+          instance.confirmButtonText = "任务初始化中...";
 
-      // 运行服务后开启定时器，定时请求该任务的实例信息
-      timer = setInterval(()=>{
-        // 这里调用调用需要执行的方法
-        getMsInsById(currentInsId).then((res) => {
-          // console.log("getMsInsById: ",res);
+          invokeService(modelService.value)
+            .then((res) => {
+              proxy.$modal.notifySuccess("开始运行");
+              done();
+              setTimeout(() => {
+                instance.confirmButtonLoading = false;
+              }, 300);
 
-          if (res["data"] != null){
-            insInfo.value = res["data"];
-            logs.value = res["data"]["logs"];
-          }
+              // forbidInvoke.value = true;
+              // console.log("invokeService: ",data["data"]);
+              showProcess.value = true;
+              showResult.value = false;
+              currentInsId = res["data"];
 
-          //任务结束删除定时任务
-          if (res["data"] == null || res["data"]["status"] == "FINISHED" || res["data"]["status"] == "ERROR"){
-            clearInterval(timer)
-            showResult.value = true;
-          }
-        });
-      }, 1000) // 每1秒执行1次
-    });
+              // getMsInsById(currentInsId).then((data) => {
+              //   console.log("getMsInsById: ",data);
+              // });
+
+              // 运行服务后开启定时器，定时请求该任务的实例信息
+              timer = setInterval(()=>{
+                // 这里调用调用需要执行的方法
+                getMsInsById(currentInsId).then((res) => {
+                  // console.log("getMsInsById: ",res);
+
+                  if (res["data"] != null){
+                    insInfo.value = res["data"];
+                    logs.value = res["data"]["logs"];
+                    outputs.value = res["data"]["outputs"];
+                  }
+
+                  //任务结束删除定时任务
+                  if (res["data"] == null || res["data"]["status"] == "FINISHED" || res["data"]["status"] == "ERROR"){
+                    clearInterval(timer)
+                    showResult.value = true;
+                  }
+                });
+              }, 1000) // 每1秒执行1次
+            })
+            .catch(() => {
+              setTimeout(() => {
+                instance.confirmButtonLoading = false;
+              }, 300);
+              done();
+            });
+
+        } else {
+          done();
+        }
+      }
+    })
+      .then((action) => {})
+      .catch(() => {
+        proxy.$modal.msg("未进行操作");
+      });
+
+
+
+
 
 
   } else {
@@ -332,6 +404,18 @@ const logColor = (log) => {
   }
 
   return "color:" + color;
+}
+
+//输出结果部分
+const indexMethod = (index: number) => {
+  return index + 1;
+}
+
+// 下载文件
+const downloadFile = async (driveFileId) => {
+  await checkAuth();
+
+  window.location.href = import.meta.env.VITE_APP_DRIVE_API + "/file/download/" + driveFileId;
 }
 
 </script>
