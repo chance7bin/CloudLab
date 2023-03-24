@@ -5,6 +5,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.file.CopyDirectoryVisitor;
 import org.apache.commons.lang3.ArrayUtils;
 import org.opengms.common.exception.UtilException;
 import org.opengms.common.utils.DateUtils;
@@ -20,6 +21,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -537,6 +540,65 @@ public class FileUtils extends org.apache.commons.io.FileUtils
                 e.printStackTrace();
             }
         }
+    }
+
+
+    /**
+     * 递归删除文件夹
+     * @param path 文件夹路径
+     * @author 7bin
+     **/
+    public static void deleteDirectory(String path) throws IOException {
+        Files.walkFileTree(Paths.get(path), new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return super.visitFile(file, attrs);
+            }
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.delete(dir);
+                return super.postVisitDirectory(dir, exc);
+            }
+        });
+
+        Files.walkFileTree(Paths.get(""), new SimpleFileVisitor<Path>(){
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+
+                return super.visitFile(file, attrs);
+            }
+        });
+    }
+
+
+    /**
+     * 拷贝文件夹
+     * @param source 源文件夹路径
+     * @param target 目标文件夹路径
+     * @author 7bin
+     **/
+    public static void copyDirectory(String source, String target) throws IOException {
+        long start = System.currentTimeMillis();
+
+        Files.walk(Paths.get(source)).forEach(path -> {
+            try {
+                String targetName = path.toString().replace(source, target);
+                // 是目录
+                if (Files.isDirectory(path)) {
+                    Files.createDirectory(Paths.get(targetName));
+                }
+                // 是普通文件
+                else if (Files.isRegularFile(path)) {
+                    Files.copy(path, Paths.get(targetName));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        long end = System.currentTimeMillis();
+        // System.out.println(end - start);
     }
 
 }
