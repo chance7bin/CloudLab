@@ -67,4 +67,5 @@ public class MsrIns extends BaseEntity {
     /** 任务所运行的docker容器id */
     Long containerId;
 
+
 }

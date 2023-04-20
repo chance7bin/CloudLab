@@ -42,7 +42,6 @@ public class SocketServiceImpl implements ISocketService {
     public void startSocketListener() {
         log.info("SocketListener - listening on port : " + socketPort);
 
-
     }
 
     @Async
@@ -183,41 +182,5 @@ public class SocketServiceImpl implements ISocketService {
             }
         }
     }
-
-
-    /**
-     * 把消息发送给客户端
-     * @param key
-     * @return void
-     * @author 7bin
-     **/
-    private void sendMessage2Client(SelectionKey key) throws IOException {
-        //将消息发回给该client
-        SocketChannel clientChannel = (SocketChannel) key.channel();
-        // get content from attachment
-        String content = (String) key.attachment();
-        // write content to socket channel
-        clientChannel.write(ByteBuffer.wrap(content.getBytes()));
-        // ByteBuffer writeBuffer = ByteBuffer.allocate(SOCKET_MESSAGE_SIZE);
-        // writeBuffer.put((content).getBytes());
-        // writeBuffer.flip();
-        // clientChannel.write(writeBuffer);
-        key.interestOps(SelectionKey.OP_READ);
-    }
-
-    // /**
-    //  * 把消息发送给客户端
-    //  * @param clientChannel
-    //  * @return void
-    //  * @author 7bin
-    //  **/
-    // private void sendMessage2Client(SocketChannel clientChannel) throws IOException {
-    //     //将消息发回给该client
-    //     Client connectingChannel = msInsService.getConnectingChannel(clientChannel);
-    //     clientChannel.write(ByteBuffer.wrap(connectingChannel.getSendMessage().getBytes()));
-    // }
-
-
-
 
 }

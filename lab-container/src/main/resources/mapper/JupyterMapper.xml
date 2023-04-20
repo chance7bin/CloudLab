@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengms.container.mapper.JupyterMapper">
+
+    <resultMap type="JupyterContainer" id="jupyterContainerResult">
+        <id     property="containerId"         column="container_id"      />
+        <result property="containerInsId"      column="container_ins_id"      />
+        <result property="containerName"       column="container_name"    />
+        <result property="imageName"           column="image_name"     />
+        <result property="imageId"             column="image_id"     />
+        <result property="status"              column="status"     />
+        <result property="containerExportPort" column="container_export_port"   />
+        <result property="hostBindPort"        column="host_bind_port"    />
+        <result property="jupyterToken"        column="jupyter_token"/>
+        <result property="workspaceVolume"     column="workspace_volume"    />
+        <!--<result property="serviceVolume"       column="service_volume"    />-->
+        <result property="configVolume"        column="config_volume"/>
+        <result property="volumeList"          column="volume_list"  typeHandler="org.opengms.container.handler.ListTypeHandler"/>
+        <result property="hostIP"              column="host_ip"/>
+        <result property="hostMAC"             column="host_mac"/>
+        <result property="createBy"            column="create_by"      />
+        <result property="createTime"          column="create_time"    />
+        <result property="updateBy"            column="update_by"      />
+        <result property="updateTime"          column="update_time"    />
+        <result property="remark"              column="remark"    />
+    </resultMap>
+
+    <insert id="insert" parameterType="jupyterContainer" useGeneratedKeys="true" keyProperty="containerId">
+        insert into jupyter_container(
+        <if test="containerId != null and containerId != 0">container_id,</if>
+        <if test="containerInsId != null and containerInsId != ''">container_ins_id,</if>
+        <if test="containerName != null and containerName != ''">container_name,</if>
+        image_id,
+        <if test="imageName != null and imageName != ''">image_name,</if>
+        <if test="status != null">status,</if>
+        <if test="containerExportPort != null">container_export_port,</if>
+        <if test="hostBindPort != null">host_bind_port,</if>
+        <if test="jupyterToken != null and jupyterToken != ''">jupyter_token,</if>
+        <if test="workspaceVolume != null and workspaceVolume != ''">workspace_volume,</if>
+        <!--<if test="serviceVolume != null and serviceVolume != ''">service_volume,</if>-->
+        <if test="configVolume != null and configVolume != ''">config_volume,</if>
+        <if test="volumeList != null and volumeList.size != 0">volume_list,</if>
+        <if test="hostIP != null">host_ip,</if>
+        <if test="hostMAC != null">host_mac,</if>
+        <if test="createBy != null and createBy != ''">create_by,</if>
+        <if test="remark != null and remark != ''">remark,</if>
+        create_time
+        )values(
+        <if test="containerId != null and containerId != 0">#{containerId},</if>
+        <if test="containerInsId != null and containerInsId != ''">#{containerInsId},</if>
+        <if test="containerName != null and containerName != ''">#{containerName},</if>
+        #{imageId},
+        <if test="imageName != null and imageName != ''">#{imageName},</if>
+        <if test="status != null">status,</if>
+        <if test="containerExportPort != null">#{containerExportPort},</if>
+        <if test="hostBindPort != null">#{hostBindPort},</if>
+        <if test="jupyterToken != null and jupyterToken != ''">#{jupyterToken},</if>
+        <if test="workspaceVolume != null and workspaceVolume != ''">#{workspaceVolume},</if>
+        <!--<if test="serviceVolume != null and serviceVolume != ''">#{serviceVolume},</if>-->
+        <if test="configVolume != null and configVolume != ''">#{configVolume},</if>
+        <if test="volumeList != null and volumeList.size != 0">#{volumeList,typeHandler=org.opengms.container.handler.ListTypeHandler},</if>
+        <if test="hostIP != null">#{hostIP},</if>
+        <if test="hostMAC != null">#{hostMAC},</if>
+        <if test="createBy != null and createBy != ''">#{createBy},</if>
+        <if test="remark != null and remark != ''">#{remark},</if>
+        sysdate()
+        )
+    </insert>
+
+    <update id="updateById" parameterType="jupyterContainer">
+        update jupyter_container
+        <set>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            update_time = sysdate()
+        </set>
+        where container_id = #{containerId}
+    </update>
+
+    <update id="deleteById" parameterType="Long" >
+        update jupyter_container
+        <set>
+            <if test="delFlag != null">del_flag = 1,</if>
+            update_time = sysdate()
+        </set>
+        where container_id = #{containerId}
+    </update>
+
+
+    <select id="selectList" resultMap="jupyterContainerResult">
+        select * from jupyter_container where del_flag = '0' || null
+    </select>
+
+
+    <select id="listAllUsedPort" resultType="java.lang.Integer">
+        select host_bind_port from jupyter_container
+    </select>
+
+
+    <select id="getContainerInfoByInsId" parameterType="string" resultMap="jupyterContainerResult">
+        select * from jupyter_container where container_ins_id=#{containerInsId} and del_flag = '0' || null
+    </select>
+
+    <select id="selectById" parameterType="Long" resultMap="jupyterContainerResult">
+        select * from jupyter_container where container_id=#{containerId} and del_flag = '0' || null
+    </select>
+
+    <update id="updateContainerStatus">
+        update jupyter_container
+        <set>
+            status = #{status},
+            update_time = sysdate()
+        </set>
+        where container_id = #{containerId}
+    </update>
+
+</mapper>

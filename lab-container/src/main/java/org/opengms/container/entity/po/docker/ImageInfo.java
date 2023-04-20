@@ -1,6 +1,7 @@
 package org.opengms.container.entity.po.docker;
 
 import lombok.Data;
+import org.opengms.container.constant.ImageStatus;
 import org.opengms.container.entity.BaseEntity;
 
 /**
@@ -19,12 +20,25 @@ public class ImageInfo extends BaseEntity {
     String imageId;
 
     /** 镜像名 */
-    String repository;
+    String imageName;
 
     /** 镜像标签 */
     String tag;
 
+    /** 镜像名:标签 */
+    String repoTags;
+
     /** 镜像大小 */
     Long size;
+
+    /** 镜像状态 */
+    String status = ImageStatus.INIT;
+
+    /** commit次数，不得超过127次 */
+    int commitCount = 0;
+
+    /** 是否删除 */
+    boolean delFlag;
+
 
 }

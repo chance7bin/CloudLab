@@ -9,14 +9,16 @@ import org.opengms.common.utils.DateUtils;
 import org.opengms.common.utils.StringUtils;
 import org.opengms.common.utils.TerminalUtils;
 import org.opengms.common.utils.file.FileUtils;
+import org.opengms.container.constant.ContainerStatus;
 import org.opengms.container.entity.dto.docker.ContainerInfoDTO;
 import org.opengms.container.entity.dto.docker.ImageInfoDTO;
-import org.opengms.container.entity.dto.docker.JupyterInfoDTO;
 import org.opengms.container.entity.po.docker.ContainerInfo;
-import org.opengms.container.entity.po.docker.JupyterContainer;
-import org.opengms.container.mapper.DockerOperMapper;
+import org.opengms.container.entity.po.JupyterContainer;
+import org.opengms.container.enums.ContainerType;
+import org.opengms.container.exception.ServiceException;
+import org.opengms.container.mapper.JupyterMapper;
+import org.opengms.container.service.IContainerService;
 import org.opengms.container.service.IDockerService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * docker业务层实现类
+ * 直接与docker交互的操作 实现类
  *
  * @author bin
  * @date 2022/10/5
@@ -40,8 +42,8 @@ public class DockerServiceImpl implements IDockerService {
     @Qualifier(value = "dockerClient")
     DockerClient dockerClient;
 
-    @Autowired
-    DockerOperMapper dockerOperMapper;
+    // @Autowired
+    // IContainerService containerService;
 
     @Value(value = "${container.repository}")
     private String repository;
@@ -71,6 +73,27 @@ public class DockerServiceImpl implements IDockerService {
     }
 
     @Override
+    public String getContainerStatusByContainerInsId(String containerInsId) {
+
+        try {
+            InspectContainerCmd cmd = dockerClient.inspectContainerCmd(containerInsId);
+            InspectContainerResponse res = cmd.exec();
+            String status = res.getState().getStatus();
+            return status;
+        } catch (Exception e){
+            // throw new ServiceException("容器不存在");
+            return ContainerStatus.DELETED;
+        }
+    }
+
+    @Override
+    public InspectImageResponse inspectImage(String sha256) {
+        InspectImageResponse res = dockerClient.inspectImageCmd(sha256).exec();
+        return res;
+    }
+
+
+    @Override
     public List<ImageInfoDTO> listImages() {
 
         List<Image> images = dockerClient.listImagesCmd().exec();
@@ -89,30 +112,43 @@ public class DockerServiceImpl implements IDockerService {
     }
 
     @Override
-    public List<ContainerInfoDTO> listContainers() {
+    public List<Container> listContainers() {
 
         List<Container> containers = dockerClient.listContainersCmd().exec();
 
-        List<ContainerInfoDTO> containerInfoList = new ArrayList<>();
+        // List<ContainerInfoDTO> containerInfoList = new ArrayList<>();
+        // for (Container container : containers) {
+        //     ContainerInfoDTO containerInfoDTO = new ContainerInfoDTO();
+        //     ContainerInfo containerInfo = containerService.getContainerInfoByInsId(container.getId(), ContainerType.JUPYTER);
+        //     // TODO: 2022/10/28 获取容器从docker命令行还是数据库？
+        //     if (containerInfo == null){
+        //         continue;
+        //     }
+        //     containerInfoDTO.setContainerId(containerInfo.getContainerId());
+        //     containerInfoDTO.setContainerName(containerInfo.getContainerName());
+        //     containerInfoDTO.setImageName(container.getImage());
+        //     containerInfoDTO.setStatus(container.getState()); //running
+        //     containerInfoDTO.setStarted(container.getStatus()); //Up 3 hours
+        //     // container.getCreated() 的时间戳位数是10位 now.getTime()是13位
+        //     containerInfoDTO.setCreated(DateUtils.getTime2Now(DateUtils.toDate(container.getCreated() * 1000)));
+        //     containerInfoList.add(containerInfoDTO);
+        // }
+
+        return containers;
+
+    }
+
+    @Override
+    public Container selectContainerByInsId(String insId) {
+
+        List<Container> containers = listContainers();
         for (Container container : containers) {
-            ContainerInfoDTO containerInfoDTO = new ContainerInfoDTO();
-            JupyterContainer jc = dockerOperMapper.getJupyterContainerInfoByInsId(container.getId());
-            // TODO: 2022/10/28 获取容器从docker命令行还是数据库？
-            if (jc == null){
-                continue;
+            if (container.getId().equals(insId)){
+                return container;
             }
-            containerInfoDTO.setContainerId(jc.getContainerId());
-            containerInfoDTO.setContainerName(jc.getContainerName());
-            containerInfoDTO.setImageName(container.getImage());
-            containerInfoDTO.setStatus(container.getState()); //running
-            containerInfoDTO.setStarted(container.getStatus()); //Up 3 hours
-            // container.getCreated() 的时间戳位数是10位 now.getTime()是13位
-            containerInfoDTO.setCreated(DateUtils.getTime2Now(DateUtils.toDate(container.getCreated() * 1000)));
-            containerInfoList.add(containerInfoDTO);
         }
 
-        return containerInfoList;
-
+        return null;
     }
 
 
@@ -122,14 +158,24 @@ public class DockerServiceImpl implements IDockerService {
     }
 
     @Override
-    public void commitContainer() {
+    public String commitContainer(String containerInsId, String imageName, String tag) {
         // CommitCmd commitCmd = dockerClient.commitCmd("413a283cfa2a2e0cfcd2a70a77d63f9c524d9f59f65f9f1ca682fd7423c4e1d6");
         // commitCmd.withRepository("java-generate");
         // commitCmd.withTag("1.0");
         // String exec = commitCmd.exec();
-        String[] cmd = new String[] {"docker", "commit", "413a283cfa2a2e0cfcd2a70a77d63fca682fd7423c4e", "java-commit:2.0"};
-        TerminalRes exec = TerminalUtils.exec(cmd);
-        System.out.println(exec);
+
+        String imageId = dockerClient.commitCmd(containerInsId)
+            .withRepository(imageName)
+            .withTag(tag)
+            .exec();
+
+        // System.out.println(exec);
+
+        // String[] cmd = new String[] {"docker", "commit", "53c516af510e17d5f3ae93475849e93749da0cd1e25b31c87232a4553f044120", "java-commit:2.0"};
+        // TerminalRes exec = TerminalUtils.exec(cmd);
+        // System.out.println(exec);
+
+        return imageId;
 
     }
 
@@ -155,11 +201,11 @@ public class DockerServiceImpl implements IDockerService {
     }
 
     @Override
-    public void startContainer() {
+    public void startContainer(String containerInsId) {
     }
 
     @Override
-    public void stopContainer() {
+    public void stopContainer(String containerInsId) {
 
     }
 
@@ -168,6 +214,15 @@ public class DockerServiceImpl implements IDockerService {
         RemoveContainerCmd removeContainerCmd = dockerClient.removeContainerCmd(containerInsId);
         removeContainerCmd.withForce(true);
         removeContainerCmd.exec();
+    }
+
+    @Override
+    public boolean isContainerRunning(String containerInsId) {
+        String status = getContainerStatusByContainerInsId(containerInsId);
+        if (ContainerStatus.RUNNING.equals(status)){
+            return true;
+        }
+        return false;
     }
 
 

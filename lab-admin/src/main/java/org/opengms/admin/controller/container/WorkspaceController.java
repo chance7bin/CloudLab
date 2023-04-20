@@ -1,6 +1,6 @@
 package org.opengms.admin.controller.container;
 
-import org.opengms.admin.clients.ContainerClient;
+import org.opengms.admin.clients.container.WorkspaceClient;
 import org.opengms.admin.entity.dto.ApiResponse;
 import org.opengms.admin.entity.po.system.SysUser;
 import org.opengms.admin.service.ISysUserService;
@@ -22,19 +22,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class WorkspaceController {
 
     @Autowired
-    ContainerClient containerClient;
+    WorkspaceClient workspaceClient;
 
     @Autowired
     ISysUserService sysUserService;
 
-    @GetMapping("/initialization/{imageName}/{containerName}")
+    @GetMapping("/initialization/{imageId}/{containerName}")
     public ApiResponse initWorkspace(
-        @PathVariable("imageName") String imageName,
+        @PathVariable("imageId") String imageId,
         @PathVariable("containerName") String containerName){
 
         Long userId = SecurityUtils.getUserId();
         SysUser sysUser = sysUserService.selectUserById(userId);
-        return containerClient.initWorkspace(sysUser.getUserName(), imageName, containerName);
+        return workspaceClient.initWorkspace(sysUser.getUserName(), imageId, containerName);
 
     }
 
@@ -43,18 +43,15 @@ public class WorkspaceController {
     public ApiResponse listWorkspaceDirByContainerId(
         @PathVariable(value = "containerId") String containerId) {
 
-        return containerClient.listWorkspaceDirByContainerId(containerId);
+        return workspaceClient.listWorkspaceDirByContainerId(containerId);
     }
 
     /**
-     * 根据containerId获取容器信息
-     * @param id
-     * @return org.opengms.admin.entity.dto.ApiResponse
-     * @author bin
+     * 根据containerId获取工作空间信息
      **/
-    @GetMapping(value = "/jupyter/item/{id}")
-    public ApiResponse getJupyterContainerById(@PathVariable("id")Long id) {
-        return containerClient.getJupyterContainerById(id);
+    @GetMapping(value = "/{containerId}")
+    public ApiResponse getWorkspaceByContainerId(@PathVariable("containerId")Long containerId) {
+        return workspaceClient.getWorkspaceByContainerId(containerId);
     }
 
 }

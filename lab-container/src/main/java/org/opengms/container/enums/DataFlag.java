@@ -6,7 +6,7 @@ package org.opengms.container.enums;
  * @author 7bin
  * @date 2022/10/21
  */
-public enum ProcessStatus {
+public enum DataFlag {
     FINISH, // 完成
     NOTREADY,// 未完成
     ERROR,// 失败

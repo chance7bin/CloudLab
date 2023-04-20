@@ -128,11 +128,11 @@
 
 <script setup lang="ts">
 import useCurrentInstance from "@/utils/currentInstance";
-import { getModelServiceById, getMsInsById, invokeService } from "@/api/container/modelService";
+import { getModelServiceById, invokeService } from "@/api/container/modelService";
+import {getMsInsById} from "@/api/container/msIns";
 import { onBeforeUnmount, ref } from "vue";
 import type { FormInstance, FormRules } from "element-plus";
 import { FolderOpened , Download} from "@element-plus/icons-vue";
-import { getJupyterContainerById, initWorkspace } from "@/api/container/workspace";
 import { checkAuth } from "@/api/admin/login";
 import { ElMessageBox } from "element-plus";
 
@@ -181,8 +181,10 @@ getModelServiceById(msId as string)
     mdlModelClass.value = res.data.modelClass;
     // console.log("modelClass:", mdlModelClass.value);
 
-    if (!modelService.value["deployStatus"]){
-      proxy.$modal.msgWarning("模型服务正在初始化中...");
+    if (modelService.value["deployStatus"] == "ERROR"){
+      proxy.$modal.msgError("模型服务部署失败, 无法调用...");
+    } else if (modelService.value["deployStatus"] != "FINISHED"){
+      proxy.$modal.msgWarning("模型服务正在初始化中, 请稍后...");
     }
 
     //参数设置页面初始化
@@ -263,8 +265,11 @@ const outputs = ref<object[]>([]);
 
 const invoke = async () => {
 
-  if (!modelService.value["deployStatus"]){
-    proxy.$modal.msgWarning("模型服务正在初始化中...");
+  if (modelService.value["deployStatus"] == "ERROR"){
+    proxy.$modal.msgError("模型服务部署失败, 无法调用...");
+    return;
+  } else if (modelService.value["deployStatus"] != "FINISHED"){
+    proxy.$modal.msgWarning("模型服务正在初始化中, 请稍后...");
     return;
   }
 
@@ -342,11 +347,6 @@ const invoke = async () => {
         proxy.$modal.msg("未进行操作");
       });
 
-
-
-
-
-
   } else {
     proxy.$modal.alertError("服务配置未填写完整");
   }
@@ -390,7 +390,7 @@ const startTaskListener = () => {
 
 const logColor = (log) => {
   let color = "#67c23a";
-  if (log['status'] == 'ERROR'){
+  if (log['dataFlag'] == 'ERROR'){
     color = "#f56c6c"
   }
   if (log["type"] == "ON_POST_ERROR_INFO") {

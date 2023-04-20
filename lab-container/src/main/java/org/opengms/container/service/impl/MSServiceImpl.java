@@ -1,27 +1,24 @@
 package org.opengms.container.service.impl;
 
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.ZipUtil;
 import com.github.dockerjava.api.exception.InternalServerErrorException;
 import lombok.extern.slf4j.Slf4j;
-import org.opengms.common.TerminalRes;
-import org.opengms.common.utils.DateUtils;
-import org.opengms.container.constant.ContainerConstants;
-import org.opengms.container.constant.TaskStatus;
-import org.opengms.container.entity.dto.docker.JupyterInfoDTO;
+import org.opengms.container.constant.*;
+import org.opengms.container.entity.dto.InvokeDTO;
+import org.opengms.container.entity.po.JupyterContainer;
 import org.opengms.container.entity.po.MsrIns;
 import org.opengms.container.entity.bo.mdl.*;
 import org.opengms.container.entity.dto.ModelServiceDTO;
 import org.opengms.container.entity.po.ModelService;
 import org.opengms.container.entity.po.docker.ContainerInfo;
-import org.opengms.container.entity.po.docker.JupyterContainer;
+import org.opengms.container.entity.po.docker.ImageInfo;
+import org.opengms.container.enums.ContainerType;
 import org.opengms.container.enums.ProcessState;
 import org.opengms.container.exception.ServiceException;
-import org.opengms.container.mapper.DockerOperMapper;
+import org.opengms.container.mapper.ImageMapper;
 import org.opengms.container.mapper.ModelServiceMapper;
 import org.opengms.container.mapper.MsrInsMapper;
 import org.opengms.container.service.*;
-import org.opengms.common.utils.StringUtils;
 import org.opengms.common.utils.uuid.SnowFlake;
 import org.opengms.common.utils.uuid.UUID;
 import org.springframework.beans.BeanUtils;
@@ -30,7 +27,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -62,7 +58,7 @@ public class MSServiceImpl implements IMSService {
     ModelServiceMapper modelServiceMapper;
 
     @Autowired
-    DockerOperMapper dockerOperMapper;
+    IContainerService containerService;
 
     @Autowired
     MsrInsMapper msrInsMapper;
@@ -71,30 +67,39 @@ public class MSServiceImpl implements IMSService {
     IDockerService dockerService;
 
     @Autowired
+    ImageMapper imageMapper;
+
+    @Autowired
     IWorkspaceService workspaceService;
 
     @Override
-    public String invoke(ModelService modelService) {
+    public String invoke(InvokeDTO invokeDTO) {
 
-        ContainerInfo containerInfo = null;
-        if (modelService.getNewImage() != null && modelService.getNewImage()){
-            // 使用新环境创建的服务要先创建并启动容器
-            containerInfo = invokePrepare(modelService);
+        ModelService modelService = modelServiceMapper.selectById(invokeDTO.getMsId());
+
+        // 调用服务前需先判断服务是否部署成功，
+        if (!DeployStatus.FINISHED.equals(modelService.getDeployStatus())){
+            throw new ServiceException("服务未部署成功，无法调用");
         }
+
+        modelService.setModelClass(invokeDTO.getModelClass());
+
+        // 调用服务前，服务环境容器的准备
+        ContainerInfo containerInfo = invokePrepare(modelService);
+
 
         String exe = "python";
         // String script = "E:/Projects/pythonProject/ogmslab/test/encapsulation.py";
         // String script = workspace + modelService.getRelativeDir() + modelService.getEncapScriptPath();
 
-        // 调用的封装脚本和mdl放在 serviceDir 的 ${msName}_${msId}/model 文件夹下
-        String script;
-        if (StringUtils.isEmpty(modelService.getRelativeDir())){
-            script = ContainerConstants.INNER_SERVICE_DIR + "/model" + modelService.getEncapScriptPath();
-        } else {
-            script = ContainerConstants.INNER_SERVICE_DIR + "/" + modelService.getRelativeDir() + "/model" + modelService.getEncapScriptPath();
-        }
-        // String mdlPath = "E:\\Projects\\pythonProject\\ogmslab\\test\\createWordCloud.mdl";
-        String mdlPath = ContainerConstants.INNER_SERVICE_DIR + "/" + modelService.getRelativeDir() + "/model" + modelService.getMdlFilePath();
+        // 模型服务相关文件放在 /service/{containerId}/{msId} 下
+        // String script ;
+        // if (StringUtils.isEmpty(modelService.getRelativeDir())){
+        //     script = ContainerConstants.INNER_SERVICE_DIR + "/model" + modelService.getEncapScriptPath();
+        // } else {
+        //     script = ContainerConstants.INNER_SERVICE_DIR + "/" + modelService.getRelativeDir() + "/model" + modelService.getEncapScriptPath();
+        // }
+        String script = ContainerConstants.INNER_SERVICE_DIR + "/model" + modelService.getEncapScriptPath();
 
         // 模型运行实例id
         String instanceId = UUID.fastUUID().toString();
@@ -105,33 +110,18 @@ public class MSServiceImpl implements IMSService {
         msrIns.setModelService(modelService);
         msrIns.setMsId(modelService.getMsId());
         msrIns.setStatus(TaskStatus.INIT);
-        if (modelService.getContainerId() != null){
-            msrIns.setContainerId(modelService.getContainerId());
-        } else {
-            if (containerInfo == null || containerInfo.getContainerId() == null){
-                throw new ServiceException("运行容器创建出错");
-            }
-            msrIns.setContainerId(containerInfo.getContainerId());
-        }
-        // msrIns.setModelClass(modelService.getModelClass());
-
-        msrInsMapper.insertMsrIns(msrIns);
-
-        // 解析mdl文档
-        // try {
-        //     ModelClass modelClass = mdlService.parseMdlFile(mdlPath);
-        //
-        //     // 设置临时输入数据
-        //     modelClass.getBehavior().getStateGroup().getStates().get(0).getEvents().get(0)
-        //         .getInputParameter().setValue("English");
-        //     modelClass.getBehavior().getStateGroup().getStates().get(0).getEvents().get(1)
-        //         .getInputParameter().setValue("E:\\opengms-lab\\container\\workspace\\jupyter_cus_5.0_8268889755334766592\\hamlet.txt");
-        //
-        //     msrIns.getModelService().setModelClass(modelClass);
-        // } catch (Exception e){
-        //     log.error("解析mdl出错: " + e.getMessage());
-        //     throw new ServiceException("解析mdl出错: " + e.getMessage());
+        // if (modelService.getContainerId() != null){
+        //     msrIns.setContainerId(modelService.getContainerId());
+        // } else {
+        //     if (containerInfo == null || containerInfo.getContainerId() == null){
+        //         throw new ServiceException("运行容器创建出错");
+        //     }
+        //     msrIns.setContainerId(containerInfo.getContainerId());
         // }
+        // msrIns.setModelClass(modelService.getModelClass());
+        msrIns.setContainerId(containerInfo.getContainerId());
+
+        msrInsMapper.insert(msrIns);
 
         // 将该实例绑定到实例集合中
         Map<String, MsrIns> msrInsColl = msInsService.getMsrInsColl();
@@ -143,17 +133,17 @@ public class MSServiceImpl implements IMSService {
         String[] cmdArr = new String[] {exe, script, MSC_HOST, MSC_PORT, instanceId};
         String pythonCMD = String.join(" ", cmdArr);
 
-        String containerName;
-        if (msrIns.getModelService().getContainerId() != null){
-            // jupyter发布的服务
-            JupyterContainer container = dockerOperMapper.getJupyterContainerInfoById(msrIns.getModelService().getContainerId());
-            containerName = container.getContainerName();
-        } else {
-            if (containerInfo == null){
-                throw new ServiceException("容器创建失败");
-            }
-            containerName = containerInfo.getContainerName();
-        }
+        String containerName = containerInfo.getContainerName();
+        // if (msrIns.getModelService().getContainerId() != null){
+        //     // jupyter发布的服务
+        //     ContainerInfo container = containerService.getContainerInfoById(msrIns.getModelService().getContainerId(), ContainerType.JUPYTER);
+        //     containerName = container.getContainerName();
+        // } else {
+        //     if (containerInfo == null){
+        //         throw new ServiceException("容器创建失败");
+        //     }
+        //     containerName = containerInfo.getContainerName();
+        // }
         cmdArr = new String[] {"docker", "exec", containerName, "/bin/bash", "-c", pythonCMD};
         // String[] cmdArr = new String[] {exe, "-m", script, MSC_HOST, MSC_PORT, instanceId};
 
@@ -169,23 +159,38 @@ public class MSServiceImpl implements IMSService {
 
     }
 
-    // 使用新环境创建的服务 容器没启动前要先启动容器, 之后再调用
+    // 调用前准备 根据关联image启动容器, 之后再调用
     private ContainerInfo invokePrepare(ModelService modelService){
+
+        // 如果模型服务不是由新环境创建的，但是该container没有启动，则要先启动该容器
+        // if (!modelService.getNewEnv()){
+        //     // 容器没启动的话先启动容器
+        //     ContainerInfo container = containerService.getContainerInfoById(modelService.getContainerId(), ContainerType.JUPYTER);
+        //     if (!ContainerStatus.RUNNING.equals(container.getStatus())){
+        //         dockerService.startContainer(container.getContainerInsId());
+        //     }
+        //     return container;
+        // }
+
+
+        // 如果模型服务是由新环境创建的，说明该服务的运行容器是根据 imageTar 动态生成的
+
         // 创建容器并启动
 
-
         // 初始化jupyter实例
-        ContainerInfo containerInfo= new ContainerInfo();
+        ContainerInfo containerInfo= new JupyterContainer();
         containerInfo.setContainerId(SnowFlake.nextId());
-        containerInfo.setImageName(modelService.getImageName());
+        containerInfo.setImageId(modelService.getImageId());
+        ImageInfo imageInfo = imageMapper.selectById(modelService.getImageId());
+        containerInfo.setImageName(imageInfo.getRepoTags());
         containerInfo.setContainerName(modelService.getMsName() + "_" + System.currentTimeMillis());
 
         // 创建者为该登录用户
         // containerInfo.setCreateBy(username);
 
-        // 设置模型运行服务路径
-        String serviceDir = "/service/" + modelService.getMsName() + "_" + modelService.getNewPkgId();
-
+        // 设置模型运行服务路径: 模型运行所需的文件在创建service时就已经迁移到 /service/{msId} 路径下了
+        // 路径为 /service/{msId}
+        String serviceDir = ContainerConstants.SERVICE_DIR(modelService.getMsId());;
         List<String> volumeList = containerInfo.getVolumeList();
         volumeList.add(serviceDir + ":" + ContainerConstants.INNER_SERVICE_DIR);
 
@@ -202,10 +207,10 @@ public class MSServiceImpl implements IMSService {
                 throw new ServiceException(serverErrorException.getMessage());
             }
         } catch (Exception e){
-            throw new ServiceException(e.getMessage());
+            throw new ServiceException(e.toString());
         }
 
-        int count = dockerOperMapper.insertContainer(containerInfo);
+        int count = containerService.insertContainer(containerInfo, ContainerType.JUPYTER);
 
         if (count <= 0){
             throw new ServiceException("创建容器失败");
@@ -220,20 +225,19 @@ public class MSServiceImpl implements IMSService {
     public int insertModelService(ModelServiceDTO modelServiceDTO) {
 
         // TODO: 2022/11/12 服务关联的文件夹暂时用containerId对应的文件夹
-        // TODO: 2022/11/12 模型服务暂时不创建新的镜像，暂时先用工作空间的镜像
         // String workspaceDir = "/workspace/" + modelServiceDTO.getContainerName();
-        // modelServiceDTO.setRelativeDir(workspaceDir);
+        // modelServiceDTO.setRelativeDir(ContainerConstants.DATA_DIR(modelServiceDTO.getContainerId()));
 
         ModelService modelService = new ModelService();
         modelService.setMsId(SnowFlake.nextId());
         BeanUtils.copyProperties(modelServiceDTO,modelService);
-        modelService.setRelativeDir(modelService.getMsName() + "_" + modelService.getMsId());
 
-
-        //拷贝该工作空间的文件至service的model文件夹下
+        String serviceDir = ContainerConstants.SERVICE_DIR(modelService.getMsId());
+        String serviceModelDir = serviceDir + "/model";
+        //拷贝该工作空间的文件至service/{msId}/model文件夹下
         FileUtil.copyContent(
-            new File(repository + ContainerConstants.workspaceDir(modelService.getContainerId())),
-            new File(repository + ContainerConstants.serviceDir(modelService.getContainerId()) + "/" + modelService.getRelativeDir() + "/model"),
+            new File(repository + ContainerConstants.DATA_DIR(modelService.getContainerId()) + modelServiceDTO.getRelativeDir()),
+            new File(repository + serviceModelDir),
             false
         );
 
@@ -242,13 +246,13 @@ public class MSServiceImpl implements IMSService {
         // if (xx.contaian(".py" || ".mdl")) 就是从容器中的 如果不是就是从Drive的 就需要下载(前端要对输入的文件类型做判断)
 
         FileUtil.copy(
-            new File(repository + ContainerConstants.workspaceDir(modelService.getContainerId()) + modelServiceDTO.getEncapScriptPath()),
-            new File(repository + ContainerConstants.serviceDir(modelService.getContainerId()) + "/" + modelService.getRelativeDir() + "/model" + modelServiceDTO.getEncapScriptPath()),
+            new File(repository + ContainerConstants.DATA_DIR(modelService.getContainerId()) + modelService.getEncapScriptPath()),
+            new File(repository + serviceModelDir + modelService.getEncapScriptPath()),
             true
         );
         FileUtil.copy(
-            new File(repository + ContainerConstants.workspaceDir(modelService.getContainerId()) + modelServiceDTO.getMdlFilePath()),
-            new File(repository + ContainerConstants.serviceDir(modelService.getContainerId()) + "/" + modelService.getRelativeDir() + "/model" + modelServiceDTO.getMdlFilePath()),
+            new File(repository + ContainerConstants.DATA_DIR(modelService.getContainerId()) + modelService.getMdlFilePath()),
+            new File(repository + serviceModelDir + modelService.getMdlFilePath()),
             true
         );
 
@@ -259,8 +263,12 @@ public class MSServiceImpl implements IMSService {
             // String[] split = workspaceVolume.split(":");
             // String workspaceDir = split[0];
             // String mdlPath = repository + workspaceDir + service.getMdlFilePath();
-            String mdlPath = repository + ContainerConstants.serviceDir(modelService.getContainerId()) + "/" + modelService.getRelativeDir() + "/model" + modelService.getMdlFilePath();
-            ModelClass modelClass = mdlService.parseMdlFile(mdlPath);
+            String mdlPath = repository + serviceModelDir + modelService.getMdlFilePath();
+            // ModelClass modelClass = mdlService.parseMdlFile(mdlPath);
+            ModelClass modelClass = mdlService.parseMdlFileWithAnnotation(mdlPath);
+            if (modelClass == null){
+                throw new ServiceException("!");
+            }
             modelService.setModelClass(modelClass);
         } catch (Exception e){
             log.error("解析mdl出错: " + e.getMessage());
@@ -268,14 +276,22 @@ public class MSServiceImpl implements IMSService {
         }
 
         // 新环境
-        if (modelServiceDTO.getNewImage() != null && modelServiceDTO.getNewImage()){
+        // if (modelServiceDTO.getNewEnv() != null && modelServiceDTO.getNewEnv()){
+        //     modelService.setDeployStatus(DeployStatus.INIT);
+        //     try {
+        //         asyncService.createNewEnv(modelService);
+        //     }catch (ServiceException e){
+        //         modelServiceMapper.updateDeployStatus(modelService.getMsId(), DeployStatus.ERROR);
+        //         throw new ServiceException("创建容器失败");
+        //     }
+        //
+        // } else {
+        //     modelService.setDeployStatus(DeployStatus.FINISHED);
+        // }
 
-            asyncService.createNewEnv(modelService);
+        modelService.setDeployStatus(DeployStatus.FINISHED);
 
-        }
-
-        return modelServiceMapper.insertModelService(modelService);
-
+        return modelServiceMapper.insert(modelService);
 
     }
 
@@ -283,46 +299,21 @@ public class MSServiceImpl implements IMSService {
 
     @Override
     public List<ModelService> selectServiceList() {
-        return modelServiceMapper.selectServiceList();
+        return modelServiceMapper.selectList();
     }
 
     @Override
     public ModelService getModelServiceById(String msId) {
 
         //根据mdl的文件路径返回mdl对象，并更新到数据库中
-        ModelService service = modelServiceMapper.getModelServiceById(msId);
+        ModelService service = modelServiceMapper.selectById(Long.valueOf(msId));
 
         // Long containerId = service.getContainerId();
         // JupyterContainer container = dockerOperMapper.getJupyterContainerInfoById(containerId);
 
-        // 解析mdl在创建服务的时候就要解析了
-        // if (service != null){
-        //     if (StringUtils.isNull(service.getModelClass())){
-        //         // 如果没有mdl对象则解析mdl文件
-        //
-        //         try {
-        //             // 解析mdl文档
-        //             // String workspaceVolume = container.getWorkspaceVolume();
-        //             // String[] split = workspaceVolume.split(":");
-        //             // String workspaceDir = split[0];
-        //             // String mdlPath = repository + workspaceDir + service.getMdlFilePath();
-        //             String mdlPath = repository + ContainerConstants.serviceDir(service.getContainerId()) + "/" + service.getRelativeDir() + "/model" + service.getMdlFilePath();
-        //             ModelClass modelClass = mdlService.parseMdlFile(mdlPath);
-        //             service.setModelClass(modelClass);
-        //
-        //             // mdl解析成字符串存入数据库中
-        //             modelServiceMapper.updateModelService(service);
-        //
-        //             // System.out.println();
-        //         } catch (Exception e){
-        //             log.error("解析mdl出错: " + e.getMessage());
-        //             throw new ServiceException("解析mdl出错: " + e.getMessage());
-        //         }
-        //     }
-        // }
-
         return service;
     }
+
 
 
 }

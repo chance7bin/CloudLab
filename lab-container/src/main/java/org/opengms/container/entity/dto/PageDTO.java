@@ -20,7 +20,7 @@ public class PageDTO
     private String orderByColumn;
 
     /** 排序的方向desc或者asc */
-    private String isAsc = "asc";
+    private String isAsc = "desc";
 
     /** 分页参数合理化 */
     private Boolean reasonable = true;

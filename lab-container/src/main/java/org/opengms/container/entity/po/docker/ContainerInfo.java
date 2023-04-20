@@ -2,6 +2,7 @@ package org.opengms.container.entity.po.docker;
 
 import lombok.Data;
 import org.opengms.container.entity.BaseEntity;
+import org.opengms.container.enums.ContainerType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ public class ContainerInfo extends BaseEntity {
     /** 容器id */
     Long containerId;
 
-    /** 容器实例id */
+    /** 对应docker中的容器实例id */
     String containerInsId;
 
     /** 容器名 (由镜像名以及容器id组成) */
@@ -38,6 +39,12 @@ public class ContainerInfo extends BaseEntity {
     /** 容器绑定端口 */
     Integer hostBindPort;
 
+    /** 主机ip */
+    String hostIP;
+
+    /** 主机MAC地址（ip可能会变，mac不会变，所以识别一个主机用mac） */
+    String hostMAC;
+
     /** 挂载数据卷列表 宿主机目录中表示的只是相对路径 实际路径需加上${repository} */
     List<String> volumeList = new ArrayList<>();
 
@@ -49,5 +56,10 @@ public class ContainerInfo extends BaseEntity {
 
     /** 容器是否被删除 */
     Boolean delFlag;
+
+    /** 容器大类 */
+    ContainerType type;
+
+
 
 }

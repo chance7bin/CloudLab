@@ -1,12 +1,12 @@
 package org.opengms.admin.controller.container;
 
-import org.opengms.admin.clients.ContainerClient;
+import org.opengms.admin.clients.container.ContainerClient;
 import org.opengms.admin.entity.dto.ApiResponse;
+import org.opengms.admin.entity.dto.PageableParams;
+import org.opengms.admin.entity.dto.container.EnvDTO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.cloud.openfeign.SpringQueryMap;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * docker容器控制层
@@ -21,17 +21,18 @@ public class ContainerController{
     @Autowired
     ContainerClient containerClient;
 
-    // @Anonymous
-    @GetMapping(value = "/list/image")
-    public ApiResponse listImages() {
-        return containerClient.listImages();
-    }
 
     // @Anonymous
-    @GetMapping(value = "/list/container")
-    public ApiResponse listContainers() {
-        return containerClient.listContainers();
+    @GetMapping(value = "/list")
+    public ApiResponse listContainers(@SpringQueryMap PageableParams pageableParams) {
+        return containerClient.listContainers(pageableParams);
     }
+
+    @PostMapping(value = "/newEnv")
+    public ApiResponse createNewEnv(@RequestBody EnvDTO envDTO){
+        return containerClient.createNewEnv(envDTO);
+    }
+
 
 
 }

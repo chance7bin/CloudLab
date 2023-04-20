@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.opengms.container.enums.ProcessState;
-import org.opengms.container.enums.ProcessStatus;
+import org.opengms.container.enums.DataFlag;
 
 import java.util.Date;
 
@@ -25,7 +25,7 @@ public class Log {
 
     String event;
 
-    ProcessStatus status;
+    DataFlag dataFlag;
 
     String message;
 
@@ -36,8 +36,8 @@ public class Log {
     }
 
 
-    public Log(ProcessStatus status, String message) {
-        this.status = status;
+    public Log(DataFlag dataFlag, String message) {
+        this.dataFlag = dataFlag;
         this.message = message;
     }
 }

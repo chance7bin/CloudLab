@@ -6,6 +6,7 @@ import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.opengms.common.utils.XMLUtils;
 import org.opengms.common.utils.uuid.UUID;
 import org.opengms.container.clients.DriveClient;
 import org.opengms.container.constant.ContainerConstants;
@@ -84,6 +85,7 @@ public class MdlServiceImpl implements IMdlService {
                 if (inputParameterNode != null){
                     InputParameter inputParameter = new InputParameter();
                     setElementAttributes(inputParameterNode.attributes(), inputParameter);
+                    // TODO: 2023/4/13 parameter还未改成list的形式
                     event.setInputParameter(inputParameter);
                 }
                 Element outputParameterNode = eventNode.element(MDLStructure.OUTPUT_PARAMETER.getInfo());
@@ -106,7 +108,13 @@ public class MdlServiceImpl implements IMdlService {
     }
 
     @Override
-    public void setElementAttributes(List<Attribute> attributes, Object obj) throws Exception {
+    public ModelClass parseMdlFileWithAnnotation(String mdlFilePath) {
+        return (ModelClass) XMLUtils.convertXmlFileToObject(ModelClass.class, mdlFilePath);
+
+    }
+
+    // @Override
+    private void setElementAttributes(List<Attribute> attributes, Object obj) throws Exception {
         for (Attribute attribute : attributes) {
             ReflectUtils.setValueByProp(obj,attribute.getName(),attribute.getValue());
         }
@@ -156,8 +164,8 @@ public class MdlServiceImpl implements IMdlService {
                 break;
             }
             case FILE:{
-                // TODO: 2022/11/14 还没做这个
                 // 如果是file的话要根据url地址下载数据到本地然后返回文件路径
+
                 // param = parameter.getFilePath();
                 // param = parameter.getValue();
                 // param = workspace + relativeDir + parameter.getValue();
@@ -166,7 +174,7 @@ public class MdlServiceImpl implements IMdlService {
 
                 // 该工作空间所在的容器创建的模型服务都在 container.repository 目录的 workspace/{containerId}/service 下
                 // String hostDir = "/workspace/" + ms.getContainerId() + "/service";
-                // String hostDir = ContainerConstants.serviceDir(ms.getContainerId());
+                // String hostDir = ContainerConstants.SERVICE_DIR(ms.getContainerId());
                 String hostDir = repository + serviceDir + insDir;
 
                 String value = parameter.getValue();
@@ -204,7 +212,7 @@ public class MdlServiceImpl implements IMdlService {
         String[] split = url.split("/");
         Long fileId = Long.valueOf(split[split.length - 1]);
         ApiResponse fileInfo = driveClient.getFileInfo(fileId);
-        if (!ApiResponse.reqSuccess(fileInfo)){
+        if (!ApiResponse.isSuccess(fileInfo)){
             throw new ServiceException("指定文件下载失败, [url: " + url + "]");
             // return null;
         }

@@ -1,7 +1,8 @@
-package org.opengms.container.entity.po.docker;
+package org.opengms.container.entity.po;
 
 
 import lombok.Data;
+import org.opengms.container.entity.po.docker.ContainerInfo;
 
 /**
  * jupyter容器信息
@@ -10,7 +11,7 @@ import lombok.Data;
  * @date 2022/10/6
  */
 @Data
-public class JupyterContainer extends ContainerInfo{
+public class JupyterContainer extends ContainerInfo {
 
     private static final long serialVersionUID = 1L;
 
@@ -21,7 +22,7 @@ public class JupyterContainer extends ContainerInfo{
     String configVolume;
 
     /** 模型服务数据卷挂载 */
-    String serviceVolume;
+    // String serviceVolume;
 
     /** jupyter的认证token */
     String jupyterToken;

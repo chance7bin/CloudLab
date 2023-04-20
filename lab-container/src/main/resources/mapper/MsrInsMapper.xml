@@ -21,7 +21,7 @@
         <result property="remark" column="remark"/>
     </resultMap>
 
-    <insert id="insertMsrIns" parameterType="msrIns">
+    <insert id="insert" parameterType="msrIns">
         insert into ms_run_instance (
         <if test="msriId != null and msriId != '' ">msri_id,</if>
         <if test="msId != null">ms_id,</if>
@@ -64,7 +64,7 @@
         where msri_id = #{msriId}
     </update>
 
-    <update id="updateMsrIns" parameterType="msrIns">
+    <update id="updateById" parameterType="msrIns">
         update ms_run_instance
         <set>
             <if test="currentState != null ">current_state = #{currentState,typeHandler=org.apache.ibatis.type.EnumTypeHandler},</if>
@@ -93,9 +93,9 @@
         where msri_id = #{msriId}
     </update>
 
-    <select id="selectMsrInsById" resultMap="MsrInsResult">
+    <select id="selectByMsriId" resultMap="MsrInsResult">
         select *
         from ms_run_instance
-        where msri_id = #{id}
+        where msri_id = #{msriId}
     </select>
 </mapper>

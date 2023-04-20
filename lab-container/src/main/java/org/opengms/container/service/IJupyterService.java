@@ -1,13 +1,16 @@
 package org.opengms.container.service;
 
 
+import org.opengms.container.entity.dto.docker.JupyterInfoDTO;
+import org.opengms.container.entity.po.JupyterContainer;
+
 /**
  * jupyter接口
  *
  * @author bin
  * @date 2022/10/6
  */
-public interface IJupyterService {
+public interface IJupyterService{
 
     /**
      * 根据config的文件夹路径生成jupyter配置文件
@@ -35,4 +38,6 @@ public interface IJupyterService {
      * @Author bin
      **/
     String generateJupyterConfig(String configDir, String suffix, String token);
+
+    JupyterInfoDTO getJupyterContainerById(Long id);
 }

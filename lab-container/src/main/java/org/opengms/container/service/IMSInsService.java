@@ -44,31 +44,10 @@ public interface IMSInsService {
 
     void removeSocketChannel(SocketChannel clientChannel);
 
-    MsrIns getMsrInsById(String msInsId);
+    MsrIns getMsrInsByMsriId(String msInsId);
 
     MsrIns getMsrInsFromMsrInsColl(String msriId);
 
     void removeChannelAndMsrInsColl(SocketChannel channel);
 
-    // void initialize(String id);
-    //
-    // void enterState(String id, String state);
-    //
-    // void fireEvent(String id, String state, String event);
-    //
-    // void requestData(String id, String state, String event);
-    //
-    // void responseData(String id, String state, String event,
-    //                   String data, String dataSignal, String dataType, String dataFormat);
-    //
-    // void postErrorInfo(String id, String errorInfo);
-    //
-    // void postWarningInfo(String id, String warningInfo);
-    //
-    // void postMessageInfo(String id, String messageInfo);
-    //
-    // void leaveState(String id, String state);
-    //
-    // //encapsulation 完成 (finalize是object接口的方法)
-    // void eFinalize(String id);
 }

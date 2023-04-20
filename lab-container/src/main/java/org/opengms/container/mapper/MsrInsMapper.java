@@ -10,16 +10,13 @@ import org.opengms.container.entity.po.MsrIns;
  * @date 2022/12/06
  */
 @Mapper
-public interface MsrInsMapper {
-
-    int insertMsrIns(MsrIns msrIns);
+public interface MsrInsMapper extends BaseMapper<MsrIns>{
 
     int updateMsrInsLogs(MsrIns msrIns);
 
     int updateMsrInsLogsAndStatus(MsrIns msrIns);
 
-    int updateMsrIns(MsrIns msrIns);
 
-    MsrIns selectMsrInsById(String id);
+    MsrIns selectByMsriId(String msriId);
 
 }

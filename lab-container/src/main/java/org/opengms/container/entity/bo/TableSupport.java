@@ -37,6 +37,13 @@ public class TableSupport
     public static final String REASONABLE = "reasonable";
 
     /**
+     * 默认排序字段
+     */
+    public static final String DEFAULT_ORDER_COLUMN = "create_time";
+
+
+
+    /**
      * 封装分页对象
      */
     public static PageDTO getPageDomain()
@@ -44,7 +51,7 @@ public class TableSupport
         PageDTO pageDTO = new PageDTO();
         pageDTO.setPageNum(Convert.toInt(ServletUtils.getParameter(PAGE_NUM), 1));
         pageDTO.setPageSize(Convert.toInt(ServletUtils.getParameter(PAGE_SIZE), 10));
-        pageDTO.setOrderByColumn(ServletUtils.getParameter(ORDER_BY_COLUMN));
+        pageDTO.setOrderByColumn(Convert.toStr(ServletUtils.getParameter(ORDER_BY_COLUMN), DEFAULT_ORDER_COLUMN));
         pageDTO.setIsAsc(ServletUtils.getParameter(IS_ASC));
         pageDTO.setReasonable(ServletUtils.getParameterToBool(REASONABLE));
         return pageDTO;

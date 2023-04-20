@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import iFrame from '@/components/iFrame/index.vue'
-import { getJupyterContainerById } from "@/api/container/workspace";
+import { getWorkspaceByContainerId } from "@/api/container/workspace";
 import { notEmptyString } from "@/utils/stringUtils";
 import useCurrentInstance from "@/utils/currentInstance";
 const { proxy } = useCurrentInstance();
@@ -23,18 +23,18 @@ const url = ref<string>("")
 
 proxy.$modal.loading();
 
-getJupyterContainerById(containerId as string)
+getWorkspaceByContainerId(containerId as string)
   .then((res) => {
     if (notEmptyString(res.data.containerName)){
       let container = res.data;
-      url.value = "http://172.21.212.240:" + container.hostBindPort + "/lab?token=" + container.jupyterToken;
-      console.log("jupyter url:",url.value);
+      // url.value = "http://172.21.212.240:" + container.hostBindPort + "/lab?token=" + container.jupyterToken;
+      url.value = "http://" + container.hostIP + ":" + container.hostBindPort + "/lab?token=" + container.jupyterToken;
+      // console.log("jupyter url:",url.value);
     }
     proxy.$modal.closeLoading();
   }
 
 )
-
 
 
 </script>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengms.container.mapper.ContainerRelationMapper">
+
+    <resultMap type="containerRelation" id="relationResult">
+        <result property="containerId" column="container_id"/>
+        <result property="typeCode" column="type_code"/>
+        <result property="hostIP" column="host_ip"/>
+        <result property="hostMAC" column="host_mac"/>
+        <result property="port" column="port"/>
+    </resultMap>
+
+
+    <insert id="insert" parameterType="containerRelation">
+        insert into container_relation(
+            <if test="hostIP != null">host_ip,</if>
+            <if test="hostMAC != null">host_mac,</if>
+            <if test="port != null">port,</if>
+            container_id,
+            type_code
+        ) values (
+            <if test="hostIP != null">#{hostIP},</if>
+            <if test="hostMAC != null">#{hostMAC},</if>
+            <if test="port != null">#{port},</if>
+            #{containerId},
+            #{typeCode}
+        )
+    </insert>
+
+    <delete id="deleteRelationByContainerId">
+        delete
+        from container_relation
+        where container_id = #{containerId}
+    </delete>
+
+    <select id="selectHostAndPort" resultType="ContainerRelation">
+        select host_ip, host_mac, port
+        from container_relation;
+    </select>
+
+
+    <select id="findLastUsedPortByHostIP" resultType="ContainerRelation">
+        select *
+        from container_relation
+        order by port desc
+        limit 1
+    </select>
+
+    <select id="findIdlePortByHostIp" resultType="ContainerRelation">
+        select *
+        from container_relation
+        order by port desc
+        limit 1
+    </select>
+
+    <select id="listUsedPortByIP" resultType="java.lang.Integer">
+        select port from container_relation where host_ip = #{ip}
+    </select>
+
+
+</mapper>

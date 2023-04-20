@@ -1,55 +1,49 @@
 import request from "@/utils/request";
+import type { QueryParams } from "@/utils/customType";
 // request.defaults.baseURL = import.meta.env.VITE_APP_CONTAINER_API;
 const containerPath = import.meta.env.VITE_APP_CONTAINER_API;
-const adminPath = import.meta.env.VITE_APP_BASE_API;
-const contextPath = adminPath + "/container";
+const adminPath = import.meta.env.VITE_APP_BASE_API + "/container";
+const contextPath = adminPath + "/service";
 
 export function invokeService(modelService: any) {
   return request({
-    url: contextPath + "/service/invoke",
+    url: contextPath + "/invoke",
     method: "post",
     data: modelService
   });
 }
 
 interface Service {
-  containerId: string | null;
-  containerName: string;
+  imageId: string;
+  containerId: string;
   msName: string;
   relativeDir: string;
   mdlFilePath: string;
   encapScriptPath: string;
-  newImage: boolean;
 }
 
 export type { Service };
 
 export function createModelService(service: Service) {
   return request({
-    url: contextPath + "/service",
+    url: contextPath,
     method: "post",
     data: service,
     timeout: 2 * 60 * 1000
   });
 }
 
-export function selectServiceList() {
+export function selectServiceList(queryParams: QueryParams) {
   return request({
-    url: contextPath + "/service/list",
-    method: "get"
+    url: contextPath + "/list",
+    method: "get",
+    params: queryParams
   });
 }
 
 export function getModelServiceById(msId: string) {
   return request({
-    url: contextPath + "/service/" + msId,
-    method: "get"
-  });
-}
-
-export function getMsInsById(msriId: string) {
-  return request({
-    url: contextPath + "/instance/" + msriId,
+    url: contextPath + "/" + msId,
     method: "get"
   });
 }

@@ -1,74 +1,98 @@
 <template>
   <div class="app-container">
     <el-table :data="images" stripe style="width: 100%">
-      <el-table-column label="镜像名称" prop="repoTags" show-overflow-tooltip width="180" />
+      <el-table-column label="镜像名称" prop="imageName" show-overflow-tooltip width="180" />
+      <el-table-column label="版本号" prop="tag" show-overflow-tooltip width="100" />
       <el-table-column label="镜像大小" prop="size" width="180" />
+      <el-table-column label="状态" prop="size" width="180" >
+        <template #default="scope">
+          <el-tag type="success" v-if="scope.row.status == 'finished'">{{ scope.row.status }}</el-tag>
+          <el-tag  v-else >{{ scope.row.status }}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="操作">
         <template #default="scope">
-          <el-button link type="primary" @click="init(scope.row)">初始化</el-button>
+          <el-button link type="primary" @click="init(scope.row)">创建工作空间</el-button>
           <el-button link type="primary">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <pagination
+      v-show="total > 0"
+      :total="total"
+      v-model:page="queryParams.pageNum"
+      v-model:limit="queryParams.pageSize"
+      @pagination="getList"
+    />
+
   </div>
 </template>
 
 <script name="images" setup lang="ts">
-import { listImages } from "@/api/container/docker";
+import { listImages } from "@/api/container/image";
 import { initWorkspace } from "@/api/container/workspace";
 import useCurrentInstance from "@/utils/currentInstance";
-import { ElMessageBox } from "element-plus";
+import {ElMessage, ElMessageBox} from "element-plus";
+import {validateName} from "@/utils/validate";
 const { proxy } = useCurrentInstance();
 
+const total = ref<number>(0);
 const images = ref<any[]>([]);
 
-listImages().then((res) => {
-  images.value = res.data;
-  // console.log("images:", images.value);
+
+
+const data = reactive({
+  queryParams: {
+    pageNum: 1,
+    pageSize: 10
+  }
 });
 
+const { queryParams} = toRefs(data);
 
-function init(row) {
-  let imageName = row.repoTags;
-
-  ElMessageBox.prompt("", "新建空间", {
-    confirmButtonText: "确认",
-    cancelButtonText: "取消",
-    inputValidator: (value) => {
-      let reg = new RegExp('[\\\\/:*?"<>|]');
-      return !reg.test(value);
-    },
-    inputPlaceholder: "工作空间名称",
-    inputErrorMessage: "非法的工作空间名称",
-
-  })
-    .then(({ value }) => {
-
-      if (value == "" || value == null){
-         proxy.$modal.msgWarning("请填写工作空间名称")
-      }
-
-      else {
-        createWorkspace(imageName ,value);
-      }
-
-    })
-    .catch(() => {
-      // ElMessage({
-      //   type: 'info',
-      //   message: 'Input canceled',
-      // })
-    });
-
+getList();
+function getList() {
+  listImages(queryParams.value).then((res: any) => {
+    images.value = res.rows;
+    total.value = Number(res.total);
+    // images.value = res.data;
+    // console.log("images:", images.value);
+  });
 }
 
+function init(row) {
+  let imageId = row.imageId;
 
-const createWorkspace = (imageName: string, containerName: string) => {
+  ElMessageBox.prompt("", "新建空间", {
+    confirmButtonText: "下一步",
+    cancelButtonText: "取消",
+    inputValidator: (value) => {
+      return validateName(value);
+    },
+    inputPlaceholder: "工作空间名称",
+    inputErrorMessage: "非法的工作空间名称"
+  })
+    .then(({ value }) => {
+      if (value == "" || value == null) {
+        proxy.$modal.msgWarning("请填写工作空间名称");
+      } else {
+        createWorkspace(imageId, value);
+      }
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '取消',
+      })
+    });
+}
+
+const createWorkspace = (imageId: string, containerName: string) => {
   ElMessageBox({
     title: "系统提示",
     message: "是否初始化工作空间",
     showCancelButton: true,
-    confirmButtonText: "确定",
+    confirmButtonText: "创建",
     cancelButtonText: "取消",
     type: "warning",
     beforeClose: (action, instance, done) => {
@@ -77,7 +101,7 @@ const createWorkspace = (imageName: string, containerName: string) => {
         instance.confirmButtonText = "初始化中...";
 
         // 初始化工作空间
-        initWorkspace(imageName, containerName)
+        initWorkspace(imageId, containerName)
           .then((res) => {
             proxy.$modal.msgSuccess("初始化工作空间成功");
             done();
@@ -111,8 +135,7 @@ const createWorkspace = (imageName: string, containerName: string) => {
     .catch(() => {
       proxy.$modal.msg("未进行操作");
     }); */
-}
-
+};
 </script>
 
 <style scoped lang="scss"></style>

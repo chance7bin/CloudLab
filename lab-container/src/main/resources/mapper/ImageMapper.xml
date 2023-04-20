@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengms.container.mapper.ImageMapper">
+
+    <resultMap type="imageInfo" id="imageResult">
+        <id     property="id"         column="id"      />
+        <result property="imageId"      column="image_id"      />
+        <result property="imageName"       column="image_name"    />
+        <result property="tag"           column="tag"     />
+        <result property="repoTags"      column="repo_tags"      />
+        <result property="size"           column="size"     />
+        <result property="status"           column="status"     />
+        <result property="delFlag"           column="del_flag"     />
+        <result property="createBy"            column="create_by"      />
+        <result property="createTime"          column="create_time"    />
+        <result property="updateBy"            column="update_by"      />
+        <result property="updateTime"          column="update_time"    />
+        <result property="remark"              column="remark"    />
+    </resultMap>
+
+    <insert id="insert" parameterType="imageInfo" useGeneratedKeys="true" keyProperty="id">
+        insert into image(
+        <if test="id != null">id,</if>
+        <if test="imageId != null">image_id,</if>
+        <if test="imageName != null">image_name,</if>
+        <if test="tag != null">tag,</if>
+        <if test="repoTags != null">repo_tags,</if>
+        <if test="size != null">size,</if>
+        <if test="status != null">status,</if>
+        <if test="commitCount != null">commit_count,</if>
+        <if test="createBy != null and createBy != ''">create_by,</if>
+        <if test="remark != null and remark != ''">remark,</if>
+        create_time
+        )values(
+        <if test="id != null">#{id},</if>
+        <if test="imageId != null">#{imageId},</if>
+        <if test="imageName != null">#{imageName},</if>
+        <if test="tag != null">#{tag},</if>
+        <if test="repoTags != null">#{repoTags},</if>
+        <if test="size != null">#{size},</if>
+        <if test="status != null">#{status},</if>
+        <if test="commitCount != null">#{commitCount},</if>
+        <if test="createBy != null and createBy != ''">#{createBy},</if>
+        <if test="remark != null and remark != ''">#{remark},</if>
+        sysdate()
+        )
+    </insert>
+
+    <update id="updateById" parameterType="imageInfo">
+        update image
+        <set>
+            <if test="imageId != null">image_id = #{imageId},</if>
+            <if test="imageName != null">image_name = #{imageName},</if>
+            <if test="tag != null">tag = #{tag},</if>
+            <if test="repoTags != null">repo_tags = #{repoTags},</if>
+            <if test="size != null">size = #{size},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="commitCount != null">commit_count = #{commitCount},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+            update_time = sysdate()
+        </set>
+        where id = #{id}
+    </update>
+
+
+    <select id="countImageByRepository" resultType="java.lang.Integer">
+        select count(id)
+        from image
+        where image_name = #{imageName} and del_flag = '0' || null
+    </select>
+
+    <select id="selectList" resultMap="imageResult">
+        select * from image
+    </select>
+
+    <select id="selectById" resultMap="imageResult">
+        select * from image
+        where id = #{id}
+    </select>
+
+    <select id="isExistByRepoTags" resultType="java.lang.Integer">
+        select count(id)
+        from image
+        where repo_tags = #{repoTags} and del_flag = '0' || null
+    </select>
+
+    <select id="getImageInfoByRepoTags" resultMap="imageResult">
+        select * from image
+        where repo_tags = #{repoTags} and del_flag = '0' || null
+    </select>
+
+
+</mapper>

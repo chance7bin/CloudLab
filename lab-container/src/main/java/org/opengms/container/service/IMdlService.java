@@ -17,8 +17,11 @@ public interface IMdlService {
     // 解析mdl文件
     ModelClass parseMdlFile(String mdlFilePath) throws Exception;
 
+    // 解析mdl文件(注解版)
+    ModelClass parseMdlFileWithAnnotation(String mdlFilePath);
+
     // 设置xml的属性
-    void setElementAttributes(List<Attribute> attributes, Object obj) throws Exception;
+    // void setElementAttributes(List<Attribute> attributes, Object obj) throws Exception;
 
 
     /**

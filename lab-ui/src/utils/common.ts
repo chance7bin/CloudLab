@@ -4,7 +4,6 @@ import errorCode from "@/utils/errorCode";
 
 /**
  * 通用ts方法封装处理
- * Copyright (c) 2022 OpenGMS
  */
 
 /**

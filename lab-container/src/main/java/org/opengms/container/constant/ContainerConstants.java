@@ -25,19 +25,22 @@ public class ContainerConstants {
 
 
     // ======  宿主机目录 ===========
-    /** 工作空间的jupyter配置文件存放在 container.repository 目录的pod/{containerId}/config文件夹下 */
-    public static String configDir(Long containerId){
+    /** 工作空间的jupyter配置文件存放在 ${container.repository} 目录的 /workspace/{containerId}/config 文件夹下 */
+    public static String CONFIG_DIR(Long containerId){
         return "/workspace/" + containerId + "/config";
     }
 
-    /** 工作空间的用户文件存放在 container.repository 目录的pod/{containerId}/data文件夹下 */
-    public static String workspaceDir(Long containerId){
+    /** 工作空间的用户文件存放在 container.repository 目录的 /workspace/{containerId}/data 文件夹下 */
+    public static String DATA_DIR(Long containerId){
         return "/workspace/" + containerId + "/data";
     }
 
-    /** 该工作空间所在的容器创建的模型服务都在 container.repository 目录的 workspace/{containerId}/service下 */
-    public static String serviceDir(Long containerId){
-        return "/workspace/" + containerId + "/service";
+    /** (Deprecated)该工作空间所在的容器创建的模型服务都在 container.repository 目录的 /workspace/{containerId}/service 文件夹下 */
+    // (Deprecated)统一放在了 repository/service/{containerId}下
+    // container 不挂载 service 目录了
+    // 文件直接拷贝到 /service/{msId} 下
+    public static String SERVICE_DIR(Long msId){
+        return "/service/" + msId;
     }
 
     /** 启动jupyter命令 */
@@ -50,7 +53,12 @@ public class ContainerConstants {
     /** 生成的镜像包路径 */
     public static final String IMAGE_PATH = "/image";
 
+    /** 生成的部署包文件夹 */
+    public static final String PACKAGE_DIR = "/package";
+
     /** 生成的部署包路径 */
-    public static final String PACKAGE_PATH = "/package";
+    public static String PACKAGE_PATH(String pkgId){
+        return PACKAGE_DIR + "/" + "pkg_" + pkgId + ".zip";
+    }
 
 }

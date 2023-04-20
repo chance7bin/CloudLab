@@ -1,6 +1,9 @@
 package org.opengms.container.entity.dto.docker;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+
+import java.util.Date;
 
 /**
  * @author bin
@@ -28,10 +31,14 @@ public class ContainerInfoDTO {
     private String started;
 
     /** 创建时间 */
-    private String created;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date created;
 
     /** 绑定的主机端口号 */
     private Integer hostBindPort;
+
+    /** 绑定的主机ip */
+    private String hostIP;
 
 
 }

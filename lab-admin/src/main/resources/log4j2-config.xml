@@ -10,7 +10,8 @@
     <Properties>
         <!-- 日志输出格式 -->
         <!--<property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${PID:-} [%15.15t] %-40.40logger{39} : %m%n" />-->
-        <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight{%5level} %style{%pid}{magenta} --- [%15.15t] %style{%-40.40logger{39}}{cyan} : %msg%n%style{%throwable}{red}" />
+        <!--<property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight{%5level} %style{%pid}{magenta} -&#45;&#45; [%15.15t] %style{%-40.40logger{39}}{cyan} : %msg%n%style{%throwable}{red}" />-->
+        <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight{%5level} %style{%pid}{magenta} --- [%15.15t] %style{%-40.40logger{1.}}{cyan} : %msg%n%style{%throwable}{red}" />
 
         <!-- ${sys:LOG_PATH} 读取的就是 application.yml 中的 logging.file.path 的值 -->
         <property name="baseDir" value="${sys:LOG_PATH}" />

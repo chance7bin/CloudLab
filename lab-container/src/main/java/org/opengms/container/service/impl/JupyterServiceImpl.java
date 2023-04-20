@@ -1,7 +1,13 @@
 package org.opengms.container.service.impl;
 
 import org.opengms.common.utils.file.FileUtils;
+import org.opengms.container.entity.dto.docker.JupyterInfoDTO;
+import org.opengms.container.entity.po.JupyterContainer;
+import org.opengms.container.mapper.JupyterMapper;
+import org.opengms.container.service.IDockerService;
 import org.opengms.container.service.IJupyterService;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -15,6 +21,11 @@ import java.io.IOException;
 @Service
 public class JupyterServiceImpl implements IJupyterService {
 
+    @Autowired
+    JupyterMapper jupyterMapper;
+
+    @Autowired
+    IDockerService dockerService;
 
 
     @Override
@@ -52,4 +63,21 @@ public class JupyterServiceImpl implements IJupyterService {
             // throw new ServiceException("生成jupyter配置文件出错");
         }
     }
+
+    @Override
+    public JupyterInfoDTO getJupyterContainerById(Long id) {
+
+        JupyterContainer jc = jupyterMapper.selectById(id);
+        String status = dockerService.getContainerStatusByContainerInsId(jc.getContainerInsId());
+        jc.setStatus(status);
+        jupyterMapper.updateContainerStatus(jc.getContainerId(), status);
+        JupyterInfoDTO jupyterInfoDTO = new JupyterInfoDTO();
+        if (jc != null){
+            BeanUtils.copyProperties(jc, jupyterInfoDTO);
+            jupyterInfoDTO.setCreated(jc.getCreateTime());
+        }
+        return jupyterInfoDTO;
+
+    }
+
 }

@@ -1,11 +1,9 @@
 package org.opengms.container;
 
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.core.util.ZipUtil;
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.CreateContainerCmd;
-import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
@@ -20,19 +18,22 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.junit.jupiter.api.Test;
 import org.opengms.common.utils.ReflectUtils;
-import org.opengms.common.utils.file.FileTypeUtils;
+import org.opengms.common.utils.XMLUtils;
 import org.opengms.common.utils.file.FileUtils;
 import org.opengms.common.utils.ip.IpUtils;
+import org.opengms.common.utils.uuid.SnowFlake;
 import org.opengms.container.clients.DriveClient;
 import org.opengms.container.entity.bo.mdl.*;
 import org.opengms.container.entity.bo.mdl.Event;
 import org.opengms.container.entity.dto.ApiResponse;
+import org.opengms.container.entity.dto.docker.ImageInfoDTO;
+import org.opengms.container.entity.po.docker.ImageInfo;
 import org.opengms.container.enums.MDLStructure;
-import org.opengms.container.mapper.DockerOperMapper;
+import org.opengms.container.mapper.ImageMapper;
 import org.opengms.container.service.IDockerService;
+import org.opengms.container.service.IMdlService;
 import org.opengms.container.service.IWorkspaceService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
@@ -66,15 +67,14 @@ public class ContainerApplicationTests {
 
         s += "c.ServerApp.token = '66666'";
 
-        FileUtils.writeBytes(s.getBytes(), "E:","jupyter_lab_config.py");
+        FileUtils.writeBytes(s.getBytes(), "E:", "jupyter_lab_config.py");
 
     }
 
 
-
     // 得到mac地址
     @Test
-    void getMac(){
+    void getMac() {
         System.out.println(IpUtils.getMacAddress());
 
     }
@@ -100,6 +100,7 @@ public class ContainerApplicationTests {
         return client;
     }
 
+    // docker信息
     @Test
     void dockerInfo() throws URISyntaxException {
         DockerClient client = connect();
@@ -149,37 +150,20 @@ public class ContainerApplicationTests {
     @Autowired
     IWorkspaceService workspaceService;
 
-    @Autowired
-    DockerOperMapper dockerOperMapper;
-
-    //测试启动容器
-    @Test
-    void testStartContainer(){
-        //插入
-        // Boolean success = workspaceService.initWorkspace("admin", "jupyter_cus:5.0");
-        // System.out.println(success);
-
-        //查找
-        // List<JupyterContainer> jupyterContainers = dockerOperMapper.listAll();
-        // System.out.println(jupyterContainers);
-
-
-    }
 
     // 将数据卷目录修改成适合docker的格式 [ /e/... ]
     @Test
-    void formatPathSupportDocker(){
+    void formatPathSupportDocker() {
         // E:\opengms-lab\container\workspace\test:/opt/notebooks
         String path = "E:\\opengms-lab\\container\\workspace\\test:/opt/notebooks";
-        path = path.replaceAll("\\\\","/");
+        path = path.replaceAll("\\\\", "/");
         int index = path.indexOf(":");
         String outputPath = path;
-        if (index == 1){
+        if (index == 1) {
             // 只有 E: 这种形式的才要进行处理
             outputPath = "/" + Character.toString(path.charAt(0)).toLowerCase() + path.substring(index + 1);
         }
         System.out.println(outputPath);
-
 
 
     }
@@ -187,7 +171,7 @@ public class ContainerApplicationTests {
 
     //测试端口是否被占用
     @Test
-    void testHost(){
+    void testHost() {
         // log(isSocketAliveUitlitybyCrunchify("localhost", 27017));
 
         log(isSocketAlive("localhost", 8080));
@@ -226,9 +210,6 @@ public class ContainerApplicationTests {
         return isAlive;
     }
 
-    private static void log(String string) {
-        System.out.println(string);
-    }
 
     private static void log(boolean isAlive) {
         System.out.println("是否真正在使用: " + isAlive + "\n");
@@ -239,10 +220,10 @@ public class ContainerApplicationTests {
 
     //测试获取镜像列表
     @Test
-    void testListImages(){
+    void testListImages() {
         // log(isSocketAliveUitlitybyCrunchify("localhost", 27017));
-        // List list = dockerService.listImages();
-        List list = dockerService.listContainers();
+        List<ImageInfoDTO> list = dockerService.listImages();
+        // List list = dockerService.listContainers();
 
         System.out.println(list);
 
@@ -251,7 +232,7 @@ public class ContainerApplicationTests {
 
     //测试事务
     @Test
-    void testTransaction(){
+    void testTransaction() {
         // log.info("123");
     }
 
@@ -259,7 +240,6 @@ public class ContainerApplicationTests {
     //测试读取xml
     @Test
     void testXML() throws DocumentException, NoSuchFieldException, InstantiationException, IllegalAccessException {
-
 
 
         SAXReader saxReader = new SAXReader();
@@ -298,13 +278,13 @@ public class ContainerApplicationTests {
                 Event event = new Event();
                 setElementAttributes(eventNode.attributes(), event);
                 Element inputParameterNode = eventNode.element(MDLStructure.INPUT_PARAMETER.getInfo());
-                if (inputParameterNode != null){
+                if (inputParameterNode != null) {
                     InputParameter inputParameter = new InputParameter();
                     setElementAttributes(inputParameterNode.attributes(), inputParameter);
                     event.setInputParameter(inputParameter);
                 }
                 Element outputParameterNode = eventNode.element(MDLStructure.OUTPUT_PARAMETER.getInfo());
-                if (outputParameterNode != null){
+                if (outputParameterNode != null) {
                     OutputParameter outputParameter = new OutputParameter();
                     setElementAttributes(outputParameterNode.attributes(), outputParameter);
                     event.setOutputParameter(outputParameter);
@@ -326,11 +306,11 @@ public class ContainerApplicationTests {
 
 
     //设置xml的属性
-    private void setElementAttributes(List<Attribute> attributes, Object obj){
+    private void setElementAttributes(List<Attribute> attributes, Object obj) {
         for (Attribute attribute : attributes) {
             try {
-                ReflectUtils.setValueByProp(obj,attribute.getName(),attribute.getValue());
-            } catch (Exception e){
+                ReflectUtils.setValueByProp(obj, attribute.getName(), attribute.getValue());
+            } catch (Exception e) {
                 log.error(e.getMessage());
             }
         }
@@ -341,7 +321,7 @@ public class ContainerApplicationTests {
 
     //上传文件
     @Test
-    void uploadFile(){
+    void uploadFile() {
 
         File file = new File("E:\\opengms-lab\\container\\workspace\\8287025736412860416\\service\\1test2_8288013738125070336\\instance\\cdf640fc-e86d-4b90-ac96-7d13608ecd90\\result.png");
 
@@ -356,7 +336,7 @@ public class ContainerApplicationTests {
             , MediaType.MULTIPART_FORM_DATA_VALUE
             , true
             , file.getName()
-            , (int)file.length()
+            , (int) file.length()
             , file.getParentFile());
         try {
             OutputStream os = item.getOutputStream();
@@ -370,7 +350,7 @@ public class ContainerApplicationTests {
 
     //commit容器
     @Test
-    void testCommitContainer(){
+    void testCommitContainer() {
         // dockerService.commitContainer();
         String container = "test6";
         String outputPath = "E:\\opengms-lab\\container\\package\\test6.tar";
@@ -381,9 +361,9 @@ public class ContainerApplicationTests {
 
     //压缩
     @Test
-    void compress(){
+    void compress() {
         // ZipUtil.zip("E:\\opengms-lab\\container\\package", "E:\\opengms-lab\\container\\pkg\\pkg.zip");
-        ZipUtil.zip(new File("E:\\opengms-lab\\container\\pkg\\pkg2.zip"),true,
+        ZipUtil.zip(new File("E:\\opengms-lab\\container\\pkg\\pkg2.zip"), true,
             new File("E:\\opengms-lab\\container\\workspace\\8289087029604552704\\config"),
             new File("E:\\opengms-lab\\container\\workspace\\8289087029604552704\\data"),
             new File("E:\\opengms-lab\\container\\image\\test6.tar"));
@@ -391,7 +371,7 @@ public class ContainerApplicationTests {
 
     //解压
     @Test
-    void uncompress(){
+    void uncompress() {
 
         File zipFile = new File("E:\\opengms-lab\\container\\package\\new3_ceaae73a-30d6-4a78-939d-7f799e1204dd.zip");
         String outFilePathStr = "E:\\opengms-lab\\container\\service\\" + FileNameUtil.mainName(zipFile);
@@ -404,6 +384,58 @@ public class ContainerApplicationTests {
         String inputPath = outFilePathStr + "/" + s[1] + ".tar";
         dockerService.importContainer(inputPath, "new1" + ":" + 1 + ".0");
         // ZipUtil.unzip("new3_ceaae73a-30d6-4a78-939d-7f799e1204dd.zip", "E:\\opengms-lab\\container\\pkg");
+    }
+
+    @Autowired
+    DockerClient dockerClient;
+
+    @Autowired
+    ImageMapper imageMapper;
+
+    // 添加基础镜像
+    @Test
+    void addDefaultImage() {
+        ImageInfo imageInfo = new ImageInfo();
+        imageInfo.setId(SnowFlake.nextId());
+        imageInfo.setImageId("sha256:59149c73a68c19b242b6b4cce1e52deb36802aa2c0c65d2990c5eb1aff6e062e");
+        imageInfo.setImageName("jupyter_cus");
+        imageInfo.setTag("5.0");
+        imageInfo.setSize(451509330L);
+        imageInfo.setRepoTags("jupyter_cus:5.0");
+        imageMapper.insert(imageInfo);
+    }
+
+    @Autowired
+    IMdlService mdlService;
+
+    @Test
+    void parseMdlFile() throws Exception {
+        String mdlPath = "E:\\opengms-lab\\container\\workspace\\8334486711696420864\\data\\createWordCloud.mdl";
+
+
+        // ModelClass modelClass = mdlService.parseMdlFile(mdlPath);
+        ModelClass m = (ModelClass)XMLUtils.convertXmlFileToObject(ModelClass.class, mdlPath);
+
+        System.out.println();
+    }
+
+    // 容器测试
+    @Test
+    void containerTest() {
+
+        // String status = dockerService.getContainerStatusByContainerInsId("5f760de92543d46726ef013f6cc0c22ae3a13a349c8a831399c966412cd574c6");
+        //
+        //
+        // List<Container> containers = dockerService.listContainers();
+        // System.out.println();
+
+        // ImageInfo imageInfoByRepoTags = imageMapper.getImageInfoByRepoTags("newimage3:1.0");
+        // System.out.println();
+
+        // dockerService.commitContainer();
+
+        dockerService.inspectImage("sha256:59149c73a68c19b242b6b4cce1e52deb36802aa2c0c65d2990c5eb1aff6e062e");
+
     }
 
 }

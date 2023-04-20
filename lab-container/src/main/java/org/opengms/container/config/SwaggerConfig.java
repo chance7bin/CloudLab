@@ -106,7 +106,7 @@ public class SwaggerConfig implements WebMvcConfigurer
         // 用ApiInfoBuilder进行定制
         return new ApiInfoBuilder()
                 // 设置标题
-                .title("OPENGMS DRIVE接口文档")
+                .title("OPENGMS CONTAINER接口文档")
                 // 描述
                 // .description("接口文档 description")
                 // 作者信息

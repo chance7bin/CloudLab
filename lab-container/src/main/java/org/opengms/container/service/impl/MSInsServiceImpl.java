@@ -5,6 +5,7 @@ import org.opengms.common.utils.DateUtils;
 import org.opengms.common.utils.file.FileUtils;
 import org.opengms.container.clients.DriveClient;
 import org.opengms.container.constant.ContainerConstants;
+import org.opengms.container.constant.ServiceType;
 import org.opengms.container.constant.TaskStatus;
 import org.opengms.container.entity.bo.InOutParam;
 import org.opengms.container.entity.bo.Log;
@@ -14,15 +15,13 @@ import org.opengms.container.entity.bo.SubIdentifier;
 import org.opengms.container.entity.po.ModelService;
 import org.opengms.container.entity.po.docker.ContainerInfo;
 import org.opengms.container.entity.socket.Client;
+import org.opengms.container.enums.ContainerType;
 import org.opengms.container.enums.DataMIME;
 import org.opengms.container.enums.ProcessState;
-import org.opengms.container.enums.ProcessStatus;
+import org.opengms.container.enums.DataFlag;
 import org.opengms.container.exception.ServiceException;
-import org.opengms.container.mapper.DockerOperMapper;
 import org.opengms.container.mapper.MsrInsMapper;
-import org.opengms.container.service.IDockerService;
-import org.opengms.container.service.IMSInsService;
-import org.opengms.container.service.IMdlService;
+import org.opengms.container.service.*;
 import org.opengms.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,7 +59,9 @@ public class MSInsServiceImpl implements IMSInsService {
     IDockerService dockerService;
 
     @Autowired
-    DockerOperMapper dockerOperMapper;
+    IContainerService containerService;
+
+
 
     // 当前socket通信实例
     private SocketChannel channel;
@@ -334,6 +335,21 @@ public class MSInsServiceImpl implements IMSInsService {
         return msrInsColl.get(msInsId);
     }
 
+
+    /**
+     * 是否销毁模型关联的容器
+     * @param modelService 模型服务实例
+     * @return {@link Boolean}
+     * @author 7bin
+     **/
+    Boolean isDestroyContainer(ModelService modelService){
+        String serviceType = modelService.getServiceType();
+        if (ServiceType.DISPOSABLE.equals(serviceType)){
+            return true;
+        }
+        return false;
+    }
+
     /**
      *
      * @param clientChannel
@@ -346,18 +362,20 @@ public class MSInsServiceImpl implements IMSInsService {
         if (currentMsrIns != null){
             msrInsColl.remove(currentMsrIns.getMsriId());
 
-            // 删除运行容器
-            ContainerInfo container = dockerOperMapper.getContainerInfoById(currentMsrIns.getContainerId());
-            if (container != null){
-                dockerService.removeContainer(container.getContainerInsId());
-                dockerOperMapper.updateContainer(container);
+            // 如果是只运行一次的服务的话，运行完删除运行容器
+            if (isDestroyContainer(currentMsrIns.getModelService())){
+                ContainerInfo container = containerService.getContainerInfoById(currentMsrIns.getContainerId(), ContainerType.JUPYTER);
+                if (container != null){
+                    dockerService.removeContainer(container.getContainerInsId());
+                    containerService.deleteContainer(container.getContainerId(), ContainerType.JUPYTER);
+                }
             }
         }
     }
 
     @Override
-    public MsrIns getMsrInsById(String msInsId) {
-        return msrInsMapper.selectMsrInsById(msInsId);
+    public MsrIns getMsrInsByMsriId(String msrInsId) {
+        return msrInsMapper.selectByMsriId(msrInsId);
     }
 
     /**
@@ -389,11 +407,11 @@ public class MSInsServiceImpl implements IMSInsService {
         ins.getLogs().add(new Log(
             ProcessState.INIT,
             null, null,
-            ProcessStatus.FINISH,
+            DataFlag.FINISH,
             null,
             new Date()
         ));
-        msrInsMapper.updateMsrIns(ins);
+        msrInsMapper.updateById(ins);
 
         ModelService ms = ins.getModelService();
         // if (ms.getRelativeDir() == null){
@@ -403,17 +421,20 @@ public class MSInsServiceImpl implements IMSInsService {
         // 依赖文件
         String mappingLibDir;
 
-        // 新建环境和基于已有环境分开讨论
-        if (ms.getNewImage() != null && ms.getNewImage()){
-            ins.setInstanceDir("/instance/" + insId);
-            mappingLibDir = ContainerConstants.INNER_SERVICE_DIR + "/model";
-        } else {
-            ins.setInstanceDir("/" + ms.getRelativeDir() + "/instance/" + insId);
-            mappingLibDir = ContainerConstants.INNER_SERVICE_DIR + "/" + ms.getRelativeDir() + "/model";
-        }
-
-
+        // （不需要了）新建环境和基于已有环境分开讨论
+        // if (ms.getNewImage() != null && ms.getNewImage()){
+        //     ins.setInstanceDir("/instance/" + insId);
+        //     mappingLibDir = ContainerConstants.INNER_SERVICE_DIR + "/model";
+        // } else {
+        //     ins.setInstanceDir("/" + ms.getRelativeDir() + "/instance/" + insId);
+        //     mappingLibDir = ContainerConstants.INNER_SERVICE_DIR + "/" + ms.getRelativeDir() + "/model";
+        // }
+        // ins.setInstanceDir("/" + ms.getMsId() + "/instance/" + insId);
+        ins.setInstanceDir("/instance/" + insId);
         // TODO: 2022/12/2 MAPPING_LIB_DIR要放在哪里？
+        // mappingLibDir = ContainerConstants.INNER_SERVICE_DIR + "/" + ms.getMsId() + "/model";
+        mappingLibDir = ContainerConstants.INNER_SERVICE_DIR + "/model";
+
         String msg = "{Initialized}" + insId
             + "[" + mappingLibDir + "]"
             + "[" + ContainerConstants.INNER_SERVICE_DIR + ins.getInstanceDir() + "]";
@@ -427,11 +448,11 @@ public class MSInsServiceImpl implements IMSInsService {
         ins.getLogs().add(new Log(
             ProcessState.ON_ENTER_STATE,
             state, null,
-            ProcessStatus.FINISH,
+            DataFlag.FINISH,
             null,
             new Date()
         ));
-        msrInsMapper.updateMsrIns(ins);
+        msrInsMapper.updateById(ins);
 
         String msg = "{Enter State Notified}";
         sendMessage2Client(msg);
@@ -444,11 +465,11 @@ public class MSInsServiceImpl implements IMSInsService {
         ins.getLogs().add(new Log(
             ProcessState.ON_FIRE_EVENT,
             state, event,
-            ProcessStatus.FINISH,
+            DataFlag.FINISH,
             null,
             new Date()
         ));
-        msrInsMapper.updateMsrIns(ins);
+        msrInsMapper.updateById(ins);
 
         String msg = "{Fire Event Notified}";
         sendMessage2Client(msg);
@@ -465,30 +486,23 @@ public class MSInsServiceImpl implements IMSInsService {
 
         String parameter = null;
         try {
-            String serviceDir = null;
-            if (msrIns.getModelService().getContainerId() != null){
-                serviceDir = ContainerConstants.serviceDir(msrIns.getModelService().getContainerId());
-            } else {
-                serviceDir = "/service/" + msrIns.getModelService().getMsName() + "_" + msrIns.getModelService().getNewPkgId();
-            }
-
-
+            String serviceDir = ContainerConstants.SERVICE_DIR(msrIns.getModelService().getMsId());
 
             parameter = mdlService.getParameter(modelService, state, event, serviceDir, msrIns.getInstanceDir());
 
             msrIns.getLogs().add(new Log(
                 ProcessState.ON_REQUEST_DATA,
                 state, event,
-                ProcessStatus.FINISH,
+                DataFlag.FINISH,
                 "Get input parameter: [ " + parameter + " ]",
                 new Date()
             ));
 
             msrIns.getInputs().add(new InOutParam(state, event, dataMIME.getInfo(), parameter));
 
-            msrInsMapper.updateMsrIns(msrIns);
+            msrInsMapper.updateById(msrIns);
 
-            sendMessage2Client("{Request Data Notified}[" + ProcessStatus.FINISH + "][" + dataMIME + "]" + parameter);
+            sendMessage2Client("{Request Data Notified}[" + DataFlag.FINISH + "][" + dataMIME + "]" + parameter);
         }catch (ServiceException se){
             kill(se.getMessage(), ProcessState.ON_REQUEST_DATA, state, event);
         }
@@ -507,20 +521,21 @@ public class MSInsServiceImpl implements IMSInsService {
         ins.getLogs().add(new Log(
             ProcessState.ON_RESPONSE_DATA,
             state, event,
-            ProcessStatus.FINISH,
+            DataFlag.FINISH,
             "Get output data: { " + dataSignal + " } [ " + data + " ]",
             new Date()
         ));
 
         try {
             // 该工作空间所在的容器创建的模型服务都在 container.repository 目录的 workspace/{containerId}/service 下
-            // String serviceDir = "/workspace/" + ins.getModelService().getContainerId() + "/service";
-            String serviceDir = null;
-            if (ins.getModelService().getContainerId() != null){
-                serviceDir = ContainerConstants.serviceDir(ins.getModelService().getContainerId());
-            } else {
-                serviceDir = "/service/" + ins.getModelService().getMsName() + "_" + ins.getModelService().getNewPkgId();
-            }
+            // String SERVICE_DIR = "/workspace/" + ins.getModelService().getContainerId() + "/service";
+            // String serviceDir = null;
+            // if (ins.getModelService().getContainerId() != null){
+            //     serviceDir = ContainerConstants.SERVICE_DIR(ins.getModelService().getContainerId());
+            // } else {
+            //     serviceDir = "/service/" + ins.getModelService().getMsName() + "_" + ins.getModelService().getPkgId();
+            // }
+            String serviceDir = ContainerConstants.SERVICE_DIR(ins.getModelService().getMsId());
 
 
             //将数据上传到drive中
@@ -532,7 +547,7 @@ public class MSInsServiceImpl implements IMSInsService {
             String fileHostFile = repository + serviceDir + split[1];
             //上传
             ApiResponse response = driveClient.uploadFiles(FileUtils.file2MultipartFile(new File(fileHostFile)));
-            if (!ApiResponse.reqSuccess(response)){
+            if (!ApiResponse.isSuccess(response)){
                 throw new ServiceException("数据上传至文件服务器时出错，数据上传失败");
             }
             String responseData = (String) ApiResponse.getResponseData(response);
@@ -540,7 +555,7 @@ public class MSInsServiceImpl implements IMSInsService {
             inOutParam.setDriveFileId(responseData);
             ins.getOutputs().add(inOutParam);
 
-            msrInsMapper.updateMsrIns(ins);
+            msrInsMapper.updateById(ins);
 
             sendMessage2Client("{Response Data Received}" + insId);
         } catch (ServiceException se){
@@ -555,11 +570,11 @@ public class MSInsServiceImpl implements IMSInsService {
         ins.getLogs().add(new Log(
             ProcessState.ON_POST_ERROR_INFO,
             null, null,
-            ProcessStatus.FINISH,
+            DataFlag.FINISH,
             errorInfo,
             new Date()
         ));
-        msrInsMapper.updateMsrIns(ins);
+        msrInsMapper.updateById(ins);
         sendMessage2Client("{Post Error Info Notified}" + insId);
     }
 
@@ -569,11 +584,11 @@ public class MSInsServiceImpl implements IMSInsService {
         ins.getLogs().add(new Log(
             ProcessState.ON_POST_WARNING_INFO,
             null, null,
-            ProcessStatus.FINISH,
+            DataFlag.FINISH,
             warningInfo,
             new Date()
         ));
-        msrInsMapper.updateMsrIns(ins);
+        msrInsMapper.updateById(ins);
         sendMessage2Client("{Post Warning Info Notified}" + insId);
     }
 
@@ -583,11 +598,11 @@ public class MSInsServiceImpl implements IMSInsService {
         ins.getLogs().add(new Log(
             ProcessState.ON_POST_MESSAGE_INFO,
             null, null,
-            ProcessStatus.FINISH,
+            DataFlag.FINISH,
             messageInfo,
             new Date()
         ));
-        msrInsMapper.updateMsrIns(ins);
+        msrInsMapper.updateById(ins);
         sendMessage2Client("{Post Message Info Notified}" + insId);
     }
 
@@ -597,11 +612,11 @@ public class MSInsServiceImpl implements IMSInsService {
         ins.getLogs().add(new Log(
             ProcessState.ON_LEAVE_STATE,
             state, null,
-            ProcessStatus.FINISH,
+            DataFlag.FINISH,
             null,
             new Date()
         ));
-        msrInsMapper.updateMsrIns(ins);
+        msrInsMapper.updateById(ins);
         sendMessage2Client("{Leave State Notified}");
     }
 
@@ -611,14 +626,14 @@ public class MSInsServiceImpl implements IMSInsService {
         ins.getLogs().add(new Log(
             ProcessState.ON_FINALIZE,
             null, null,
-            ProcessStatus.FINISH,
+            DataFlag.FINISH,
             null,
             new Date()
         ));
         ins.setStatus(TaskStatus.FINISHED);
         int second = DateUtils.differentSecondsByMillisecond(new Date(), ins.getStartTime());
         ins.setSpanTime(second);
-        msrInsMapper.updateMsrIns(ins);
+        msrInsMapper.updateById(ins);
         sendMessage2Client("{Finalize Notified}");
     }
 
@@ -676,7 +691,7 @@ public class MSInsServiceImpl implements IMSInsService {
         ins.getLogs().add(new Log(
             processState,
             state, event,
-            ProcessStatus.ERROR,
+            DataFlag.ERROR,
             msg,
             new Date()
         ));
@@ -688,7 +703,7 @@ public class MSInsServiceImpl implements IMSInsService {
             ins.setSpanTime(second);
         }
 
-        msrInsMapper.updateMsrIns(ins);
+        msrInsMapper.updateById(ins);
 
         sendMessage2Client(channel, "{kill}" + msg);
 

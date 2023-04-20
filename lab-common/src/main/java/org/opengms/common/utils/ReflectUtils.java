@@ -18,7 +18,6 @@ public class ReflectUtils {
      * @param obj 对象实例
      * @param prop 属性名
      * @param value 属性值
-     * @return void
      * @author 7bin
      **/
     public static void setValueByProp(Object obj, String prop, String value) throws IntrospectionException, InvocationTargetException, IllegalAccessException {
@@ -34,18 +33,21 @@ public class ReflectUtils {
 
     private static Object getValue(Object value,Class type){
         if (value != null){
-            if (type.isAssignableFrom(String[].class))
+            if (type.isAssignableFrom(String[].class)) {
                 return toStringArray(value);
-            if (type.isAssignableFrom(Integer[].class))
+            }
+            if (type.isAssignableFrom(Integer[].class)) {
                 return toIntegerArray(value);
-            else if (type.isAssignableFrom(Integer.class) || type.isAssignableFrom(int.class) )
+            } else if (type.isAssignableFrom(Integer.class) || type.isAssignableFrom(int.class) ) {
                 return toInteger(value);
-            if (type.isAssignableFrom(Double.class) || type.isAssignableFrom(double.class))
+            }
+            if (type.isAssignableFrom(Double.class) || type.isAssignableFrom(double.class)) {
                 return toDouble(value);
-            else if (type.isAssignableFrom(Boolean.class) || type.isAssignableFrom(boolean.class))
+            } else if (type.isAssignableFrom(Boolean.class) || type.isAssignableFrom(boolean.class)) {
                 return toBoolean(value);
-            else if (type.isAssignableFrom(String.class))
+            } else if (type.isAssignableFrom(String.class)) {
                 return toString(value);
+            }
             // 在此处添加新的转换规则
             // ...
         }

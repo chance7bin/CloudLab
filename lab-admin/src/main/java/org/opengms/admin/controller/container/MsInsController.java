@@ -1,6 +1,6 @@
 package org.opengms.admin.controller.container;
 
-import org.opengms.admin.clients.ContainerClient;
+import org.opengms.admin.clients.container.MsInsClient;
 import org.opengms.admin.controller.common.BaseController;
 import org.opengms.admin.entity.dto.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class MsInsController extends BaseController {
 
     @Autowired
-    ContainerClient containerClient;
+    MsInsClient msInsClient;
 
     @GetMapping(value = "/{msriId}")
     public ApiResponse getMsInsById(@PathVariable("msriId") String msriId){
-        ApiResponse ins = containerClient.getMsInsById(msriId);
+        ApiResponse ins = msInsClient.getMsInsById(msriId);
         return ins;
     }
 

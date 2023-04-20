@@ -24,7 +24,7 @@ public class MsInsController {
 
     @GetMapping(value = "/{msriId}")
     public ApiResponse getMsInsById(@PathVariable("msriId") String msriId){
-        return ApiResponse.success(msInsService.getMsrInsById(msriId));
+        return ApiResponse.success(msInsService.getMsrInsByMsriId(msriId));
     }
 
 }

@@ -2,11 +2,18 @@ package org.opengms.container.controller;
 
 import org.opengms.container.controller.common.BaseController;
 import org.opengms.container.entity.dto.ApiResponse;
+import org.opengms.container.entity.dto.InvokeDTO;
 import org.opengms.container.entity.dto.ModelServiceDTO;
+import org.opengms.container.entity.dto.TableDataInfo;
 import org.opengms.container.entity.po.ModelService;
+import org.opengms.container.entity.vo.ModelServiceVO;
 import org.opengms.container.service.IMSService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author 7bin
@@ -30,19 +37,30 @@ public class ModelServiceController extends BaseController {
 
 
     @GetMapping(value = "/list")
-    public ApiResponse selectServiceList(){
-        return ApiResponse.success(msService.selectServiceList());
+    public TableDataInfo selectServiceList(){
+        startPage();
+        List<ModelService> modelServices = msService.selectServiceList();
+        List<ModelServiceVO> res = modelServices.stream()
+            .map(o -> {
+                ModelServiceVO modelServiceVO = new ModelServiceVO();
+                BeanUtils.copyProperties(o, modelServiceVO);
+                return modelServiceVO;
+            }).collect(Collectors.toList());
+        return getDataTable(res);
     }
 
     @GetMapping(value = "/{msId}")
     public ApiResponse getModelServiceById(@PathVariable("msId") String msId){
-        return ApiResponse.success(msService.getModelServiceById(msId));
+        ModelService service = msService.getModelServiceById(msId);
+        ModelServiceVO modelServiceVO = new ModelServiceVO();
+        BeanUtils.copyProperties(service, modelServiceVO);
+        return ApiResponse.success(modelServiceVO);
     }
 
     @PostMapping(value = "/invoke")
-    public ApiResponse invoke(@RequestBody ModelService modelService){
+    public ApiResponse invoke(@RequestBody InvokeDTO invokeDTO){
 
-        return ApiResponse.success("调用成功", msService.invoke(modelService));
+        return ApiResponse.success("调用成功", msService.invoke(invokeDTO));
     }
 
 }

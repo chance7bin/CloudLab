@@ -3,6 +3,8 @@ package org.opengms.admin.entity.dto.container.mdl;
 import lombok.Data;
 import org.opengms.admin.entity.SerializableEntity;
 
+import java.util.List;
+
 /**
  * @author 7bin
  * @date 2022/11/04
@@ -26,7 +28,9 @@ public class Event extends SerializableEntity {
     String description;
 
     InputParameter inputParameter;
+    // List<InputParameter> inputParameter;
 
     OutputParameter outputParameter;
+    // List<OutputParameter> outputParameter;
 
 }

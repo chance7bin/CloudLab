@@ -1,12 +1,12 @@
 import request from "@/utils/request";
 // request.defaults.baseURL = import.meta.env.VITE_APP_CONTAINER_API;
 const containerPath = import.meta.env.VITE_APP_CONTAINER_API;
-const adminPath = import.meta.env.VITE_APP_BASE_API;
-const contextPath = adminPath + "/container";
+const adminPath = import.meta.env.VITE_APP_BASE_API + "/container";
+const contextPath = adminPath + "/workspace";
 
-export function initWorkspace(imageName: string, containerName) {
+export function initWorkspace(imageId: string, containerName) {
   return request({
-    url: contextPath + "/workspace/initialization/" + imageName + "/" + containerName,
+    url: contextPath + "/initialization/" + imageId + "/" + containerName,
     method: "get",
     timeout: 30000
   });
@@ -14,14 +14,14 @@ export function initWorkspace(imageName: string, containerName) {
 
 export function listWorkspaceDirContainChildren(containerId: string) {
   return request({
-    url: contextPath + "/workspace/dir/" + containerId,
+    url: contextPath + "/dir/" + containerId,
     method: "get"
   });
 }
 
-export function getJupyterContainerById(id: string) {
+export function getWorkspaceByContainerId(id: string) {
   return request({
-    url: contextPath + "/workspace/jupyter/item/" + id,
+    url: contextPath + "/" + id,
     method: "get"
   });
 }

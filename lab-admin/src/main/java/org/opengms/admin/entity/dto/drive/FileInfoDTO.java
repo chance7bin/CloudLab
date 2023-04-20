@@ -31,6 +31,6 @@ public class FileInfoDTO extends BaseEntity {
     private String size;
 
     /** 删除标志 0false  1true */
-    private Boolean delFlag;
+    private boolean delFlag;
 
 }

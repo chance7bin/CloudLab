@@ -10,13 +10,8 @@ import java.util.List;
  * @date 2022/11/12
  */
 @Mapper
-public interface ModelServiceMapper {
+public interface ModelServiceMapper extends BaseMapper<ModelService>{
 
-    int insertModelService(ModelService modelService);
+    int updateDeployStatus(Long msId, String status);
 
-    List<ModelService> selectServiceList();
-
-    ModelService getModelServiceById(String msId);
-
-    int updateModelService(ModelService modelService);
 }
