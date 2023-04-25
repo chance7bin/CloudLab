@@ -164,11 +164,11 @@ public class ApiResponse extends HashMap<String, Object> {
 
     /**
      * 在远程调用时判断请求是否成功
-     * @param response
-     * @return {@link boolean}
+     * @param response {@link ApiResponse}
+     * @return {@link boolean} 成功返回true; 失败返回false
      * @author 7bin
      **/
-    public static boolean reqSuccess(ApiResponse response){
+    public static boolean isSuccess(ApiResponse response){
         return (Integer) response.get(ApiResponse.CODE_TAG) == HttpStatus.SUCCESS;
     }
 

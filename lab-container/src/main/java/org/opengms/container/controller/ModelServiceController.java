@@ -40,13 +40,15 @@ public class ModelServiceController extends BaseController {
     public TableDataInfo selectServiceList(){
         startPage();
         List<ModelService> modelServices = msService.selectServiceList();
+        TableDataInfo dataTable = getDataTable(modelServices);
         List<ModelServiceVO> res = modelServices.stream()
             .map(o -> {
                 ModelServiceVO modelServiceVO = new ModelServiceVO();
                 BeanUtils.copyProperties(o, modelServiceVO);
                 return modelServiceVO;
             }).collect(Collectors.toList());
-        return getDataTable(res);
+        dataTable.setRows(res);  // 如果转完再getDataTable，total会显示错误
+        return dataTable;
     }
 
     @GetMapping(value = "/{msId}")

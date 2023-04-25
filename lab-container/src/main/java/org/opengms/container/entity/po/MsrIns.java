@@ -1,6 +1,7 @@
 package org.opengms.container.entity.po;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.netty.channel.Channel;
 import lombok.Data;
 import org.opengms.container.entity.BaseEntity;
 import org.opengms.container.entity.bo.InOutParam;
@@ -22,9 +23,13 @@ import java.util.List;
 @Data
 public class MsrIns extends BaseEntity {
 
-    /** 客户端channel */
+    /** 客户端channel nio */
     @JsonIgnore
     SocketChannel socketChannel;
+
+    /** 客户端channel netty */
+    @JsonIgnore
+    Channel channel;
 
     /** 模型运行实例id  */
     String msriId;

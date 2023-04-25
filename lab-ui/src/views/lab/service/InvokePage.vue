@@ -135,6 +135,7 @@ import type { FormInstance, FormRules } from "element-plus";
 import { FolderOpened , Download} from "@element-plus/icons-vue";
 import { checkAuth } from "@/api/admin/login";
 import { ElMessageBox } from "element-plus";
+import type {InvokeDTO} from "@/api/container/modelService";
 
 
 const { proxy } = useCurrentInstance();
@@ -154,7 +155,7 @@ const serviceExist = ref<boolean>(true);
 proxy.$modal.loading();
 
 const collapseAll = ref<string[]>([]);
-const modelService = ref({});
+const modelService = ref();
 //模型mdl对象
 const mdlModelClass = ref({});
 
@@ -292,7 +293,16 @@ const invoke = async () => {
           instance.confirmButtonLoading = true;
           instance.confirmButtonText = "任务初始化中...";
 
-          invokeService(modelService.value)
+          let invokeDTO : InvokeDTO = {
+            msId: modelService.value.msId,
+            imageId: modelService.value.imageId,
+            msName: modelService.value.msName,
+            modelClass: modelService.value.modelClass,
+            deployStatus: modelService.value.deployStatus,
+            serviceType: modelService.value.serviceType
+          }
+
+          invokeService(invokeDTO)
             .then((res) => {
               proxy.$modal.notifySuccess("开始运行");
               done();

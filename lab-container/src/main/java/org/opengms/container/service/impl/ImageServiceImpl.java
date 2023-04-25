@@ -26,21 +26,10 @@ public class ImageServiceImpl implements IImageService {
     ImageMapper imageMapper;
 
     @Override
-    public List<ImageInfoDTO> listImages() {
+    public List<ImageInfo> listImages() {
         List<ImageInfo> imageInfos = imageMapper.selectList();
-        List<ImageInfoDTO> dtoList = imageInfos.stream()
-            .map(o -> {
-                ImageInfoDTO imageInfoDTO = new ImageInfoDTO();
-                imageInfoDTO.setImageId(o.getId());
-                imageInfoDTO.setImageName(o.getImageName());
-                imageInfoDTO.setTag(o.getTag());
-                imageInfoDTO.setRepoTags(o.getRepoTags());
-                imageInfoDTO.setSize(o.getSize() == null ? "unknown" : FileUtils.calcSize(o.getSize()));
-                imageInfoDTO.setStatus(o.getStatus());
-                return imageInfoDTO;
-            })
-            .collect(Collectors.toList());
-        return dtoList;
+
+        return imageInfos;
     }
 
     @Override

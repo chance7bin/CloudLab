@@ -187,6 +187,7 @@ public class FileServiceImpl implements IFileService {
             int year = DateUtils.getYear();
             int month = DateUtils.getMonth();
             String name = fileInfo.getMd5() + "_" + fileInfo.getFileName();
+            // String name = fileInfo.getMd5();
             FileUtil.move(
                 new File(savePath + separator + name),
                 new File(savePath + separator + year + separator + month + separator + name),

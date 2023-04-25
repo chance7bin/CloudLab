@@ -1,18 +1,13 @@
 package org.opengms.container.service.impl;
 
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.ZipUtil;
 import com.github.dockerjava.api.command.InspectImageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.opengms.common.TerminalRes;
 import org.opengms.common.utils.DateUtils;
-import org.opengms.common.utils.file.FileUtils;
-import org.opengms.common.utils.uuid.SnowFlake;
 import org.opengms.common.utils.uuid.UUID;
 import org.opengms.container.constant.*;
 import org.opengms.container.entity.bo.Log;
-import org.opengms.container.entity.dto.docker.EnvDTO;
-import org.opengms.container.entity.po.ModelService;
 import org.opengms.container.entity.po.MsrIns;
 import org.opengms.container.entity.po.docker.ContainerInfo;
 import org.opengms.container.entity.po.docker.ImageInfo;
@@ -43,7 +38,7 @@ import java.util.Date;
 public class MSCAsyncServiceImpl implements IMSCAsyncService {
 
     @Autowired
-    IMSInsService msInsService;
+    IMSInsSocketService msInsSocketService;
 
     @Autowired
     MsrInsMapper msrInsMapper;
@@ -81,7 +76,7 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
         String encapsulationCMD = cmdArr[cmdArr.length - 1];
         String[] encap = encapsulationCMD.split(" ");
         String msrid = encap[encap.length - 1];
-        MsrIns ins = msInsService.getMsrInsFromMsrInsColl(msrid);
+        MsrIns ins = msInsSocketService.getMsrInsFromMsrInsColl(msrid);
 
         long start = System.currentTimeMillis();
         // String exe = "python";
@@ -110,13 +105,13 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
             // exitVal == -1 为程序执行成功, 但自定义返回错误代码
             if (exitVal == 0) {
                 log.info("Exec done, cost: " + ((end - start) / 1000) + "s");
-                log.info("[程序正常退出] " + response);
+                log.info("[程序正常退出] 退出码 : " + exitVal + " " + response);
             } else if (exitVal == -1) {
-                String msg = "[程序自定义错误] " + response;
+                String msg = "[程序自定义错误] 退出码 : " + exitVal + " " + response;
                 log.error(msg);
                 execError(ins, msg);
             } else {
-                String msg = "[程序内部错误] " + error;
+                String msg = "[程序内部错误] 退出码 : " + exitVal + " " + error;
                 log.error(msg);
                 execError(ins, msg);
             }
@@ -283,7 +278,7 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
         }
         msrInsMapper.updateById(ins);
 
-        msInsService.removeChannelAndMsrInsColl(ins.getSocketChannel());
+        msInsSocketService.removeChannelAndMsrInsColl(ins.getChannel());
 
     }
 }

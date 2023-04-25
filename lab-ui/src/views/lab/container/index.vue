@@ -29,7 +29,7 @@
           <el-button link type="primary" @click="refresh(scope.$index, scope.row)">刷新</el-button>
           <el-button link type="primary" @click="openCreateEnvDialog(scope.$index, scope.row)">创建新环境</el-button>
 <!--          <el-button link type="primary">重启</el-button>-->
-          <el-button link type="primary">删除</el-button>
+          <el-button link type="primary" @click="deleteContainer(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -189,6 +189,10 @@ function enterWorkspace(index, row) {
   // console.log(row)
   let query = { containerId: row.containerId };
   router.push({ path: "/workspace/instance", query: query });
+}
+
+function deleteContainer(row) {
+  proxy.$modal.confirm("是否删除该容器");
 }
 </script>
 

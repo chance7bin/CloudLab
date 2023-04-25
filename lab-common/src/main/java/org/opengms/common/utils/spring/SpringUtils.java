@@ -32,7 +32,9 @@ public final class SpringUtils implements BeanFactoryPostProcessor, ApplicationC
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException 
     {
-        SpringUtils.applicationContext = applicationContext;
+        if(SpringUtils.applicationContext == null){
+            SpringUtils.applicationContext  = applicationContext;
+        }
     }
 
     /**
@@ -61,6 +63,16 @@ public final class SpringUtils implements BeanFactoryPostProcessor, ApplicationC
     {
         T result = (T) beanFactory.getBean(clz);
         return result;
+    }
+
+    public static ApplicationContext getApplicationContext() {
+        return applicationContext;
+    }
+
+    public static <T> T getBeanByContext(Class<T> clz) throws BeansException
+    {
+        return getApplicationContext().getBean(clz);
+
     }
 
     /**

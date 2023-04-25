@@ -235,7 +235,7 @@ const uploadSuccess = (file) => {
     driveFileId: null
   };
   addFile(fileInfoDTO).then(() => {
-    proxy.$modal.msgSuccess("文件夹添加成功");
+    proxy.$modal.msgSuccess("文件添加成功");
     dialogVisible.value = false;
     getFolder();
   });
@@ -284,6 +284,10 @@ const selectTypeIcon = (item): string => {
       case "zip":
       case "tar.gz":
         icon = "zip_big"
+        break;
+      case "mp4":
+      case "avi":
+        icon = "video_big";
         break;
       default:
         icon = "file";

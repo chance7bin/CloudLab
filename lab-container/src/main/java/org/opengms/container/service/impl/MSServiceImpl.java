@@ -46,7 +46,7 @@ public class MSServiceImpl implements IMSService {
     private String repository;
 
     @Autowired
-    IMSInsService msInsService;
+    IMSInsSocketService msInsSocketService;
 
     @Autowired
     IMSCAsyncService asyncService;
@@ -74,6 +74,8 @@ public class MSServiceImpl implements IMSService {
 
     @Override
     public String invoke(InvokeDTO invokeDTO) {
+
+        // TODO: 2023/4/25 并发调用同一个服务，如何解决资源冲突问题
 
         ModelService modelService = modelServiceMapper.selectById(invokeDTO.getMsId());
 
@@ -124,7 +126,7 @@ public class MSServiceImpl implements IMSService {
         msrInsMapper.insert(msrIns);
 
         // 将该实例绑定到实例集合中
-        Map<String, MsrIns> msrInsColl = msInsService.getMsrInsColl();
+        Map<String, MsrIns> msrInsColl = msInsSocketService.getMsrInsColl();
         msrInsColl.put(instanceId,msrIns);
 
         // python执行命令要添加-m参数才能把python代码所在路径加入到sys.path中

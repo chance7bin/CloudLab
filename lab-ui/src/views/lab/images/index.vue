@@ -13,7 +13,7 @@
       <el-table-column label="操作">
         <template #default="scope">
           <el-button link type="primary" @click="init(scope.row)">创建工作空间</el-button>
-          <el-button link type="primary">删除</el-button>
+          <el-button link type="primary" @click="deleteImage(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -136,6 +136,12 @@ const createWorkspace = (imageId: string, containerName: string) => {
       proxy.$modal.msg("未进行操作");
     }); */
 };
+
+
+function deleteImage(row) {
+  proxy.$modal.confirm("是否删除该镜像");
+}
+
 </script>
 
 <style scoped lang="scss"></style>

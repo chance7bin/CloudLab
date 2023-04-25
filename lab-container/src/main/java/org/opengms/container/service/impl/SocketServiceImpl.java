@@ -3,6 +3,7 @@ package org.opengms.container.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.opengms.container.enums.ProcessState;
 import org.opengms.container.exception.ServiceException;
+import org.opengms.container.service.IMSInsNIOSocketService;
 import org.opengms.container.service.IMSInsService;
 import org.opengms.container.service.ISocketService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,7 @@ import java.util.Set;
 public class SocketServiceImpl implements ISocketService {
 
     @Autowired
-    IMSInsService msInsService;
+    IMSInsNIOSocketService msInsNIOSocketService;
 
     @Value("${socket.port}")
     private int socketPort;
@@ -102,16 +103,17 @@ public class SocketServiceImpl implements ISocketService {
 
                                 clientChannel.close();
                                 // 将该client从clientMap中移除
-                                msInsService.removeSocketChannel(clientChannel);
-                                log.info("socket closed....... current connecting client number: " + msInsService.getMsrInsColl().size());
+                                // msInsNIOSocketService.removeSocketChannel(clientChannel);
+                                msInsNIOSocketService.removeChannelAndMsrInsColl(clientChannel);
+                                // log.info("socket closed....... current connecting client number: " + msInsNIOSocketService.getMsrInsColl().size());
 
                             } else if (readBytes > 0) {
                                 String receiveMassage = new String(readBuffer.array());
                                 receiveMassage = receiveMassage.trim();
-                                log.info("recv: " + receiveMassage);
+                                // log.info("recv: " + receiveMassage);
 
                                 // 与客户端的交互写在这里
-                                msInsService.stateSelector(clientChannel, receiveMassage);
+                                msInsNIOSocketService.stateSelector(clientChannel, receiveMassage);
 
                                 // Client client = msInsService.getConnectingChannel(clientChannel);
                                 // if (client != null){
@@ -149,9 +151,9 @@ public class SocketServiceImpl implements ISocketService {
                         if (clientChannel != null){
 
                             try {
-                                //出错的信息发送给客户端
+                                // 出错的信息发送给客户端
                                 // msInsService.stateSelector(clientChannel);
-                                msInsService.kill(clientChannel, e.getMessage(), ProcessState.SOCKET_CLOSE);
+                                msInsNIOSocketService.kill(clientChannel, e.getMessage(), ProcessState.SOCKET_CLOSE);
 
                             } catch (ServiceException ex){
 

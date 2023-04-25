@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface IImageService {
 
-    List<ImageInfoDTO> listImages();
+    List<ImageInfo> listImages();
 
     int insert(ImageInfo image);
 

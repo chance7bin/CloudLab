@@ -136,18 +136,11 @@ public class ContainerServiceImpl implements IContainerService {
     }
 
     @Override
-    public List<ContainerInfoDTO> listContainers(ContainerType type) {
+    public List<ContainerInfo> listContainers(ContainerType type) {
 
         BaseContainerMapper mapper = getMapper(type);
         List<ContainerInfo> list = mapper.selectList();
-        List<ContainerInfoDTO> res = new ArrayList<>();
-        for (ContainerInfo info : list) {
-            ContainerInfoDTO containerInfoDTO = new ContainerInfoDTO();
-            BeanUtils.copyProperties(info, containerInfoDTO);
-            containerInfoDTO.setCreated(info.getCreateTime());
-            res.add(containerInfoDTO);
-        }
-        return res;
+        return list;
     }
 
 

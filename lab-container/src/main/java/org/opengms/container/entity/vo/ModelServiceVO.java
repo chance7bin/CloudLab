@@ -1,7 +1,10 @@
 package org.opengms.container.entity.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.opengms.container.entity.bo.mdl.ModelClass;
+
+import java.util.Date;
 
 /**
  * @author 7bin
@@ -33,5 +36,12 @@ public class ModelServiceVO {
 
     /** 服务类型 (0: 一次性的; 1: 后台运行)*/
     String serviceType;
+
+    /** 创建者 */
+    private String createBy;
+
+    /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date createTime;
 
 }

@@ -14,8 +14,8 @@
       <el-table-column label="操作">
         <template #default="scope">
           <el-button link type="primary" @click="invokeService(scope.$index, scope.row)">调用</el-button>
-          <el-button link type="primary">编辑</el-button>
-          <el-button link type="primary">删除</el-button>
+<!--          <el-button link type="primary">编辑</el-button>-->
+          <el-button link type="primary" @click="deleteService(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -67,6 +67,11 @@ function invokeService(index, row) {
   }
   let query = { msId: services.value[index].msId };
   router.push({ path: "/service/invoke", query: query });
+}
+
+
+function deleteService(row) {
+  proxy.$modal.confirm("是否删除该服务");
 }
 </script>
 

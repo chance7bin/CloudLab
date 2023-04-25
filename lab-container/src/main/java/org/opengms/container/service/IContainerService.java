@@ -24,7 +24,7 @@ public interface IContainerService {
 
     int insertContainer(ContainerInfo containerInfo, ContainerType type);
 
-    List<ContainerInfoDTO> listContainers(ContainerType type);
+    List<ContainerInfo> listContainers(ContainerType type);
 
     /**
      * 根据主机ip获取已经使用的端口
