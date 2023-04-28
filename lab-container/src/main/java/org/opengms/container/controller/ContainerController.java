@@ -7,12 +7,10 @@ import org.opengms.container.entity.dto.docker.ContainerInfoDTO;
 import org.opengms.container.entity.dto.docker.EnvDTO;
 import org.opengms.container.entity.po.docker.ContainerInfo;
 import org.opengms.container.enums.ContainerType;
-import org.opengms.container.service.IContainerService;
-import org.opengms.container.service.IDockerService;
-import org.opengms.container.service.IJupyterService;
-import org.opengms.container.service.IMSCAsyncService;
+import org.opengms.container.service.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -29,7 +27,8 @@ import java.util.List;
 public class ContainerController extends BaseController {
 
     @Autowired
-    IDockerService dockerService;
+    @Qualifier(value = "dockerServiceImpl")
+    IAbstractContainerService dockerService;
 
     @Autowired
     IJupyterService jupyterService;

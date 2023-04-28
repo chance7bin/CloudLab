@@ -21,14 +21,14 @@
       <el-table-column label="容器名称" prop="containerName" show-overflow-tooltip width="360" />
       <el-table-column label="镜像名称" prop="imageName" width="200" />
       <el-table-column label="容器状态" prop="status" width="180" />
-<!--      <el-table-column label="启动时间" prop="started" width="180" />-->
+      <!--      <el-table-column label="启动时间" prop="started" width="180" />-->
       <el-table-column label="创建时间" prop="created" width="180" />
       <el-table-column label="操作">
         <template #default="scope">
           <el-button link type="primary" @click="enterWorkspace(scope.$index, scope.row)">进入</el-button>
           <el-button link type="primary" @click="refresh(scope.$index, scope.row)">刷新</el-button>
           <el-button link type="primary" @click="openCreateEnvDialog(scope.$index, scope.row)">创建新环境</el-button>
-<!--          <el-button link type="primary">重启</el-button>-->
+          <!--          <el-button link type="primary">重启</el-button>-->
           <el-button link type="primary" @click="deleteContainer(scope.row)">删除</el-button>
         </template>
       </el-table-column>
@@ -41,21 +41,8 @@
       @pagination="getContainerList"
     />
 
-
-
-    <el-dialog
-        v-model="createEnvDialog"
-        title="创建新环境"
-        width="15%"
-    >
-
-      <el-form
-          ref="ruleFormRef"
-          :model="ruleForm"
-          status-icon
-          :rules="rules"
-          class="demo-ruleForm"
-      >
+    <el-dialog v-model="createEnvDialog" title="创建新环境" width="15%">
+      <el-form ref="ruleFormRef" :model="ruleForm" status-icon :rules="rules" class="demo-ruleForm">
         <el-form-item label="名称" prop="imageName">
           <el-input v-model="ruleForm.imageName" />
         </el-form-item>
@@ -67,26 +54,23 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="createEnvDialog = false">取消</el-button>
-          <el-button type="primary" @click="submitForm(ruleFormRef)">
-            创建
-          </el-button>
+          <el-button type="primary" @click="submitForm(ruleFormRef)"> 创建 </el-button>
         </span>
       </template>
     </el-dialog>
-
   </div>
 </template>
 
 <script name="container" setup lang="ts">
-import {listContainers, createNewEnv} from "@/api/container/container";
-import type {NewEnv} from "@/api/container/container";
+import { listContainers, createNewEnv } from "@/api/container/container";
+import type { NewEnv } from "@/api/container/container";
 import useCurrentInstance from "@/utils/currentInstance";
 import { ref } from "vue";
 import { getWorkspaceByContainerId } from "@/api/container/workspace";
 import { notEmptyString } from "@/utils/stringUtils";
-import {ElMessageBox, ElMessage} from "element-plus";
-import type { FormInstance, FormRules } from 'element-plus'
-import {validAlphabets, validateName, validEmail} from "@/utils/validate";
+import { ElMessageBox, ElMessage } from "element-plus";
+import type { FormInstance, FormRules } from "element-plus";
+import { validAlphabets, validateName, validEmail } from "@/utils/validate";
 
 const { proxy } = useCurrentInstance();
 const router = useRouter();
@@ -103,9 +87,10 @@ const data = reactive({
 });
 const { queryParams } = toRefs(data);
 
-const createEnvDialog = ref(false)
+const createEnvDialog = ref(false);
 
 getContainerList();
+
 function getContainerList() {
   listContainers(queryParams.value).then((res: any) => {
     containers.value = res.rows;
@@ -119,71 +104,64 @@ function refresh(index, row) {
   });
 }
 
-
-const ruleFormRef = ref<FormInstance>()
+const ruleFormRef = ref<FormInstance>();
 const ruleForm = reactive({
-  imageName: '',
-  tag: '1.0'
-})
+  imageName: "",
+  tag: "1.0"
+});
 
-let createEnvParams : NewEnv = {
+let createEnvParams: NewEnv = {
   containerId: "",
   envName: "",
   tag: ""
-}
-
+};
 
 // 名称校验器
 const nameValidator = (rule: any, value: any, callback: any) => {
-  if (value === '') {
-    callback(new Error('请输入完整'))
-  }
-  else {
+  if (value === "") {
+    callback(new Error("请输入完整"));
+  } else {
     let validate = validateName(value);
-    if (validate){
+    if (validate) {
       callback();
     } else {
-      callback("不能包含非法字符")
+      callback("不能包含非法字符");
     }
     return validate;
   }
-}
-
+};
 
 const rules = reactive<FormRules>({
-  imageName: [{ required: true,  validator: nameValidator, trigger: 'blur' }],
-  tag: [{ required: true,  validator: nameValidator, trigger: 'blur' }],
-})
+  imageName: [{ required: true, validator: nameValidator, trigger: "blur" }],
+  tag: [{ required: true, validator: nameValidator, trigger: "blur" }]
+});
 
 const submitForm = (formEl: FormInstance | undefined) => {
-  if (!formEl) return
+  if (!formEl) return;
   formEl.validate((valid) => {
     if (valid) {
-
       createEnvParams.envName = ruleForm.imageName;
       createEnvParams.tag = ruleForm.tag;
 
       createNewEnv(createEnvParams)
-          .then(() => {
-            proxy.$modal.msgSuccess("新环境正在初始化，请稍后...");
-            createEnvDialog.value = false;
-          })
-          .catch(() => {
-            // createEnvDialog.value = false;
-          });
-
+        .then(() => {
+          proxy.$modal.msgSuccess("新环境正在初始化，请稍后...");
+          createEnvDialog.value = false;
+        })
+        .catch(() => {
+          // createEnvDialog.value = false;
+        });
     } else {
       // console.log('error submit!')
-      return false
+      return false;
     }
-  })
-}
+  });
+};
 
 function openCreateEnvDialog(index, row) {
   createEnvParams.containerId = row.containerId;
   createEnvDialog.value = true;
 }
-
 
 function enterWorkspace(index, row) {
   // console.log(row)

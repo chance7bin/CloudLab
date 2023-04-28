@@ -208,7 +208,7 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
             // 更新image表
             ImageInfo imageInfo = imageMapper.selectById(imageId);
             imageInfo.setImageId(sha256);
-            InspectImageResponse inspectImageResponse = dockerService.inspectImage(sha256);
+            ImageInfo inspectImageResponse = dockerService.inspectImage(sha256);
             imageInfo.setSize(inspectImageResponse.getSize());
             // imageInfo.setCommitCount(xxx);
             imageInfo.setStatus(ImageStatus.FINISHED);

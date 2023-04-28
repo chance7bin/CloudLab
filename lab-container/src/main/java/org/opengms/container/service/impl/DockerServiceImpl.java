@@ -14,6 +14,7 @@ import org.opengms.container.entity.dto.docker.ContainerInfoDTO;
 import org.opengms.container.entity.dto.docker.ImageInfoDTO;
 import org.opengms.container.entity.po.docker.ContainerInfo;
 import org.opengms.container.entity.po.JupyterContainer;
+import org.opengms.container.entity.po.docker.ImageInfo;
 import org.opengms.container.enums.ContainerType;
 import org.opengms.container.exception.ServiceException;
 import org.opengms.container.mapper.JupyterMapper;
@@ -87,68 +88,79 @@ public class DockerServiceImpl implements IDockerService {
     }
 
     @Override
-    public InspectImageResponse inspectImage(String sha256) {
+    public ImageInfo inspectImage(String sha256) {
         InspectImageResponse res = dockerClient.inspectImageCmd(sha256).exec();
-        return res;
+        ImageInfo imageInfo = new ImageInfo();
+        imageInfo.setSize(res.getSize());
+        return imageInfo;
     }
 
 
     @Override
-    public List<ImageInfoDTO> listImages() {
+    public List<ImageInfo> listImages() {
 
         List<Image> images = dockerClient.listImagesCmd().exec();
 
-        List<ImageInfoDTO> imageInfoDTOS = new ArrayList<>();
+        List<ImageInfo> imageInfoDTOS = new ArrayList<>();
         for (Image image : images) {
-            ImageInfoDTO imageInfoDTO = new ImageInfoDTO();
-            imageInfoDTO.setRepoTags(image.getRepoTags()[0]);
-            Long size = image.getSize();
-            imageInfoDTO.setSize(FileUtils.calcSize(size));
-            imageInfoDTOS.add(imageInfoDTO);
+            imageInfoDTOS.add(formatImageInfo(image));
         }
 
         return imageInfoDTOS;
 
     }
 
-    @Override
-    public List<Container> listContainers() {
 
-        List<Container> containers = dockerClient.listContainersCmd().exec();
+    /**
+     * docker中的image信息转换成项目中的image信息
+     * @param image docker中的image信息
+     * @return {@link ImageInfo}
+     * @author 7bin
+     **/
+    private ImageInfo formatImageInfo(Image image){
 
-        // List<ContainerInfoDTO> containerInfoList = new ArrayList<>();
-        // for (Container container : containers) {
-        //     ContainerInfoDTO containerInfoDTO = new ContainerInfoDTO();
-        //     ContainerInfo containerInfo = containerService.getContainerInfoByInsId(container.getId(), ContainerType.JUPYTER);
-        //     // TODO: 2022/10/28 获取容器从docker命令行还是数据库？
-        //     if (containerInfo == null){
-        //         continue;
-        //     }
-        //     containerInfoDTO.setContainerId(containerInfo.getContainerId());
-        //     containerInfoDTO.setContainerName(containerInfo.getContainerName());
-        //     containerInfoDTO.setImageName(container.getImage());
-        //     containerInfoDTO.setStatus(container.getState()); //running
-        //     containerInfoDTO.setStarted(container.getStatus()); //Up 3 hours
-        //     // container.getCreated() 的时间戳位数是10位 now.getTime()是13位
-        //     containerInfoDTO.setCreated(DateUtils.getTime2Now(DateUtils.toDate(container.getCreated() * 1000)));
-        //     containerInfoList.add(containerInfoDTO);
-        // }
+        ImageInfo imageInfo = new ImageInfo();
+        imageInfo.setRepoTags(image.getRepoTags()[0]);
+        Long size = image.getSize();
+        imageInfo.setSize(size);
 
-        return containers;
+        return imageInfo;
 
     }
 
     @Override
-    public Container selectContainerByInsId(String insId) {
+    public List<ContainerInfo> listContainers() {
 
-        List<Container> containers = listContainers();
+        List<Container> containers = dockerClient.listContainersCmd().exec();
+        List<ContainerInfo> infoList = new ArrayList<>();
         for (Container container : containers) {
-            if (container.getId().equals(insId)){
+            infoList.add(formatContainerInfo(container));
+        }
+        return infoList;
+
+    }
+
+    @Override
+    public ContainerInfo selectContainerByInsId(String insId) {
+
+        List<ContainerInfo> containers = listContainers();
+        for (ContainerInfo container : containers) {
+            if (container.getContainerInsId().equals(insId)){
                 return container;
             }
         }
 
         return null;
+    }
+
+    private ContainerInfo formatContainerInfo(Container container){
+        ContainerInfo containerInfo = new ContainerInfo();
+        containerInfo.setContainerInsId(container.getId());
+        containerInfo.setImageName(container.getImage());
+        containerInfo.setStatus(container.getState()); //running
+        // container.getCreated() 的时间戳位数是10位 now.getTime()是13位
+        // containerInfo.setCreated(DateUtils.getTime2Now(DateUtils.toDate(container.getCreated() * 1000)));
+        return containerInfo;
     }
 
 
