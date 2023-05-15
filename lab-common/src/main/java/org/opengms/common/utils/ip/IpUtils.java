@@ -241,13 +241,41 @@ public class IpUtils
      * @return 本地mac地址
      * @Author bin
      **/
-    public static String getMacAddress(){
+    public static String getMacAddress(String host) {
+        InetAddress ipAddress;
+        try {
+            ipAddress = InetAddress.getByName(host);
+            NetworkInterface network = NetworkInterface.getByInetAddress(ipAddress);
+            byte[] mac = network.getHardwareAddress();
+            if (mac != null) {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < mac.length; i++) {
+                    sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+                }
+                System.out.println("MAC Address: " + sb.toString());
+                return sb.toString();
+            } else {
+                System.out.println("MAC Address not found for remote host.");
+            }
+        } catch (UnknownHostException | SocketException e) {
+            e.printStackTrace();
+        }
+        return "00-00-00-00-00-00";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(getMacAddress("172.21.212.177"));
+    }
+
+
+
+    public static String getLocalMacAddress(){
         try {
             return NetUtil.getMacAddress(InetAddress.getLocalHost());
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-        return "未知";
+        return "00-00-00-00-00-00";
     }
 
 

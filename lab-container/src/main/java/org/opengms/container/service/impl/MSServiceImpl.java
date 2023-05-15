@@ -38,12 +38,16 @@ import java.util.Map;
 @Service
 public class MSServiceImpl implements IMSService {
 
-    private final static String MSC_HOST = "172.21.212.240";
+    @Value(value = "${mscSocket.host}")
+    private String MSC_HOST;
 
-    private final static String MSC_PORT = "6001";
+    @Value(value = "${mscSocket.port}")
+    private String MSC_PORT;
 
     @Value(value = "${container.repository}")
     private String repository;
+
+    private boolean isDocker = false;
 
     @Autowired
     IMSInsSocketService msInsSocketService;
@@ -65,6 +69,9 @@ public class MSServiceImpl implements IMSService {
 
     @Autowired
     IDockerService dockerService;
+
+    @Autowired
+    IK8sService k8sService;
 
     @Autowired
     ImageMapper imageMapper;
@@ -146,10 +153,40 @@ public class MSServiceImpl implements IMSService {
         //     }
         //     containerName = containerInfo.getContainerName();
         // }
-        cmdArr = new String[] {"docker", "exec", containerName, "/bin/bash", "-c", pythonCMD};
-        // String[] cmdArr = new String[] {exe, "-m", script, MSC_HOST, MSC_PORT, instanceId};
 
-        asyncService.exec(cmdArr);
+
+
+        // docker的调用命令
+        if (isDocker){
+            cmdArr = new String[] {"docker", "exec", containerName, "/bin/bash", "-c", pythonCMD};
+            asyncService.exec(cmdArr);
+        } else{
+            // pod 中的container name
+            String podContainerName = containerInfo.getImageName().split(":")[0];
+
+            // 检查pod是否已经创建好了
+            int cnt = 0;
+            while (true){
+                String status = k8sService.getPodStatus(containerName, "dev");
+                if ("Running".equals(status)){
+                    break;
+                }
+                if (cnt > 10){
+                    throw new ServiceException("pod创建超时");
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                log.info("waiting for pod to be ready, current status: " + status);
+                cnt++;
+            }
+            log.info("start run model service!");
+            asyncService.exec("dev", containerName, podContainerName, cmdArr);
+        }
+
+
 
         // 调用成功之后
         // if (exitVal == 0){
@@ -164,19 +201,6 @@ public class MSServiceImpl implements IMSService {
     // 调用前准备 根据关联image启动容器, 之后再调用
     private ContainerInfo invokePrepare(ModelService modelService){
 
-        // 如果模型服务不是由新环境创建的，但是该container没有启动，则要先启动该容器
-        // if (!modelService.getNewEnv()){
-        //     // 容器没启动的话先启动容器
-        //     ContainerInfo container = containerService.getContainerInfoById(modelService.getContainerId(), ContainerType.JUPYTER);
-        //     if (!ContainerStatus.RUNNING.equals(container.getStatus())){
-        //         dockerService.startContainer(container.getContainerInsId());
-        //     }
-        //     return container;
-        // }
-
-
-        // 如果模型服务是由新环境创建的，说明该服务的运行容器是根据 imageTar 动态生成的
-
         // 创建容器并启动
 
         // 初始化jupyter实例
@@ -185,7 +209,7 @@ public class MSServiceImpl implements IMSService {
         containerInfo.setImageId(modelService.getImageId());
         ImageInfo imageInfo = imageMapper.selectById(modelService.getImageId());
         containerInfo.setImageName(imageInfo.getRepoTags());
-        containerInfo.setContainerName(modelService.getMsName() + "_" + System.currentTimeMillis());
+        containerInfo.setContainerName(modelService.getMsName() + "-" + System.currentTimeMillis());
 
         // 创建者为该登录用户
         // containerInfo.setCreateBy(username);
@@ -195,6 +219,39 @@ public class MSServiceImpl implements IMSService {
         String serviceDir = ContainerConstants.SERVICE_DIR(modelService.getMsId());;
         List<String> volumeList = containerInfo.getVolumeList();
         volumeList.add(serviceDir + ":" + ContainerConstants.INNER_SERVICE_DIR);
+
+        // 模型服务使用k8s创建容器
+        // prepareContainerByDocker(imageInfo, containerInfo);
+        prepareContainerByK8s(imageInfo, containerInfo);
+
+
+        // TODO: 2023/5/13 创建模型服务是否需要记录容器信息
+        int count = containerService.insertContainer(containerInfo, ContainerType.JUPYTER);
+
+        if (count <= 0){
+            throw new ServiceException("创建容器失败");
+        }
+
+        return containerInfo;
+
+
+    }
+
+    // 调用前准备，先启动容器，再调用
+    private void prepareContainerByDocker(ImageInfo imageInfo, ContainerInfo containerInfo){
+
+        // 启动容器前需先判断该镜像是否已经在本地
+        try {
+            dockerService.inspectImage(imageInfo.getImageId());
+        } catch (Exception ex){
+            // docker中没有该image到hub上拉
+            try {
+                log.info("从docker hub中拉取镜像: " + imageInfo.getImageName() + ":" + imageInfo.getTag());
+                dockerService.pullImage(imageInfo.getImageName(), imageInfo.getTag());
+            } catch (InterruptedException e) {
+                throw new ServiceException("拉取镜像失败");
+            }
+        }
 
         //对创建容器抛出的异常做处理
         try {
@@ -212,14 +269,11 @@ public class MSServiceImpl implements IMSService {
             throw new ServiceException(e.toString());
         }
 
-        int count = containerService.insertContainer(containerInfo, ContainerType.JUPYTER);
+    }
 
-        if (count <= 0){
-            throw new ServiceException("创建容器失败");
-        }
+    private void prepareContainerByK8s(ImageInfo imageInfo, ContainerInfo containerInfo){
 
-        return containerInfo;
-
+        k8sService.createPod(containerInfo.getContainerName(),"dev", imageInfo.getRepoTags());
 
     }
 

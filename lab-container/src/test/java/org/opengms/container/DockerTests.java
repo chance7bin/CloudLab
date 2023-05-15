@@ -6,10 +6,13 @@ import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
+import com.github.dockerjava.core.command.PushImageResultCallback;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.opengms.common.TerminalRes;
+import org.opengms.common.utils.TerminalUtils;
 import org.opengms.common.utils.XMLUtils;
 import org.opengms.common.utils.uuid.SnowFlake;
 import org.opengms.container.entity.bo.mdl.ModelClass;
@@ -25,6 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Docker测试代码
@@ -130,7 +134,6 @@ public class DockerTests {
     }
 
 
-
     //测试获取镜像列表
     @Test
     void testListImages() {
@@ -139,6 +142,55 @@ public class DockerTests {
         // List list = dockerService.listContainers();
 
         System.out.println(list);
+
+
+    }
+
+    String dockerRegistryUrl = "172.21.212.177:8080";
+
+    //测试push镜像
+    @Test
+    void testPushImages() throws InterruptedException {
+
+        String imageName = "jupyter_ws";
+        String tag = "1.0";
+
+        dockerService.pushImage(imageName, tag);
+    }
+
+    String tagImage(String imageNameWithTag, String newImageNameWithRepository, String newTag) {
+
+        final String id = dockerClient.inspectImageCmd(imageNameWithTag)
+            .exec()
+            .getId();
+
+        // push the image to the registry
+        dockerClient.tagImageCmd(id, newImageNameWithRepository, newTag).exec();
+
+        return newImageNameWithRepository + ":" + newTag;
+    }
+
+    //测试pull镜像
+    @Test
+    void testPullImages() throws InterruptedException {
+
+        String imageName = "nginx";
+        String tag = "3.0";
+        String newImageWithTag = dockerRegistryUrl + "/" + imageName + ":" + tag;
+
+        // 1.使用dockerclient拉取镜像
+        dockerClient.pullImageCmd(newImageWithTag)
+            .start()
+            .awaitCompletion(1, TimeUnit.MINUTES);
+
+        // 2.重命名(docker tag)镜像，删除镜像仓库地址前缀
+        tagImage(newImageWithTag, "ogms/" + imageName, tag);
+
+
+        // 3.删除以镜像仓库地址为前缀的镜像
+        dockerClient.removeImageCmd(newImageWithTag).withForce(true).exec();
+
+        System.out.println();
 
 
     }
@@ -166,11 +218,11 @@ public class DockerTests {
     void addDefaultImage() {
         ImageInfo imageInfo = new ImageInfo();
         imageInfo.setId(SnowFlake.nextId());
-        imageInfo.setImageId("sha256:59149c73a68c19b242b6b4cce1e52deb36802aa2c0c65d2990c5eb1aff6e062e");
-        imageInfo.setImageName("jupyter_cus");
-        imageInfo.setTag("5.0");
-        imageInfo.setSize(451509330L);
-        imageInfo.setRepoTags("jupyter_cus:5.0");
+        imageInfo.setImageId("sha256:8834a83ccd002170cc8b60bfee25582aa44b3b2b444dd94fada1e6d6e3eb3326");
+        imageInfo.setImageName("jupyter_ws");
+        imageInfo.setTag("3.0");
+        imageInfo.setSize(391766465L);
+        imageInfo.setRepoTags("jupyter_ws:3.0");
         imageMapper.insert(imageInfo);
     }
 
@@ -207,4 +259,32 @@ public class DockerTests {
 
     }
 
+
+    @Test
+    void inspectImage() throws InterruptedException {
+
+        String sha256 = "sha256:8834a83ccd002170cc8b60bfee25582aa44b3b2b444dd94fada1e6d6e3eb3326";
+
+        try {
+            ImageInfo imageInfo = dockerService.inspectImage(sha256);
+        } catch (Exception ex){
+            // docker中没有该image到hub上拉
+            dockerService.pullImage("jupyter_ws", "1.0");
+        }
+
+
+        System.out.println();
+
+
+    }
+
+    @Test
+    void updateImageStatus(){
+        imageMapper.updateStatusById(8344298234506244096L, "error");
+    }
+
+    @Test
+    void logTest(){
+        log.info("[程序正常退出] 退出码 : {} (response: {})", 1, "success");
+    }
 }

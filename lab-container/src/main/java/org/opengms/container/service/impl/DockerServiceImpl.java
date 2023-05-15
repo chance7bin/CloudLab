@@ -10,6 +10,7 @@ import org.opengms.common.utils.StringUtils;
 import org.opengms.common.utils.TerminalUtils;
 import org.opengms.common.utils.file.FileUtils;
 import org.opengms.container.constant.ContainerStatus;
+import org.opengms.container.entity.bo.ExecResponse;
 import org.opengms.container.entity.dto.docker.ContainerInfoDTO;
 import org.opengms.container.entity.dto.docker.ImageInfoDTO;
 import org.opengms.container.entity.po.docker.ContainerInfo;
@@ -25,9 +26,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 直接与docker交互的操作 实现类
@@ -42,6 +45,9 @@ public class DockerServiceImpl implements IDockerService {
     @Autowired
     @Qualifier(value = "dockerClient")
     DockerClient dockerClient;
+
+    @Value(value = "${docker.dockerRegistryUrl}")
+    private String dockerRegistryUrl;
 
     // @Autowired
     // IContainerService containerService;
@@ -237,6 +243,26 @@ public class DockerServiceImpl implements IDockerService {
         return false;
     }
 
+    @Override
+    public ExecResponse exec(String[] cmdArr) throws IOException, InterruptedException {
+
+        //这个方法是类似隐形开启了命令执行器，输入指令执行python脚本
+        Process process = Runtime.getRuntime()
+            .exec(cmdArr); // "python解释器位置（这里一定要用python解释器所在位置不要用python这个指令）+ python脚本所在路径（一定绝对路径）"
+
+        String response = TerminalUtils.getInputMsg(process);
+        String error = TerminalUtils.getErrorMsg(process);
+
+        int exitVal = process.waitFor(); // 阻塞程序，跑完了才输出结果
+        // long end = System.currentTimeMillis();
+
+        // TODO: 2022/11/7 封装脚本中的错误该如何处理
+        // currentMsrIns = msInsService.getCurrentMsrIns(msInsId);
+
+        return new ExecResponse(exitVal, response, error);
+
+    }
+
 
     //初始化容器
     private CreateContainerResponse initContainer(DockerClient client, ContainerInfo containerInfo){
@@ -309,4 +335,50 @@ public class DockerServiceImpl implements IDockerService {
         return outputPath;
     }
 
+    private String tagImage(String imageNameWithTag, String newImageNameWithRepository, String newTag) {
+
+        final String id = dockerClient.inspectImageCmd(imageNameWithTag)
+            .exec()
+            .getId();
+
+        // push the image to the registry
+        dockerClient.tagImageCmd(id, newImageNameWithRepository, newTag).exec();
+
+        return newImageNameWithRepository + ":" + newTag;
+    }
+
+    @Override
+    public void pushImage(String imageName, String tag) throws InterruptedException {
+
+        // 1.推送本地镜像到仓库前都必须重命名(docker tag)镜像，以镜像仓库地址为前缀
+        String newImageName = tagImage(imageName + ":" + tag, dockerRegistryUrl + "/" + imageName, tag);
+
+        // 2.使用dockerclient推送镜像
+        dockerClient.pushImageCmd(newImageName)
+            .start()
+            .awaitCompletion(1, TimeUnit.MINUTES);
+
+
+        // 3.删除以镜像仓库地址为前缀的镜像（因为该镜像只是用于推送到指定docker registry的临时tag）
+        dockerClient.removeImageCmd(newImageName).withForce(true).exec();
+
+    }
+
+    @Override
+    public void pullImage(String imageName, String tag) throws InterruptedException {
+
+        String newImageWithTag = dockerRegistryUrl + "/" + imageName + ":" + tag;
+
+        // 1.使用dockerclient拉取镜像
+        dockerClient.pullImageCmd(newImageWithTag)
+            .start()
+            .awaitCompletion(1, TimeUnit.MINUTES);
+
+        // 2.重命名(docker tag)镜像，删除镜像仓库地址前缀
+        tagImage(newImageWithTag, imageName, tag);
+
+
+        // 3.删除以镜像仓库地址为前缀的镜像
+        dockerClient.removeImageCmd(newImageWithTag).withForce(true).exec();
+    }
 }

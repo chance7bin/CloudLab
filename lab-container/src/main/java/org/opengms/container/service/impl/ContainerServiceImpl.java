@@ -20,6 +20,7 @@ import org.opengms.container.mapper.ImageMapper;
 import org.opengms.container.mapper.JupyterMapper;
 import org.opengms.container.service.IContainerService;
 import org.opengms.container.service.IDockerService;
+import org.opengms.container.service.IK8sService;
 import org.opengms.container.service.IMSCAsyncService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,9 @@ public class ContainerServiceImpl implements IContainerService {
 
     @Autowired
     IDockerService dockerService;
+
+    @Autowired
+    IK8sService k8sService;
 
     @Autowired
     ImageMapper imageMapper;
@@ -116,11 +120,15 @@ public class ContainerServiceImpl implements IContainerService {
                 // 实现业务逻辑，在前面分析的invokeAfterCommit方法中，会调用到这里
                 if (status == TransactionSynchronization.STATUS_COMMITTED) {
                     // 事务提交后执行
-                    log.info("容器信息插入成功");
+                    // log.info("容器信息插入成功");
                 } else if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
                     // 事务回滚后执行
                     log.warn("容器信息插入失败，销毁容器");
-                    dockerService.removeContainer(containerInsId);
+                    if (containerInsId != null){ // docker 创建的容器才有insId， k8s创建的没有，是通过podName删除的
+                        dockerService.removeContainer(containerInsId);
+                    } else {
+                        k8sService.deletePod(containerInfo.getContainerName(), "dev");
+                    }
                 }
             }
         });

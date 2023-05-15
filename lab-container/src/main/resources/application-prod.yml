@@ -1,0 +1,6 @@
+#docker配置
+docker:
+  clientHost: 172.21.212.177
+  clientPort: 2375
+  clientMac: 02:42:e3:3a:5a:55
+  dockerRegistryUrl: 172.21.212.177:8080

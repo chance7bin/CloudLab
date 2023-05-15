@@ -6,6 +6,7 @@ import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,6 +22,12 @@ import java.time.Duration;
 @Configuration
 public class DockerConfig {
 
+    @Value("${docker.clientHost}")
+    private String clientHost;
+
+    @Value("${docker.clientPort}")
+    private String clientPort;
+
     @Bean(name = "dockerClient")
     DockerClient dockerClient(){
         return connect();
@@ -28,10 +35,11 @@ public class DockerConfig {
 
     /** 连接docker */
     private DockerClient connect() {
-        // String host = "tcp://172.16.10.151:2375";
+        String host = "tcp://" + clientHost + ":" + clientPort;
         // String apiVersion = "1.38";
         //创建DefaultDockerClientConfig
         DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
+            .withDockerHost(host)
             // .withApiVersion(apiVersion)
             // .withDockerHost(host)
             .build();

@@ -1,5 +1,6 @@
 package org.opengms.container.handler.socket;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.Map;
 
 /**
  * @author 7bin
@@ -35,7 +37,7 @@ public class QuitHandler extends ChannelInboundHandlerAdapter {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         log.info("{} 已经断开", ctx.channel().remoteAddress());
         quitHandler.msInsSocketService.removeChannelAndMsrInsColl(ctx.channel());
-        log.info("socket closed....... current connecting client number: " + quitHandler.msInsSocketService.getMsrInsColl().size());
+        // log.info("socket closed....... current connecting client number: " + quitHandler.msInsSocketService.getMsrInsColl().size());
     }
 
     // 当出现异常时触发
@@ -43,7 +45,7 @@ public class QuitHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         log.info("{} 断开异常 异常是{}", ctx.channel().remoteAddress() , cause.getMessage());
         quitHandler.msInsSocketService.removeChannelAndMsrInsColl(ctx.channel());
-        log.info("socket closed....... current connecting client number: " + quitHandler.msInsSocketService.getMsrInsColl().size());
+        // log.info("socket closed....... current connecting client number: " + quitHandler.msInsSocketService.getMsrInsColl().size());
     }
 
 }

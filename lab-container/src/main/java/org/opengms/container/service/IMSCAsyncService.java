@@ -13,6 +13,8 @@ public interface IMSCAsyncService {
 
     void exec(String[] cmdArr);
 
+    void exec(String namespace, String podName, String containerName, String[] command);
+
     /**
      * 创建新环境
      * @param containerId 容器id

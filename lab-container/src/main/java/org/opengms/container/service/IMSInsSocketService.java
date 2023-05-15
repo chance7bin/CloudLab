@@ -36,19 +36,23 @@ public interface IMSInsSocketService {
 
     Map<String, MsrIns> getMsrInsColl();
 
+    Map<Channel, String> getChannelInsMap();
+
     // Client getConnectingChannel(Channel clientChannel);
 
     MsrIns getCurrentMsrIns(Channel clientChannel);
 
     MsrIns getCurrentMsrIns(String msInsId);
 
-    void removeSocketChannel(Channel clientChannel);
+    // void removeSocketChannel(Channel clientChannel);
 
     // MsrIns getMsrInsByMsriId(String msInsId);
 
     MsrIns getMsrInsFromMsrInsColl(String msriId);
 
     void removeChannelAndMsrInsColl(Channel channel);
+
+    void removeChannelAndMsrInsColl(MsrIns msrIns);
 
 
 }

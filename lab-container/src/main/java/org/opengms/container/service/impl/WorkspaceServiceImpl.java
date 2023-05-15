@@ -57,7 +57,11 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
     @Autowired
     ImageMapper imageMapper;
 
+    @Value(value = "${docker.clientHost}")
+    private String clientHost;
 
+    @Value(value = "${docker.clientMac}")
+    private String clientMac;
 
 
     @Value(value = "${container.repository}")
@@ -111,7 +115,7 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
 
         // 设置绑定的主机端口
         // jupyterContainer.setHostBindPort(8826);
-        String hostIP = "localhost";
+        String hostIP = clientHost;
         List<Integer> usedPort = containerRelationMapper.listUsedPortByIP(hostIP);
         List<Integer> excludePort = new ArrayList<>(usedPort);
         boolean allocated = setHostBindPort(jupyterContainer, hostIP, HOST_BIND_PORT_LIMIT, excludePort);
@@ -120,7 +124,7 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
         }
         // 绑定主机和端口
         jupyterContainer.setHostIP(hostIP);
-        jupyterContainer.setHostMAC(IpUtils.getMacAddress());
+        jupyterContainer.setHostMAC(clientMac);
 
 
         // 解决 "Invalid volume specification" 问题，需将路径改成 /e/...

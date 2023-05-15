@@ -23,10 +23,7 @@ import org.opengms.container.enums.DataMIME;
 import org.opengms.container.enums.ProcessState;
 import org.opengms.container.exception.ServiceException;
 import org.opengms.container.mapper.MsrInsMapper;
-import org.opengms.container.service.IContainerService;
-import org.opengms.container.service.IDockerService;
-import org.opengms.container.service.IMSInsSocketService;
-import org.opengms.container.service.IMdlService;
+import org.opengms.container.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -60,6 +57,9 @@ public class MSInsSocketServiceImpl implements IMSInsSocketService {
 
     @Autowired
     IDockerService dockerService;
+
+    @Autowired
+    IK8sService k8sService;
 
     @Autowired
     IContainerService containerService;
@@ -104,6 +104,11 @@ public class MSInsSocketServiceImpl implements IMSInsSocketService {
     @Override
     public Map<String, MsrIns> getMsrInsColl() {
         return msrInsColl;
+    }
+
+    @Override
+    public Map<Channel, String> getChannelInsMap() {
+        return channelInsMap;
     }
 
     @Override
@@ -330,27 +335,40 @@ public class MSInsSocketServiceImpl implements IMSInsSocketService {
      * @return void
      * @author 7bin
      **/
-    @Override
+    // @Override
     public void removeSocketChannel(Channel clientChannel){
-        MsrIns currentMsrIns = getCurrentMsrIns(clientChannel);
-        if (currentMsrIns != null){
+
+        if(clientChannel != null){
+            MsrIns currentMsrIns = getCurrentMsrIns(clientChannel);
+            removeSocketChannel(currentMsrIns);
+        }
+
+    }
+
+
+    public void removeSocketChannel(MsrIns msrIns){
+        if (msrIns != null){
 
             // 两个map解绑
-            msrInsColl.remove(currentMsrIns.getMsriId());
-            channelInsMap.remove(clientChannel);
+            msrInsColl.remove(msrIns.getMsriId());
+            if (msrIns.getChannel() != null){
+                channelInsMap.remove(msrIns.getChannel());
+            }
+
+            log.info("socket closed....... current connecting client number: " + msrInsColl.size());
 
             // 删除docker容器
             // 如果是只运行一次的服务的话，运行完删除运行容器
-            if (isDestroyContainer(currentMsrIns.getModelService())){
-                ContainerInfo container = containerService.getContainerInfoById(currentMsrIns.getContainerId(), ContainerType.JUPYTER);
+            if (isDestroyContainer(msrIns.getModelService())){
+                ContainerInfo container = containerService.getContainerInfoById(msrIns.getContainerId(), ContainerType.JUPYTER);
                 if (container != null){
-                    dockerService.removeContainer(container.getContainerInsId());
+                    // dockerService.removeContainer(container.getContainerInsId());
+                    k8sService.deletePod(container.getContainerName(), "dev");
                     containerService.deleteContainer(container.getContainerId(), ContainerType.JUPYTER);
                 }
             }
         }
     }
-
 
     /**
      * 抽取标识符 根据{}分隔
@@ -624,6 +642,13 @@ public class MSInsSocketServiceImpl implements IMSInsSocketService {
     public void removeChannelAndMsrInsColl(Channel channel){
         // 将该client从clientMap中移除
         removeSocketChannel(channel);
+    }
+
+    @Async
+    @Override
+    public void removeChannelAndMsrInsColl(MsrIns msrIns){
+        // 将该client从clientMap中移除
+        removeSocketChannel(msrIns);
     }
 
     // @Override

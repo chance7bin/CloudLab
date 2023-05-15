@@ -8,7 +8,9 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.KubeConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.opengms.container.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 
 import java.io.FileReader;
@@ -27,13 +29,21 @@ public class K8sConfig {
     @Value(value = "${container.repository}")
     private String repository;
 
-    @Bean(name = "k8sClient")
-    CoreV1Api k8sClient() throws IOException {
-        return connect();
+
+    // @Bean(name = "k8sClient")
+    // ApiClient k8sClient() throws IOException {
+    //     return connect();
+    // }
+
+    @Bean(name = "k8sApi")
+    CoreV1Api k8sApi() throws IOException {
+        connect();
+        return new CoreV1Api();
     }
 
 
-    private CoreV1Api connect() throws IOException {
+
+    private ApiClient connect() throws IOException {
         // file path to your KubeConfig
         String kubeConfigPath = repository + "/resource/kube/config";
 
@@ -45,9 +55,12 @@ public class K8sConfig {
         Configuration.setDefaultApiClient(client);
 
         // the CoreV1Api loads default api-client from global configuration.
-        CoreV1Api api = new CoreV1Api();
+        // CoreV1Api api = new CoreV1Api();
+        // k8sApi = new CoreV1Api();
 
-        return api;
+        log.info("kubernetes server has been connected.");
+
+        return client;
     }
 
 }

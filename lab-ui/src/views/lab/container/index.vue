@@ -165,8 +165,29 @@ function openCreateEnvDialog(index, row) {
 
 function enterWorkspace(index, row) {
   // console.log(row)
-  let query = { containerId: row.containerId };
-  router.push({ path: "/workspace/instance", query: query });
+
+
+  // let query = { containerId: row.containerId };
+  // router.push({ path: "/workspace/instance", query: query });
+
+  // iframe内嵌框如果网站地址和jupyter地址不一致websocket会无法通信
+  // 所以采用跳转到新页面的方式
+  getWorkspaceByContainerId(row.containerId as string)
+      .then((res) => {
+            if (notEmptyString(res.data.containerName)){
+              let container = res.data;
+              // url.value = "http://172.21.212.240:" + container.hostBindPort + "/lab?token=" + container.jupyterToken;
+              let url = "http://" + container.hostIP + ":" + container.hostBindPort + "/lab?token=" + container.jupyterToken;
+              // console.log("jupyter url:",url.value);
+              if (notEmptyString(url)){
+                window.open(url);
+              } else {
+                proxy.$modal.msgError("无法获取工作空间地址");
+              }
+            }
+          }
+
+      )
 }
 
 function deleteContainer(row) {

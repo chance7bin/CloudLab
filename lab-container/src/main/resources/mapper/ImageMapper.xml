@@ -65,6 +65,15 @@
         where id = #{id}
     </update>
 
+    <update id="updateStatusById">
+        update image
+        <set>
+            status = #{status},
+            update_time = sysdate()
+        </set>
+        where id = #{id}
+    </update>
+
 
     <select id="countImageByRepository" resultType="java.lang.Integer">
         select count(id)

@@ -1,6 +1,8 @@
 package org.opengms.container.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.poi.ss.formula.functions.T;
 import org.opengms.container.entity.po.docker.ImageInfo;
 
 import java.util.List;
@@ -31,4 +33,15 @@ public interface ImageMapper extends BaseMapper<ImageInfo>{
     int isExistByRepoTags(String repoTags);
 
     ImageInfo getImageInfoByRepoTags(String repoTags);
+
+    /**
+     * 根据 ID 修改镜像状态
+     *
+     * @param id 镜像id
+     * @param status 镜像状态
+     * @return {@link Integer}
+     * @author 7bin
+     **/
+    Integer updateStatusById(@Param("id") Long id, @Param("status") String status);
+
 }

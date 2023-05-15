@@ -5,6 +5,7 @@ import org.opengms.common.TerminalRes;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 
 /**
@@ -85,29 +86,82 @@ public class TerminalUtils {
     // }
 
     // 获取子进程的错误信息
-    public static String getErrorMsg(Process process) throws IOException {
-        // 采用字节流读取缓冲池内容，腾出空间
-        ByteArrayOutputStream pool = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int count = -1;
-        while ((count = process.getErrorStream().read(buffer)) != -1) {
-            pool.write(buffer, 0, count);
-            buffer = new byte[1024];
-        }
-        return pool.toString("gbk").trim();
-    }
+    // public static String getErrorMsg(Process process) throws IOException {
+    //     // 采用字节流读取缓冲池内容，腾出空间
+    //     ByteArrayOutputStream pool = new ByteArrayOutputStream();
+    //     byte[] buffer = new byte[1024];
+    //     int count = -1;
+    //     while ((count = process.getErrorStream().read(buffer)) != -1) {
+    //         pool.write(buffer, 0, count);
+    //         buffer = new byte[1024];
+    //     }
+    //     return pool.toString("gbk").trim();
+    // }
+
+    // 获取子进程的输入信息
+    // public static String getInputMsg(Process process) throws IOException {
+    //     // 采用字节流读取缓冲池内容，腾出空间
+    //     ByteArrayOutputStream pool = new ByteArrayOutputStream();
+    //     byte[] buffer = new byte[1024];
+    //     int count = -1;
+    //     while ((count = process.getInputStream().read(buffer)) != -1) {
+    //         pool.write(buffer, 0, count);
+    //         buffer = new byte[1024];
+    //     }
+    //     return pool.toString("gbk").trim();
+    // }
 
     // 获取子进程的输入信息
     public static String getInputMsg(Process process) throws IOException {
+
+        // 检查进程是否已经启动
+        if (!process.isAlive()) {
+            // 进程已经终止
+            return "";
+        }
+
+        // 获取输入流和输出流
+        final InputStream stdout = process.getInputStream();
+        // final InputStream stderr = process.getErrorStream();
+
+
+        return readStream(stdout);
+    }
+
+    // 获取子进程的错误信息
+    public static String getErrorMsg(Process process) throws IOException {
+
+        // 检查进程是否已经启动
+        if (!process.isAlive()) {
+            // 进程已经终止
+            return "";
+        }
+
+        // 获取输入流和输出流
+        // final InputStream stdout = process.getInputStream();
+        final InputStream stderr = process.getErrorStream();
+
+        return readStream(stderr);
+
+    }
+
+    // 读取输入流，并将内容转换成字符串
+    private static String readStream(InputStream inputStream) throws IOException {
+
+
         // 采用字节流读取缓冲池内容，腾出空间
         ByteArrayOutputStream pool = new ByteArrayOutputStream();
         byte[] buffer = new byte[1024];
         int count = -1;
-        while ((count = process.getInputStream().read(buffer)) != -1) {
+        while ((count = inputStream.read(buffer)) != -1) {
             pool.write(buffer, 0, count);
             buffer = new byte[1024];
         }
-        return pool.toString("gbk").trim();
+
+        // 关闭流
+        inputStream.close();
+
+        return pool.toString("utf-8").trim();
     }
 
 

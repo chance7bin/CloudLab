@@ -3,12 +3,14 @@ package org.opengms.container.service;
 import com.github.dockerjava.api.command.InspectImageResponse;
 import com.github.dockerjava.api.model.Container;
 import org.opengms.common.TerminalRes;
+import org.opengms.container.entity.bo.ExecResponse;
 import org.opengms.container.entity.dto.docker.ContainerInfoDTO;
 import org.opengms.container.entity.dto.docker.ImageInfoDTO;
 import org.opengms.container.entity.dto.docker.JupyterInfoDTO;
 import org.opengms.container.entity.po.docker.ContainerInfo;
 import org.opengms.container.entity.po.docker.ImageInfo;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -18,5 +20,11 @@ import java.util.List;
  * @date 2022/10/5
  */
 public interface IDockerService extends IAbstractContainerService{
+
+    void pushImage(String imageName, String tag) throws InterruptedException;
+
+    void pullImage(String imageName, String tag) throws InterruptedException;
+
+    ExecResponse exec(String[] cmdArr) throws IOException, InterruptedException;
 
 }

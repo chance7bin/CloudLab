@@ -149,11 +149,11 @@
             <version>4.1.39.Final</version>
         </dependency>
 
-        <!--java版本的k8s客户端-->
+        <!--java版本的k8s客户端  9.0.2 与 k8s的1.17版本兼容性最好 -->
         <dependency>
             <groupId>io.kubernetes</groupId>
             <artifactId>client-java</artifactId>
-            <version>15.0.1</version>
+            <version>10.0.1</version>
         </dependency>
 
     </dependencies>

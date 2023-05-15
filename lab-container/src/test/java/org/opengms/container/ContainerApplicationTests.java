@@ -67,12 +67,16 @@ public class ContainerApplicationTests {
     @Autowired
     DriveClient driveClient;
 
+    @Value("${container.repository}")
+    private String repository;
+
 
     // 生成jupyter配置文件
     @Test
     void generateJupyterConfig() throws IOException {
 
-        String resourcePath = "static/jupyter_lab_config.py";
+        // String resourcePath = "static/jupyter_lab_config.py";
+        String resourcePath = repository + "/resource/jupyter_lab_config.py";
 
         String s = FileUtils.readResourceTxtFile(resourcePath);
 
@@ -88,7 +92,7 @@ public class ContainerApplicationTests {
     // 得到mac地址
     @Test
     void getMac() {
-        System.out.println(IpUtils.getMacAddress());
+        System.out.println(IpUtils.getLocalMacAddress());
 
     }
 

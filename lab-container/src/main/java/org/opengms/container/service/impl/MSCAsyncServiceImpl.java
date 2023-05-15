@@ -2,11 +2,16 @@ package org.opengms.container.service.impl;
 
 import cn.hutool.core.io.FileUtil;
 import com.github.dockerjava.api.command.InspectImageResponse;
+import io.kubernetes.client.Exec;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.models.V1Container;
+import io.kubernetes.client.openapi.models.V1Pod;
 import lombok.extern.slf4j.Slf4j;
 import org.opengms.common.TerminalRes;
 import org.opengms.common.utils.DateUtils;
 import org.opengms.common.utils.uuid.UUID;
 import org.opengms.container.constant.*;
+import org.opengms.container.entity.bo.ExecResponse;
 import org.opengms.container.entity.bo.Log;
 import org.opengms.container.entity.po.MsrIns;
 import org.opengms.container.entity.po.docker.ContainerInfo;
@@ -26,8 +31,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author 7bin
@@ -50,6 +57,9 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
     IDockerService dockerService;
 
     @Autowired
+    IK8sService k8sService;
+
+    @Autowired
     ModelServiceMapper modelServiceMapper;
 
     // @Autowired
@@ -63,7 +73,37 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
 
 
     /**
-     * 调用终端执行封装脚本
+     * 调用终端执行封装脚本 （k8s调用）
+     *
+     * @param namespace 命名空间
+     * @param podName   pod名称
+     * @param containerName 容器名称
+     * @param command   执行命令
+     **/
+    @Override
+    @Async
+    public void exec(String namespace, String podName, String containerName, String[] command){
+
+        MsrIns ins = getMsrInsByPythonCmd(command);
+
+        try {
+            ExecResponse res = k8sService.exec(namespace, podName, containerName, command);
+            execPostProcessing(res, ins);
+
+        } catch (ApiException | InterruptedException | IOException e) {
+
+            String msg = "[执行终端命令出错] " + e.getMessage();
+            log.error(msg);
+            execError(ins, msg);
+
+        }
+
+
+    }
+
+
+    /**
+     * 调用终端执行封装脚本 （docker本地调用）
      *
      * @param cmdArr 执行命令
      * @return void
@@ -75,8 +115,9 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
 
         String encapsulationCMD = cmdArr[cmdArr.length - 1];
         String[] encap = encapsulationCMD.split(" ");
-        String msrid = encap[encap.length - 1];
-        MsrIns ins = msInsSocketService.getMsrInsFromMsrInsColl(msrid);
+        // String msrid = encap[encap.length - 1];
+        // MsrIns ins = msInsSocketService.getMsrInsFromMsrInsColl(msrid);
+        MsrIns ins = getMsrInsByPythonCmd(encap);
 
         long start = System.currentTimeMillis();
         // String exe = "python";
@@ -87,42 +128,56 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
         // log.info("Exec cmd: {}", command);
         MsrIns currentMsrIns = null;
         try {
-            //这个方法是类似隐形开启了命令执行器，输入指令执行python脚本
-            Process process = Runtime.getRuntime()
-                .exec(cmdArr); // "python解释器位置（这里一定要用python解释器所在位置不要用python这个指令）+ python脚本所在路径（一定绝对路径）"
 
-            String response = TerminalUtils.getInputMsg(process);
-            String error = TerminalUtils.getErrorMsg(process);
+            ExecResponse res = dockerService.exec(cmdArr);
+            execPostProcessing(res, ins);
 
-            int exitVal = process.waitFor(); // 阻塞程序，跑完了才输出结果
-            long end = System.currentTimeMillis();
-
-            // TODO: 2022/11/7 封装脚本中的错误该如何处理
-            // currentMsrIns = msInsService.getCurrentMsrIns(msInsId);
-
-            // exitVal == 0 为程序执行成功
-            // exitVal == 1 为程序异常终止
-            // exitVal == -1 为程序执行成功, 但自定义返回错误代码
-            if (exitVal == 0) {
-                log.info("Exec done, cost: " + ((end - start) / 1000) + "s");
-                log.info("[程序正常退出] 退出码 : " + exitVal + " " + response);
-            } else if (exitVal == -1) {
-                String msg = "[程序自定义错误] 退出码 : " + exitVal + " " + response;
-                log.error(msg);
-                execError(ins, msg);
-            } else {
-                String msg = "[程序内部错误] 退出码 : " + exitVal + " " + error;
-                log.error(msg);
-                execError(ins, msg);
-            }
-        } catch (Exception e) {
+        } catch (IOException | InterruptedException e) {
             String msg = "[执行终端命令出错] " + e.getMessage();
             log.error(msg);
             execError(ins, msg);
             // if (currentMsrIns != null){
-                // currentMsrIns.getLogs().add(new Log("执行终端命令出错: " + e.getMessage()));
+            // currentMsrIns.getLogs().add(new Log("执行终端命令出错: " + e.getMessage()));
             // }
         }
+
+    }
+
+    // exec后处理
+    private void execPostProcessing(ExecResponse res, MsrIns ins){
+
+        // exitVal == 0 为程序执行成功
+        // exitVal == 1 为程序异常终止
+        // exitVal == -1 为程序执行成功, 但自定义返回错误代码
+        int exitVal = res.getExitCode();
+        String response = res.getResponse();
+        String error = res.getError();
+
+        if (exitVal == 0) {
+            // log.info("Exec done, cost: " + ((end - start) / 1000) + "s");
+            log.info("[程序正常退出] 退出码 : {} (response: {})", exitVal, response);
+        } else if (exitVal == -1) {
+            String msg = "[程序自定义错误] 退出码 : " + exitVal + "(response: " + error + ")";
+            log.error(msg);
+            execError(ins, msg);
+        } else {
+            String msg = "[程序内部错误] 退出码 : " + exitVal + "(error: " + error + ")";
+            log.error(msg);
+            execError(ins, msg);
+        }
+    }
+
+    /**
+     * 根据python的调用命令获取模型服务实例id
+     * @param command python调用命令
+     * @return {@link MsrIns}
+     * @author 7bin
+     **/
+    private MsrIns getMsrInsByPythonCmd(String[] command) {
+
+        String msrid = command[command.length - 1];
+        MsrIns ins = msInsSocketService.getMsrInsFromMsrInsColl(msrid);
+        return ins;
 
     }
 
@@ -196,7 +251,6 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
         String pkgUUID = UUID.fastUUID().toString();
         String imgTarName = pkgUUID + ".tar";
 
-        // TODO: 2023/4/13 还未上传到docker hub
         // TerminalRes terminalRes = dockerService.exportContainer(container.getContainerInsId(),
         //     repository + ContainerConstants.IMAGE_PATH + "/" + imgTarName);
         // if (terminalRes.getCode().equals(TerminalRes.ERROR_CODE)){
@@ -213,14 +267,24 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
             // imageInfo.setCommitCount(xxx);
             imageInfo.setStatus(ImageStatus.FINISHED);
             imageMapper.updateById(imageInfo);
-            log.info("导入镜像成功，镜像名：" + imageInfo.getRepoTags());
+            log.info("镜像commit成功，镜像名：" + imageInfo.getRepoTags());
         }catch (Exception e){
             // 更新image表
-            ImageInfo imageInfo = imageMapper.selectById(imageId);
-            imageInfo.setStatus(ImageStatus.ERROR);
-            imageMapper.updateById(imageInfo);
-            log.info("导入镜像出错，镜像名：" + imageInfo.getRepoTags());
-            throw new ServiceException("导出镜像出错");
+            // ImageInfo imageInfo = imageMapper.selectById(imageId);
+            // imageInfo.setStatus(ImageStatus.ERROR);
+            imageMapper.updateStatusById(imageId, ImageStatus.ERROR);
+            log.info("镜像commit出错，镜像id：" + imageId);
+            throw new ServiceException("镜像commit出错");
+        }
+
+        try {
+            dockerService.pushImage(envName, tag);
+        } catch (InterruptedException e) {
+            // 更新image表
+            imageMapper.updateStatusById(imageId, ImageStatus.ERROR);
+            log.info("镜像commit出错，镜像id：" + imageId);
+            throw new ServiceException("镜像commit出错");
+
         }
 
         // 压缩打包
@@ -239,10 +303,8 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
         //     new File(repository + ContainerConstants.IMAGE_PATH + "/" + imgTarName));
 
         // 打包后删除该镜像tar包
-        // TODO: 2023/4/17 之后是上传到docker hub上的
         // FileUtil.del(new File(repository + ContainerConstants.IMAGE_PATH + "/" + pkgUUID + ".tar"));
 
-        // TODO: 2022/12/15 把生成的部署包发送给所有计算节点
         // modelService.setPkgId(pkgUUID);
         // modelService.setImageTar(imgTarName);
         // modelServiceMapper.updateById(modelService);
@@ -278,7 +340,7 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
         }
         msrInsMapper.updateById(ins);
 
-        msInsSocketService.removeChannelAndMsrInsColl(ins.getChannel());
+        msInsSocketService.removeChannelAndMsrInsColl(ins);
 
     }
 }
