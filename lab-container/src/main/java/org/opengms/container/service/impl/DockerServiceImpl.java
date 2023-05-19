@@ -46,14 +46,17 @@ public class DockerServiceImpl implements IDockerService {
     @Qualifier(value = "dockerClient")
     DockerClient dockerClient;
 
-    @Value(value = "${docker.dockerRegistryUrl}")
+    @Value(value = "${docker.registryUrl}")
     private String dockerRegistryUrl;
+
+    @Value("${docker.useDockerHub}")
+    private boolean useDockerHub;
 
     // @Autowired
     // IContainerService containerService;
 
-    @Value(value = "${container.repository}")
-    private String repository;
+    // @Value(value = "${container.repository}")
+    // private String repository;
 
     @Value("${socket.port}")
     private int socketPort;
@@ -263,6 +266,11 @@ public class DockerServiceImpl implements IDockerService {
 
     }
 
+    @Override
+    public String getRealImageNameWithTag(String imageNameWithTag) {
+        return useDockerHub ? dockerRegistryUrl + "/" + imageNameWithTag : imageNameWithTag;
+    }
+
 
     //初始化容器
     private CreateContainerResponse initContainer(DockerClient client, ContainerInfo containerInfo){
@@ -270,7 +278,8 @@ public class DockerServiceImpl implements IDockerService {
         //数据卷 Bind.parse
         List<Bind> binds = new ArrayList<>();
         for (String volume : containerInfo.getVolumeList()) {
-            volume = formatPathSupportDocker(repository + volume);
+            // volume = formatPathSupportDocker(repository + volume);
+            volume = formatPathSupportDocker(volume);
             binds.add(Bind.parse(volume));
         }
 
@@ -375,10 +384,10 @@ public class DockerServiceImpl implements IDockerService {
             .awaitCompletion(1, TimeUnit.MINUTES);
 
         // 2.重命名(docker tag)镜像，删除镜像仓库地址前缀
-        tagImage(newImageWithTag, imageName, tag);
+        // tagImage(newImageWithTag, imageName, tag);
 
 
         // 3.删除以镜像仓库地址为前缀的镜像
-        dockerClient.removeImageCmd(newImageWithTag).withForce(true).exec();
+        // dockerClient.removeImageCmd(newImageWithTag).withForce(true).exec();
     }
 }

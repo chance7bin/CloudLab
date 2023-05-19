@@ -23,8 +23,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 直接与k8s交互的操作 实现类
@@ -41,7 +43,7 @@ public class K8sServiceImpl implements IK8sService {
     CoreV1Api k8sApi;
 
 
-    @Value(value = "${docker.dockerRegistryUrl}")
+    @Value(value = "${docker.registryUrl}")
     private String dockerRegistryUrl;
 
     @Value(value = "${nfs.host}")
@@ -50,6 +52,8 @@ public class K8sServiceImpl implements IK8sService {
     @Value(value = "${nfs.path}")
     private String nfsPath;
 
+    @Value(value = "${k8s.namespace}")
+    private String namespace;
 
     @Override
     public ContainerInfo createContainer(ContainerInfo containerInfo) {
@@ -165,6 +169,24 @@ public class K8sServiceImpl implements IK8sService {
 
     @Override
     public void createPod(String podName, String namespace, String imageName, String tag) {
+        createPod(podName, namespace, imageName + ":" + tag, null, ContainerConstants.RUN_DEFAULT_CMD);
+    }
+
+    @Override
+    public void createPod(String podName, String namespace, String imageNameWithTag) {
+
+        createPod(podName, namespace, imageNameWithTag, null, ContainerConstants.RUN_DEFAULT_CMD);
+
+    }
+
+    @Override
+    public void createPod(String podName, String namespace, String imageNameWithTag, List<String> volumeList) {
+        createPod(podName, namespace, imageNameWithTag, volumeList, ContainerConstants.RUN_DEFAULT_CMD);
+    }
+
+
+    @Override
+    public void createPod(String podName, String namespace, String imageName, List<String> volumeList, List<String> command) {
 
         V1Pod pod = new V1Pod();
         pod.setApiVersion("v1");
@@ -176,23 +198,50 @@ public class K8sServiceImpl implements IK8sService {
 
         V1PodSpec spec = new V1PodSpec();
 
-        Long msId = 8344476353811312640L;
-        String serviceDir = ContainerConstants.SERVICE_DIR(msId);
-
         V1Container container = new V1Container();
 
-        container.setName(imageName);
-        container.setImage(dockerRegistryUrl + "/" + imageName + ":" + tag);
+        container.setName(getPodContainerName(podName));
+        // container.setImage(dockerRegistryUrl + "/" + imageName + ":" + tag);
+        container.setImage(imageName);
         // container.setPorts(Arrays.asList(new V1ContainerPort().containerPort(80)));
-        container.setVolumeMounts(Arrays.asList(new V1VolumeMount().mountPath(ContainerConstants.INNER_SERVICE_DIR).name("service-volume")));
         container.setImagePullPolicy("IfNotPresent");
-        container.setCommand(ContainerConstants.RUN_DEFAULT_CMD);
-        spec.setContainers(Arrays.asList(container));
+        container.setCommand(command);
 
-        V1Volume volume = new V1Volume();
-        volume.setName("service-volume");
-        volume.setNfs(new V1NFSVolumeSource().path(nfsPath + serviceDir).server(nfsHost));
-        spec.setVolumes(Arrays.asList(volume));
+        // 挂载volume
+        // container.setVolumeMounts(Arrays.asList(new V1VolumeMount().mountPath(ContainerConstants.INNER_SERVICE_DIR).name("service-volume")));
+        if (volumeList != null && volumeList.size() > 0) {
+
+            List<V1VolumeMount> volumeMounts = new ArrayList<>();
+            List<V1Volume> volumes = new ArrayList<>();
+
+            for (int i = 0; i < volumeList.size(); i++) {
+                String v = volumeList.get(i);
+                String[] split = v.split(":");
+                String hostPath = split[0];
+                String containerPath = split[1];
+
+                String volumeName = "service-volume-" + i;
+
+                // 容器内挂载
+                volumeMounts.add(new V1VolumeMount().mountPath(containerPath).name(volumeName));
+
+                // nfs挂载
+                V1Volume volume = new V1Volume();
+                volume.setName(volumeName);
+                volume.setNfs(new V1NFSVolumeSource().path(nfsPath + hostPath).server(nfsHost));
+                volumes.add(volume);
+
+            }
+
+            container.setVolumeMounts(volumeMounts);
+
+            spec.setVolumes(volumes);
+        }
+
+
+        // spec.setVolumes(Arrays.asList(volume));
+
+        spec.setContainers(Arrays.asList(container));
 
         pod.setSpec(spec);
 
@@ -202,18 +251,10 @@ public class K8sServiceImpl implements IK8sService {
             log.error("Exception when calling CoreV1Api#createNamespacedPod");
             log.error("Status code: " + e.getCode());
             log.error("Reason: " + e.getResponseBody());
+            throw new ServiceException("Exception when calling CoreV1Api#createNamespacedPod");
         }
     }
 
-    @Override
-    public void createPod(String podName, String namespace, String imageNameWithTag) {
-
-        String[] split = imageNameWithTag.split(":");
-        String imageName = split[0];
-        String tag = split[1];
-        createPod(podName, namespace, imageName, tag);
-
-    }
 
     @Override
     public void deletePod(String podName, String namespace){
@@ -227,6 +268,7 @@ public class K8sServiceImpl implements IK8sService {
             log.error("Exception when calling CoreV1Api#deleteNamespacedPod");
             log.error("Status code: " + e.getCode());
             log.error("Reason: " + e.getResponseBody());
+            throw new ServiceException("Exception when calling CoreV1Api#deleteNamespacedPod");
         }
     }
 
@@ -252,5 +294,10 @@ public class K8sServiceImpl implements IK8sService {
             // e.printStackTrace();
             return null;
         }
+    }
+
+    @Override
+    public String getPodContainerName(String podName) {
+        return "container-" + podName;
     }
 }

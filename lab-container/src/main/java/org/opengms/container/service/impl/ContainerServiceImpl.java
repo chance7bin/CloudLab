@@ -24,6 +24,7 @@ import org.opengms.container.service.IK8sService;
 import org.opengms.container.service.IMSCAsyncService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -40,6 +41,12 @@ import java.util.List;
 @Slf4j
 @Service
 public class ContainerServiceImpl implements IContainerService {
+
+    @Value("${docker.useDockerHub}")
+    private boolean useDockerHub;
+
+    @Value("${docker.registryUrl}")
+    private String registryUrl;
 
     @Autowired
     JupyterMapper jupyterMapper;
@@ -190,6 +197,13 @@ public class ContainerServiceImpl implements IContainerService {
     }
 
     @Override
+    public int updateContainerInsId(Long containerId, String insId, ContainerType type) {
+
+        BaseContainerMapper mapper = getMapper(type);
+        return mapper.updateContainerInsId(containerId, insId);
+    }
+
+    @Override
     public Long createNewEnv(EnvDTO envDTO) {
 
         // 判断是否存在名称和tag都相同的镜像
@@ -204,6 +218,9 @@ public class ContainerServiceImpl implements IContainerService {
         imageInfo.setImageName(envDTO.getEnvName());
         imageInfo.setTag(envDTO.getTag());
         imageInfo.setRepoTags(repoTags);
+        if (useDockerHub){
+            imageInfo.setRegistryUrl(registryUrl);
+        }
         Integer cnt = imageMapper.insert(imageInfo);
         if (cnt <= 0){
             throw new ServiceException("创建环境失败");

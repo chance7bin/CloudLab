@@ -11,3 +11,32 @@ logging:
 
 
 labDriveUrl: localhost:8809/drive
+
+#docker配置
+docker:
+  clientHost: localhost
+  clientPort: 2375
+  clientMac: 18-C0-4D-38-98-4B
+  useDockerHub: true
+  registryUrl: 172.21.212.240:8080
+
+
+
+#socket配置
+mscSocket:
+  host: 172.21.212.240
+  port: 6001
+
+#nfs配置
+nfs:
+  host: 172.21.212.240
+  path: /e/opengms-lab/container
+
+
+#模型服务运行模式 docker | k8s
+modelService:
+  mode: k8s
+
+#k8s配置
+k8s:
+  namespace: dev

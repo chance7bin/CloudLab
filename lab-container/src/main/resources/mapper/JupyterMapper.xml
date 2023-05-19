@@ -115,4 +115,13 @@
         where container_id = #{containerId}
     </update>
 
+    <update id="updateContainerInsId">
+        update jupyter_container
+        <set>
+            container_ins_id = #{insId},
+            update_time = sysdate()
+        </set>
+        where container_id = #{containerId}
+    </update>
+
 </mapper>

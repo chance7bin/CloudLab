@@ -14,6 +14,7 @@ import org.opengms.container.entity.dto.ApiResponse;
 import org.opengms.container.entity.po.MsrIns;
 import org.opengms.container.entity.bo.SubIdentifier;
 import org.opengms.container.entity.po.ModelService;
+import org.opengms.container.entity.po.MsrInsPlain;
 import org.opengms.container.entity.po.docker.ContainerInfo;
 import org.opengms.container.entity.socket.Client;
 import org.opengms.container.enums.ContainerType;
@@ -34,6 +35,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -52,4 +54,11 @@ public class MSInsServiceImpl implements IMSInsService {
     public MsrIns getMsrInsByMsriId(String msrInsId) {
         return msrInsMapper.selectByMsriId(msrInsId);
     }
+
+    @Override
+    public List<MsrInsPlain> getMsrInsList() {
+        return msrInsMapper.selectPlainList();
+    }
+
+
 }

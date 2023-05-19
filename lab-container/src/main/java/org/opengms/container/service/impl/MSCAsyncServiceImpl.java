@@ -53,6 +53,9 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
     @Value(value = "${container.repository}")
     private String repository;
 
+    @Value(value = "${docker.useDockerHub}")
+    private boolean useDockerHub;
+
     @Autowired
     IDockerService dockerService;
 
@@ -265,9 +268,10 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
             ImageInfo inspectImageResponse = dockerService.inspectImage(sha256);
             imageInfo.setSize(inspectImageResponse.getSize());
             // imageInfo.setCommitCount(xxx);
-            imageInfo.setStatus(ImageStatus.FINISHED);
+            imageInfo.setStatus(ImageStatus.COMMITTED);
             imageMapper.updateById(imageInfo);
             log.info("镜像commit成功，镜像名：" + imageInfo.getRepoTags());
+
         }catch (Exception e){
             // 更新image表
             // ImageInfo imageInfo = imageMapper.selectById(imageId);
@@ -277,14 +281,17 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
             throw new ServiceException("镜像commit出错");
         }
 
-        try {
-            dockerService.pushImage(envName, tag);
-        } catch (InterruptedException e) {
-            // 更新image表
-            imageMapper.updateStatusById(imageId, ImageStatus.ERROR);
-            log.info("镜像commit出错，镜像id：" + imageId);
-            throw new ServiceException("镜像commit出错");
+        if (useDockerHub){
+            try {
+                dockerService.pushImage(envName, tag);
+                imageMapper.updateStatusById(imageId, ImageStatus.PUSHED);
+            } catch (InterruptedException e) {
+                // 更新image表
+                imageMapper.updateStatusById(imageId, ImageStatus.ERROR);
+                log.info("镜像commit出错，镜像id：" + imageId);
+                throw new ServiceException("镜像commit出错");
 
+            }
         }
 
         // 压缩打包

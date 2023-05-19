@@ -21,6 +21,17 @@
         <result property="remark" column="remark"/>
     </resultMap>
 
+    <resultMap id="MsrInsPlainResult" type="msrInsPlain">
+        <result property="insId" column="msri_id"/>
+        <result property="serviceName" column="ms_name"/>
+        <result property="imageName" column="repo_tags"/>
+        <result property="currentState" column="current_state" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="status" column="status"/>
+        <result property="spanTime" column="span_time"/>
+        <result property="serviceType" column="service_type"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
     <insert id="insert" parameterType="msrIns">
         insert into ms_run_instance (
         <if test="msriId != null and msriId != '' ">msri_id,</if>
@@ -54,6 +65,16 @@
         sysdate()
         )
     </insert>
+
+    <select id="selectPlainList" resultMap="MsrInsPlainResult">
+
+        select mri.msri_id ,mri.current_state, mri.status, mri.create_time, mri.span_time,
+               ms.ms_name, ms.service_type, i.repo_tags
+        from ms_run_instance mri
+        left join model_service ms on mri.ms_id = ms.ms_id
+        left join image i on i.id = ms.image_id
+
+    </select>
 
     <update id="updateMsrInsLogs" parameterType="msrIns">
         update ms_run_instance

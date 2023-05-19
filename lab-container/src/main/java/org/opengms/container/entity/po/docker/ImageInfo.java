@@ -34,6 +34,9 @@ public class ImageInfo extends BaseEntity {
     /** 镜像状态 */
     String status = ImageStatus.INIT;
 
+    /** 镜像所在仓库地址 */
+    String registryUrl;
+
     /** commit次数，不得超过127次 */
     int commitCount = 0;
 

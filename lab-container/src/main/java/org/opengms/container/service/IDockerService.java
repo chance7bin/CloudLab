@@ -27,4 +27,12 @@ public interface IDockerService extends IAbstractContainerService{
 
     ExecResponse exec(String[] cmdArr) throws IOException, InterruptedException;
 
+
+    /**
+     * 得到真正的镜像名（是否附带docker hub 地址前缀）
+     * @param imageNameWithTag
+     * @return {@link String}
+     * @author 7bin
+     **/
+    String getRealImageNameWithTag(String imageNameWithTag);
 }

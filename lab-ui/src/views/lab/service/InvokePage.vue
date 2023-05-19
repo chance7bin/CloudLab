@@ -45,8 +45,6 @@
                       </div>
                     </el-form-item>
                   </div>
-
-
                 </el-collapse-item>
               </el-collapse>
 

@@ -27,7 +27,7 @@ public class ContainerInfo extends BaseEntity {
     /** 容器名 (由镜像名以及容器id组成) */
     String containerName;
 
-    /** 镜像名 */
+    /** 镜像名 pull imageName */
     String imageName;
 
     /** 镜像id */

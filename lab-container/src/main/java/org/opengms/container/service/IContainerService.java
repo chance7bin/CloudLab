@@ -54,6 +54,8 @@ public interface IContainerService {
 
     int updateContainerStatus(Long containerId, String status, ContainerType type);
 
+    int updateContainerInsId(Long containerId, String insId, ContainerType type);
+
     /**
      * 创建新环境
      * @param envDTO env数据创数对象

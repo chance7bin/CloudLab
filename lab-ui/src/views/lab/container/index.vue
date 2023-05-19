@@ -18,8 +18,8 @@
 
     <!--容器列表-->
     <el-table :data="containers" stripe style="width: 100%">
-      <el-table-column label="容器名称" prop="containerName" show-overflow-tooltip width="360" />
-      <el-table-column label="镜像名称" prop="imageName" width="200" />
+      <el-table-column label="容器名称" prop="containerName" show-overflow-tooltip width="220" />
+      <el-table-column label="镜像名称" prop="imageName" show-overflow-tooltip width="300" />
       <el-table-column label="容器状态" prop="status" width="180" />
       <!--      <el-table-column label="启动时间" prop="started" width="180" />-->
       <el-table-column label="创建时间" prop="created" width="180" />

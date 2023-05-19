@@ -14,6 +14,16 @@ public class ImageStatus {
     public static final String INIT = "init";
 
     /**
+     * 已commit
+     */
+    public static final String COMMITTED = "committed";
+
+    /**
+     * 已push
+     */
+    public static final String PUSHED = "pushed";
+
+    /**
      * 已完成
      */
     public static final String FINISHED = "finished";

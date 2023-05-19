@@ -7,6 +7,7 @@ import org.opengms.common.utils.StringUtils;
 import org.opengms.common.utils.file.FileUtils;
 import org.opengms.container.clients.DriveClient;
 import org.opengms.container.constant.ContainerConstants;
+import org.opengms.container.constant.ServiceMode;
 import org.opengms.container.constant.ServiceType;
 import org.opengms.container.constant.TaskStatus;
 import org.opengms.container.entity.bo.InOutParam;
@@ -63,6 +64,12 @@ public class MSInsSocketServiceImpl implements IMSInsSocketService {
 
     @Autowired
     IContainerService containerService;
+
+    @Value(value = "${modelService.mode}")
+    String modelServiceMode;
+
+    @Value(value = "${k8s.namespace}")
+    String namespace;
 
 
     // 当前socket通信实例
@@ -362,8 +369,12 @@ public class MSInsSocketServiceImpl implements IMSInsSocketService {
             if (isDestroyContainer(msrIns.getModelService())){
                 ContainerInfo container = containerService.getContainerInfoById(msrIns.getContainerId(), ContainerType.JUPYTER);
                 if (container != null){
-                    // dockerService.removeContainer(container.getContainerInsId());
-                    k8sService.deletePod(container.getContainerName(), "dev");
+                    if(ServiceMode.DOCKER.equals(modelServiceMode)){
+                        dockerService.removeContainer(container.getContainerInsId());
+                    } else {
+                        k8sService.deletePod(container.getContainerName(), namespace);
+                    }
+
                     containerService.deleteContainer(container.getContainerId(), ContainerType.JUPYTER);
                 }
             }

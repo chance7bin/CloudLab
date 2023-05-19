@@ -40,7 +40,7 @@ public class K8sTests {
     @Value(value = "${container.repository}")
     String repository;
 
-    @Value(value = "${docker.dockerRegistryUrl}")
+    @Value(value = "${docker.registryUrl}")
     String dockerRegistryUrl;
 
     // @Autowired

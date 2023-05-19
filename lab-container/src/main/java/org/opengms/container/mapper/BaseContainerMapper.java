@@ -24,5 +24,6 @@ public interface BaseContainerMapper<T extends ContainerInfo> extends BaseMapper
 
     int updateContainerStatus(@Param("containerId") Long containerId, @Param("status") String status);
 
+    int updateContainerInsId(@Param("containerId") Long containerId, @Param("status") String insId);
 
 }

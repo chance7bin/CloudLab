@@ -57,6 +57,7 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
     @Autowired
     ImageMapper imageMapper;
 
+
     @Value(value = "${docker.clientHost}")
     private String clientHost;
 
@@ -81,7 +82,7 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
         jupyterContainer.setContainerId(SnowFlake.nextId());
         // jupyterContainer.setImageName("jupyter_cus:5.0");
         ImageInfo imageInfo = imageMapper.selectById(Long.valueOf(imageId));
-        jupyterContainer.setImageName(imageInfo.getRepoTags());
+        jupyterContainer.setImageName(dockerService.getRealImageNameWithTag(imageInfo.getImageName()));
         jupyterContainer.setImageId(imageInfo.getId());
         // jupyterContainer.setContainerName(jupyterContainer.getImageName().replaceAll(":","_") + "_" + jupyterContainer.getContainerId());
         jupyterContainer.setContainerName(containerName);
@@ -141,11 +142,22 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
         volumeList.add(jupyterContainer.getWorkspaceVolume());
         // volumeList.add(jupyterContainer.getServiceVolume());
 
+        jupyterContainer.setStatus(dockerService.getContainerStatusByContainerInsId(jupyterContainer.getContainerInsId()));
+        int count = containerService.insertContainer(jupyterContainer, ContainerType.JUPYTER);
+
         //对创建容器抛出的异常做处理
         try {
             // 启动容器
             jupyterContainer.setCmd(ContainerConstants.RUN_JUPYTER_CMD);
+            // 补全volume信息
+            List<String> vlist = jupyterContainer.getVolumeList();
+            for (int i = 0; i < vlist.size(); i++) {
+                vlist.set(i, repository + vlist.get(i));
+            }
             dockerService.createContainer(jupyterContainer);
+            // 更新容器实例信息
+            containerService.updateContainerInsId(jupyterContainer.getContainerId(), jupyterContainer.getContainerInsId(), ContainerType.JUPYTER);
+
         } catch (InternalServerErrorException serverErrorException){
             if (serverErrorException.getMessage().contains("port is already allocated")){
                 throw new ServiceException("端口被占用");
@@ -156,9 +168,6 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
         } catch (Exception e){
             throw new ServiceException(e.getMessage());
         }
-
-        jupyterContainer.setStatus(dockerService.getContainerStatusByContainerInsId(jupyterContainer.getContainerInsId()));
-        int count = containerService.insertContainer(jupyterContainer, ContainerType.JUPYTER);
 
         return count > 0;
 

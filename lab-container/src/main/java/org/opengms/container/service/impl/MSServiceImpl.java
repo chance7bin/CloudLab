@@ -2,6 +2,7 @@ package org.opengms.container.service.impl;
 
 import cn.hutool.core.io.FileUtil;
 import com.github.dockerjava.api.exception.InternalServerErrorException;
+import com.github.dockerjava.api.model.Bind;
 import lombok.extern.slf4j.Slf4j;
 import org.opengms.container.constant.*;
 import org.opengms.container.entity.dto.InvokeDTO;
@@ -47,7 +48,11 @@ public class MSServiceImpl implements IMSService {
     @Value(value = "${container.repository}")
     private String repository;
 
-    private boolean isDocker = false;
+    @Value(value = "${modelService.mode}")
+    private String serviceMode;
+
+    @Value(value = "${k8s.namespace}")
+    private String namespace;
 
     @Autowired
     IMSInsSocketService msInsSocketService;
@@ -95,79 +100,47 @@ public class MSServiceImpl implements IMSService {
 
         // 调用服务前，服务环境容器的准备
         ContainerInfo containerInfo = invokePrepare(modelService);
+        String containerName = containerInfo.getContainerName();
 
-
-        String exe = "python";
-        // String script = "E:/Projects/pythonProject/ogmslab/test/encapsulation.py";
-        // String script = workspace + modelService.getRelativeDir() + modelService.getEncapScriptPath();
-
-        // 模型服务相关文件放在 /service/{containerId}/{msId} 下
-        // String script ;
-        // if (StringUtils.isEmpty(modelService.getRelativeDir())){
-        //     script = ContainerConstants.INNER_SERVICE_DIR + "/model" + modelService.getEncapScriptPath();
-        // } else {
-        //     script = ContainerConstants.INNER_SERVICE_DIR + "/" + modelService.getRelativeDir() + "/model" + modelService.getEncapScriptPath();
-        // }
-        String script = ContainerConstants.INNER_SERVICE_DIR + "/model" + modelService.getEncapScriptPath();
-
+        // 创建模型运行实例
         // 模型运行实例id
         String instanceId = UUID.fastUUID().toString();
-
         MsrIns msrIns = new MsrIns();
         msrIns.setMsriId(instanceId);
         msrIns.setCurrentState(ProcessState.INIT);
         msrIns.setModelService(modelService);
         msrIns.setMsId(modelService.getMsId());
         msrIns.setStatus(TaskStatus.INIT);
-        // if (modelService.getContainerId() != null){
-        //     msrIns.setContainerId(modelService.getContainerId());
-        // } else {
-        //     if (containerInfo == null || containerInfo.getContainerId() == null){
-        //         throw new ServiceException("运行容器创建出错");
-        //     }
-        //     msrIns.setContainerId(containerInfo.getContainerId());
-        // }
-        // msrIns.setModelClass(modelService.getModelClass());
         msrIns.setContainerId(containerInfo.getContainerId());
-
         msrInsMapper.insert(msrIns);
-
         // 将该实例绑定到实例集合中
         Map<String, MsrIns> msrInsColl = msInsSocketService.getMsrInsColl();
         msrInsColl.put(instanceId,msrIns);
 
+        // 构建python执行命令
+        String exe = "python";
+        // String script = "E:/Projects/pythonProject/ogmslab/test/encapsulation.py";
+        // String script = workspace + modelService.getRelativeDir() + modelService.getEncapScriptPath();
+        String script = ContainerConstants.INNER_SERVICE_DIR + "/model" + modelService.getEncapScriptPath();
         // python执行命令要添加-m参数才能把python代码所在路径加入到sys.path中
         // docker exec $DOCKER_ID /bin/bash -c 'cd /packages/detectron && python tools/train.py'
         // String[] cmdArr = new String[] {exe, script, MSC_HOST, MSC_PORT, instanceId};
         String[] cmdArr = new String[] {exe, script, MSC_HOST, MSC_PORT, instanceId};
-        String pythonCMD = String.join(" ", cmdArr);
-
-        String containerName = containerInfo.getContainerName();
-        // if (msrIns.getModelService().getContainerId() != null){
-        //     // jupyter发布的服务
-        //     ContainerInfo container = containerService.getContainerInfoById(msrIns.getModelService().getContainerId(), ContainerType.JUPYTER);
-        //     containerName = container.getContainerName();
-        // } else {
-        //     if (containerInfo == null){
-        //         throw new ServiceException("容器创建失败");
-        //     }
-        //     containerName = containerInfo.getContainerName();
-        // }
-
-
 
         // docker的调用命令
-        if (isDocker){
-            cmdArr = new String[] {"docker", "exec", containerName, "/bin/bash", "-c", pythonCMD};
+        if (ServiceMode.DOCKER.equals(serviceMode)){
+            String cmdStr = String.join(" ", cmdArr);
+            cmdArr = new String[] {"docker", "exec", containerName, "/bin/bash", "-c", cmdStr};
             asyncService.exec(cmdArr);
         } else{
-            // pod 中的container name
-            String podContainerName = containerInfo.getImageName().split(":")[0];
 
             // 检查pod是否已经创建好了
+
+            // TODO: 2023/5/15 如果没有这个镜像要先到hub上拉，这个耗时可能会超过10s
+            
             int cnt = 0;
             while (true){
-                String status = k8sService.getPodStatus(containerName, "dev");
+                String status = k8sService.getPodStatus(containerName, namespace);
                 if ("Running".equals(status)){
                     break;
                 }
@@ -183,10 +156,12 @@ public class MSServiceImpl implements IMSService {
                 cnt++;
             }
             log.info("start run model service!");
-            asyncService.exec("dev", containerName, podContainerName, cmdArr);
+
+            // pod 中的container name
+            String podContainerName = k8sService.getPodContainerName(containerName);
+
+            asyncService.exec(namespace, containerName, podContainerName, cmdArr);
         }
-
-
 
         // 调用成功之后
         // if (exitVal == 0){
@@ -208,7 +183,7 @@ public class MSServiceImpl implements IMSService {
         containerInfo.setContainerId(SnowFlake.nextId());
         containerInfo.setImageId(modelService.getImageId());
         ImageInfo imageInfo = imageMapper.selectById(modelService.getImageId());
-        containerInfo.setImageName(imageInfo.getRepoTags());
+        containerInfo.setImageName(dockerService.getRealImageNameWithTag(imageInfo.getRepoTags()));
         containerInfo.setContainerName(modelService.getMsName() + "-" + System.currentTimeMillis());
 
         // 创建者为该登录用户
@@ -220,16 +195,17 @@ public class MSServiceImpl implements IMSService {
         List<String> volumeList = containerInfo.getVolumeList();
         volumeList.add(serviceDir + ":" + ContainerConstants.INNER_SERVICE_DIR);
 
-        // 模型服务使用k8s创建容器
-        // prepareContainerByDocker(imageInfo, containerInfo);
-        prepareContainerByK8s(imageInfo, containerInfo);
-
-
-        // TODO: 2023/5/13 创建模型服务是否需要记录容器信息
         int count = containerService.insertContainer(containerInfo, ContainerType.JUPYTER);
 
         if (count <= 0){
-            throw new ServiceException("创建容器失败");
+            throw new ServiceException("插入容器信息失败");
+        }
+
+        if (ServiceMode.DOCKER.equals(serviceMode)){
+            prepareContainerByDocker(containerInfo);
+        } else {
+            // 模型服务使用k8s创建容器
+            prepareContainerByK8s(containerInfo);
         }
 
         return containerInfo;
@@ -238,7 +214,9 @@ public class MSServiceImpl implements IMSService {
     }
 
     // 调用前准备，先启动容器，再调用
-    private void prepareContainerByDocker(ImageInfo imageInfo, ContainerInfo containerInfo){
+    private void prepareContainerByDocker(ContainerInfo containerInfo){
+
+        ImageInfo imageInfo = imageMapper.selectById(containerInfo.getImageId());
 
         // 启动容器前需先判断该镜像是否已经在本地
         try {
@@ -257,7 +235,15 @@ public class MSServiceImpl implements IMSService {
         try {
             // 启动容器
             containerInfo.setCmd(ContainerConstants.RUN_DEFAULT_CMD);
+
+            // 补全volume信息
+            List<String> volumeList = containerInfo.getVolumeList();
+            for (int i = 0; i < volumeList.size(); i++) {
+                volumeList.set(i, repository + volumeList.get(i));
+            }
+
             dockerService.createContainer(containerInfo);
+            containerService.updateContainerInsId(containerInfo.getContainerId(), containerInfo.getContainerInsId(), ContainerType.JUPYTER);
         } catch (InternalServerErrorException serverErrorException){
             if (serverErrorException.getMessage().contains("port is already allocated")){
                 throw new ServiceException("端口被占用");
@@ -271,9 +257,9 @@ public class MSServiceImpl implements IMSService {
 
     }
 
-    private void prepareContainerByK8s(ImageInfo imageInfo, ContainerInfo containerInfo){
+    private void prepareContainerByK8s(ContainerInfo containerInfo){
 
-        k8sService.createPod(containerInfo.getContainerName(),"dev", imageInfo.getRepoTags());
+        k8sService.createPod(containerInfo.getContainerName(), namespace, containerInfo.getImageName(), containerInfo.getVolumeList());
 
     }
 

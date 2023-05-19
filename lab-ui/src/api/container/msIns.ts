@@ -11,3 +11,11 @@ export function getMsInsById(msriId: string) {
     method: "get"
   });
 }
+
+export function getMsInsList(queryParams: QueryParams) {
+  return request({
+    url: contextPath + "/list",
+    method: "get",
+    params: queryParams
+  });
+}
