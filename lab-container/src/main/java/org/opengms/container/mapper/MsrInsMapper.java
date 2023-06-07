@@ -1,6 +1,7 @@
 package org.opengms.container.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.opengms.container.entity.po.InstanceDetail;
 import org.opengms.container.entity.po.MsrIns;
 import org.opengms.container.entity.po.MsrInsPlain;
 
@@ -20,7 +21,7 @@ public interface MsrInsMapper extends BaseMapper<MsrIns>{
     int updateMsrInsLogsAndStatus(MsrIns msrIns);
 
 
-    MsrIns selectByMsriId(String msriId);
+    InstanceDetail selectByMsriId(String msriId);
 
     List<MsrInsPlain> selectPlainList();
 

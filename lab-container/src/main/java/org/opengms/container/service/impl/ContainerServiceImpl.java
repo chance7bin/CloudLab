@@ -8,6 +8,7 @@ import org.opengms.common.utils.uuid.SnowFlake;
 import org.opengms.container.entity.bo.ContainerBean;
 import org.opengms.container.entity.dto.docker.ContainerInfoDTO;
 import org.opengms.container.entity.dto.docker.EnvDTO;
+import org.opengms.container.entity.dto.docker.JupyterInfoDTO;
 import org.opengms.container.entity.po.ContainerRelation;
 import org.opengms.container.entity.po.JupyterContainer;
 import org.opengms.container.entity.po.docker.ContainerInfo;
@@ -18,10 +19,7 @@ import org.opengms.container.mapper.BaseContainerMapper;
 import org.opengms.container.mapper.ContainerRelationMapper;
 import org.opengms.container.mapper.ImageMapper;
 import org.opengms.container.mapper.JupyterMapper;
-import org.opengms.container.service.IContainerService;
-import org.opengms.container.service.IDockerService;
-import org.opengms.container.service.IK8sService;
-import org.opengms.container.service.IMSCAsyncService;
+import org.opengms.container.service.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,6 +48,9 @@ public class ContainerServiceImpl implements IContainerService {
 
     @Autowired
     JupyterMapper jupyterMapper;
+
+    @Autowired
+    IJupyterService jupyterService;
 
     @Autowired
     IDockerService dockerService;
@@ -158,6 +159,25 @@ public class ContainerServiceImpl implements IContainerService {
         return list;
     }
 
+    @Override
+    public ContainerInfoDTO formatContainerResult(ContainerInfo containerInfo) {
+
+        ContainerInfoDTO containerInfoDTO = new ContainerInfoDTO();
+
+        // 更新容器状态
+        ContainerType type = containerInfo.getType();
+        if (type == null || type == ContainerType.JUPYTER){
+            JupyterInfoDTO jupyterInfo = jupyterService.getJupyterContainerById(containerInfo.getContainerId());
+            BeanUtils.copyProperties(jupyterInfo, containerInfoDTO);
+        } else {
+            BeanUtils.copyProperties(containerInfo, containerInfoDTO);
+            containerInfoDTO.setCreated(containerInfo.getCreateTime());
+        }
+
+
+        return containerInfoDTO;
+
+    }
 
 
     @Override

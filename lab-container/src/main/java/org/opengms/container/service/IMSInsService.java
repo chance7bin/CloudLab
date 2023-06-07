@@ -1,5 +1,6 @@
 package org.opengms.container.service;
 
+import org.opengms.container.entity.po.InstanceDetail;
 import org.opengms.container.entity.po.MsrIns;
 import org.opengms.container.entity.po.MsrInsPlain;
 import org.opengms.container.entity.socket.Client;
@@ -17,7 +18,7 @@ import java.util.Map;
  */
 public interface IMSInsService {
 
-    MsrIns getMsrInsByMsriId(String msInsId);
+    InstanceDetail getMsrInsByMsriId(String msInsId);
 
     List<MsrInsPlain> getMsrInsList();
 }

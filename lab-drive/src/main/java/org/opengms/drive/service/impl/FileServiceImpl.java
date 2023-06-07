@@ -92,7 +92,7 @@ public class FileServiceImpl implements IFileService {
         fileInfo.setFilePath(year + separator + month + separator + newName);
         fileInfo.setMd5(SecureUtil.md5(newFile));
         fileInfo.setSize(String.valueOf(FileUtil.size(newFile)));
-        fileInfo.setSuffix(FileTypeUtils.getFileType(newFile));
+        fileInfo.setSuffix(FileTypeUtils.getFileType(fileName));
         int insert = fileMapper.insert(fileInfo);
         if (insert > 0){
             return fileInfo.getFileId();
@@ -134,7 +134,8 @@ public class FileServiceImpl implements IFileService {
 
         Result<JSONArray> result;
         try {
-            String realFilename = md5 + "_" + fileName;
+            // String realFilename = md5 + "_" + fileName;
+            String realFilename = md5;
             result = LocalUpload.checkFileMd5(md5, realFilename, confFilePath, savePath);
         } catch (Exception e) {
             // e.printStackTrace();
@@ -154,7 +155,8 @@ public class FileServiceImpl implements IFileService {
             //     : param.getChunkSize();
 
             // 实际存储的文件格式为 [{md5}_{filename}]
-            String realFilename = param.getMd5() + "_" + param.getName();
+            // String realFilename = param.getMd5() + "_" + param.getName();
+            String realFilename = param.getMd5();
             param.setName(realFilename);
             result = LocalUpload.fragmentFileUploader(param, confFilePath, savePath, 5242880L, request);
             // return NovelWebUtils.forReturn(result);
@@ -186,8 +188,8 @@ public class FileServiceImpl implements IFileService {
             String separator = "/";
             int year = DateUtils.getYear();
             int month = DateUtils.getMonth();
-            String name = fileInfo.getMd5() + "_" + fileInfo.getFileName();
-            // String name = fileInfo.getMd5();
+            // String name = fileInfo.getMd5() + "_" + fileInfo.getFileName();
+            String name = fileInfo.getMd5();
             FileUtil.move(
                 new File(savePath + separator + name),
                 new File(savePath + separator + year + separator + month + separator + name),
@@ -202,7 +204,7 @@ public class FileServiceImpl implements IFileService {
             fileInfo.setFilePath(year + separator + month + separator + name);
             if (StringUtils.isEmpty(fileInfo.getSuffix())){
                 File file = new File(savePath + separator + fileInfo.getFilePath());
-                fileInfo.setSuffix(FileNameUtil.extName(file));
+                fileInfo.setSuffix(FileTypeUtils.getFileType(fileInfo.getFileName()));
             }
         }
 

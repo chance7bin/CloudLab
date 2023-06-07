@@ -46,7 +46,11 @@ public class DriveServiceImpl implements IDriveService {
 
         FileInfo file = existFileInPath(fileInfo.getFilename(), fileInfo.getParentId());
         if (file != null && file.getDirectory()){
-            throw new ServiceException("指定的文件夹和已有的某个文件重名，请指定其他名称");
+            if (fileInfo.getDirectory()){
+                throw new ServiceException("此目标已包含名为" + fileInfo.getFilename() + "的文件或文件夹");
+            } else {
+                throw new ServiceException("指定的文件名与已存在的文件或文件夹重名，请指定其他名称");
+            }
         }
 
         if (fileInfo.getDirectory()){
@@ -64,16 +68,17 @@ public class DriveServiceImpl implements IDriveService {
             if ((Integer) result.get(ApiResponse.CODE_TAG) == HttpStatus.SUCCESS){
                 HashMap<String, Object> data = (HashMap<String, Object>) result.get(ApiResponse.DATA_TAG);
                 fileInfo.setFileId(SnowFlake.nextId());
-                fileInfo.setType((String) data.getOrDefault("suffix", null));
+                // fileInfo.setType((String) data.getOrDefault("suffix", null));
+                fileInfo.setType(FileTypeUtils.getFileType(fileInfo.getFilename()));
                 fileInfo.setDriveFileId((String) data.get("fileId"));
 
                 int cnt = 1;
                 String filename = fileInfo.getFilename();
                 String oriFilename = fileInfo.getFilename();
-                String extName = fileInfo.getType() == null ? FileNameUtil.extName(oriFilename) : fileInfo.getType();
+                String extName = fileInfo.getType() == null ? FileTypeUtils.getFileType(oriFilename) : fileInfo.getType();
                 // 判断是否有同名的，有的话在文件后面 + (1) 命名
                 while (existFileInPath(filename ,fileInfo.getParentId()) != null){
-                    if (extName == null || "".equals(extName)){
+                    if (extName == null || "".equals(extName) || oriFilename.lastIndexOf(extName) == -1){
                         filename = oriFilename + " (" + cnt + ")";
                     } else {
                         int extNameIndex = oriFilename.lastIndexOf(extName);
@@ -100,6 +105,7 @@ public class DriveServiceImpl implements IDriveService {
     //     }
     // }
 
+    // 判断在parentId路径下是否有相同文件名的文件
     private FileInfo existFileInPath(String filename, String parentId){
         return driveMapper.existFileInPath(filename, parentId);
     }

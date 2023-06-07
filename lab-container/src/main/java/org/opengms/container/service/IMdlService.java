@@ -27,9 +27,9 @@ public interface IMdlService {
     /**
      * 获取Parameter步骤的参数值
      *
-     * @param modelService
-     * @param state
-     * @param event
+     * @param modelService 模型服务
+     * @param state state name
+     * @param event event name
      * @param serviceDir 服务相对路径
      * @param insDir 实例相对路径
      * @return {@link String} 值类型: 值; 文件类型: 文件名

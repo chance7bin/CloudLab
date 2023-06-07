@@ -218,7 +218,7 @@ public class MdlServiceImpl implements IMdlService {
         }
         HashMap<String, Object> responseData = (HashMap<String, Object>) ApiResponse.getResponseData(fileInfo);
         String suffix = (String)responseData.get("suffix");
-        String filename = "gd_" + UUID.fastUUID() + "." + suffix;
+        String filename = suffix == null ? "gd_" + UUID.fastUUID() : "gd_" + UUID.fastUUID() + "." + suffix;
         HttpUtil.downloadFile(url, new File(destDir + "/" + filename));
         return filename;
     }

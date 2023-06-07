@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiOperation;
 import org.opengms.admin.clients.DriveClient;
 import org.opengms.admin.controller.common.BaseController;
 import org.opengms.admin.entity.dto.ApiResponse;
+import org.opengms.admin.entity.dto.TableDataInfo;
 import org.opengms.admin.entity.po.drive.FileInfo;
 import org.opengms.admin.service.IDriveService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +42,12 @@ public class DriveController extends BaseController {
 
 
     @GetMapping(value = "/list")
-    public ApiResponse getFileList(@RequestParam("parentId") String parentId) {
+    public TableDataInfo getFileList(@RequestParam("parentId") String parentId) {
+        startPage();
         String username = getUsername();
-        return ApiResponse.success(driveService.getFileList(parentId, username));
+        List<FileInfo> fileList = driveService.getFileList(parentId, username);
+        // return ApiResponse.success(driveService.getFileList(parentId, username));
+        return getDataTable(fileList);
 
     }
 

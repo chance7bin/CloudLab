@@ -33,45 +33,54 @@
 
     <!--文件夹容器-->
     <div class="folder-container">
-      <el-empty v-if="folderList.length === 0" description="哎呀, 你怎么一个文件都没有呢 (T_T)" />
-      <el-space v-else wrap>
-        <div v-for="(item, index) in folderList" :key="index">
-          <!--{{ item.filename }}-->
+      <!--<el-scrollbar :height="folderHeight">-->
+        <el-empty v-if="folderList.length === 0" description="哎呀, 怎么一个文件都没有呢 (T_T)" />
+        <el-space v-else wrap>
+          <div v-for="(item, index) in folderList" :key="index">
+            <!--{{ item.filename }}-->
 
-          <el-tooltip :content="item.filename" placement="bottom" effect="light" :show-after="600">
-            <div
-              class="folder-item"
-              :class="selectedItem == index ? 'folder-active' : ''"
-              @dblclick="folderDbClick(item)"
-              @click="folderSelect(item, index)"
-              @mouseover="item['showPlugin'] = true"
-              @mouseleave="item['showPlugin'] = false"
-            >
-              <!--下载按钮-->
-              <div class="item-plugin">
-                <!--<el-icon><Download /></el-icon>-->
-                <svg-icon
-                  class="icon-hover"
-                  icon-class="download-file"
-                  @click="downloadFile(item)"
-                  v-show="!item.directory && item['showPlugin']"
-                ></svg-icon>
+            <el-tooltip :content="item.filename" placement="bottom" effect="light" :show-after="600">
+              <div
+                  class="folder-item"
+                  :class="selectedItem == item.fileId ? 'folder-active' : ''"
+                  @dblclick="folderDbClick(item)"
+                  @click="folderSelect(item, index)"
+                  @mouseover="item['showPlugin'] = true"
+                  @mouseleave="item['showPlugin'] = false"
+              >
+                <!--下载按钮-->
+                <div class="item-plugin">
+                  <!--<el-icon><Download /></el-icon>-->
+                  <svg-icon
+                      class="icon-hover"
+                      icon-class="download-file"
+                      @click="downloadFile(item)"
+                      v-show="!item.directory && item['showPlugin']"
+                  ></svg-icon>
+                </div>
+
+                <!--图标-->
+                <!--<svg-icon v-if="item.directory" icon-class="folder" class-name="icon-size"></svg-icon>-->
+                <!--<svg-icon v-else icon-class="file" class-name="icon-size"></svg-icon>-->
+                <svg-icon :icon-class="selectTypeIcon(item)" class-name="icon-size"></svg-icon>
+
+                <!--文件名-->
+                <div class="ellipsis-fixed">
+                  <div class="overflow-ellipsis">{{ item.filename }}</div>
+                </div>
+
               </div>
-
-              <!--图标-->
-              <!--<svg-icon v-if="item.directory" icon-class="folder" class-name="icon-size"></svg-icon>-->
-              <!--<svg-icon v-else icon-class="file" class-name="icon-size"></svg-icon>-->
-              <svg-icon :icon-class="selectTypeIcon(item)" class-name="icon-size"></svg-icon>
-
-              <!--文件名-->
-              <div class="ellipsis-fixed">
-                <div class="overflow-ellipsis">{{ item.filename }}</div>
-              </div>
-
-            </div>
-          </el-tooltip>
-        </div>
-      </el-space>
+            </el-tooltip>
+          </div>
+        </el-space>
+      <!--</el-scrollbar>-->
+      <pagination
+          v-show="total > 0"
+          :total="total"
+          v-model:page="queryParams.pageNum"
+          v-model:limit="queryParams.pageSize"
+          @pagination="getFolder"
+      />
     </div>
 
     <!--新建文件夹-->
@@ -79,7 +88,7 @@
     <!--上传文件对话框-->
     <div>
       <el-dialog v-model="dialogVisible" title="上传文件" width="30%" draggable>
-        <span>支持上传一个或多个文件</span>
+        <!--<span>支持上传一个或多个文件</span>-->
         <simple-uploader @uploadSuccess="uploadSuccess"></simple-uploader>
       </el-dialog>
     </div>
@@ -94,10 +103,55 @@ import { ElNotification as notify, ElMessageBox, ElMessage } from "element-plus"
 import { getFileList, addFile } from "@/api/drive/drive";
 import type { FileInfoDTO } from "@/api/drive/drive";
 import { checkAuth } from "@/api/admin/login";
+import {ref} from "vue";
+import useDriveStore from "@/stores/modules/drive";
+
+const total = ref<number>(0);
+
+const data = reactive({
+  queryParams: {
+    pageNum: 1,
+    pageSize: 10
+  }
+});
+const { queryParams } = toRefs(data);
 
 const emit = defineEmits(["selectedItem"]);
 
+// 文件夹部分
+// let folderHeight = document.querySelector(".folder-container")?.clientHeight;
+const folderList = ref<any[]>([]);
+const selectedItem = ref<number | null>();
 
+// 在 DOM 渲染完成后执行的操作
+onMounted(() => {
+  // 根据app-container的高度计算folder-container的高度
+  // queryParams.value.pageSize = calcPaginationSize();
+  queryParams.value.pageSize = 40;
+
+  // 先获取到请求的分页大小，再获取文件列表
+  getFolder();
+});
+
+function calcPaginationSize(){
+
+  const appContainer = document.querySelector(".app-container");
+  const topBtn = document.querySelector(".top-btn");
+  const folderNav = document.querySelector(".folder-nav");
+  const paginationCls = document.querySelector(".pagination-container");
+
+  let itemHeight = 160;
+  let itemWeight = 150;
+
+  let containerPadding = 20;
+  const height = (appContainer as Element).clientHeight - (topBtn as Element).clientHeight
+      - (folderNav as Element).clientHeight - (paginationCls as Element).clientHeight - containerPadding * 4;
+  const weight = (appContainer as Element).clientWidth - containerPadding * 4;
+  let colCnt = Math.floor(height / itemHeight);
+  let rowCnt = Math.floor(weight / itemWeight);
+  console.log("colCnt:", colCnt, "rowCnt:", rowCnt);
+  return colCnt * rowCnt;
+}
 
 // 云盘路径
 interface FilePath {
@@ -140,22 +194,20 @@ const refreshFolder = () => {
 };
 
 // 根据breadcrumbList获取该文件夹下的文件
-const getFolder = () => {
-  selectedItem.value = null;
-  getFileList(currentFile.parentId).then((res) => {
+function getFolder() {
+  // selectedItem.value = null;
+  // useDriveStore().setCurrentPath(currentFile.parentId);
+  getFileList(currentFile.parentId, queryParams.value).then((res : any) => {
     // console.log("listWorkspaceDir:", res);
-    folderList.value = res.data;
+    folderList.value = res.rows;
+    total.value = Number(res.total);
   });
-};
+}
 
-// 文件夹部分
 
-const folderList = ref<any[]>([]);
-const selectedItem = ref<number | null>();
-getFolder();
 
 const folderSelect = (item, index) => {
-  selectedItem.value = index;
+  selectedItem.value = item.fileId;
   emit("selectedItem", item);
 };
 
@@ -246,7 +298,7 @@ const downloadFile = async (item) => {
   // console.log(item);
   await checkAuth();
 
-  window.location.href = import.meta.env.VITE_APP_DRIVE_API + "/file/download/" + item.driveFileId;
+  window.location.href = import.meta.env.VITE_APP_DRIVE_API + "/file/download/" + item.driveFileId + "?downloadFilename=" + item.filename;
 };
 
 // 选择文件展示的图标

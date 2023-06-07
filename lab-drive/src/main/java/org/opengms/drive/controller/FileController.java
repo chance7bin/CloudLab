@@ -190,12 +190,12 @@ public class FileController {
      * 文件下载
      *
      * @param id       id
-     * @param isSource 是否使用原文件名
+     * @param downloadFilename 是否使用传入的文件名
      * @param request  请求
      * @param response 响应
      */
     @GetMapping(value = "/download/{id}")
-    public void download(@PathVariable Long id, @RequestParam(required = false) Boolean isSource, HttpServletRequest request, HttpServletResponse response) {
+    public void download(@PathVariable Long id, @RequestParam(required = false) String downloadFilename, HttpServletRequest request, HttpServletResponse response) {
         OutputStream outputStream = null;
         InputStream inputStream = null;
         try {
@@ -203,7 +203,7 @@ public class FileController {
             if (fileDetails == null){
                 throw new ServiceException("未找到该文件");
             }
-            String filename = (isSource != null && isSource) ? fileDetails.getFilePath() : fileDetails.getFileName();
+            String filename = (downloadFilename != null && !downloadFilename.isEmpty()) ? downloadFilename : fileDetails.getFileName();
             inputStream = fileService.getFileInputStream(id);
             response.setHeader("Content-Disposition", "attachment;filename=" + EncodingUtils.convertToFileName(request, filename));
             // 获取输出流

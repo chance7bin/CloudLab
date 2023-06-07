@@ -11,7 +11,7 @@
       <el-table-column label="创建时间" prop="createTime" width="200" />
       <el-table-column label="操作">
         <template #default="scope">
-          <el-button link type="primary" >查看</el-button>
+          <el-button link type="primary" @click="detail(scope.$index)">查看</el-button>
           <el-button link type="primary" >删除</el-button>
         </template>
       </el-table-column>
@@ -30,6 +30,7 @@
 import useCurrentInstance from "@/utils/currentInstance";
 import {getMsInsList} from "@/api/container/msIns";
 
+const router = useRouter();
 const {proxy} = useCurrentInstance();
 
 const instances = ref<any[]>([]);
@@ -51,6 +52,10 @@ function getList() {
   });
 }
 
+function detail(index) {
+  let query = { insId: instances.value[index].insId };
+  router.push({ path: "/instance/detail", query: query });
+}
 
 </script>
 

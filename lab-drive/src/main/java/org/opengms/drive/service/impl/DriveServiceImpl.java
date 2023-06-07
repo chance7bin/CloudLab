@@ -29,7 +29,7 @@ public class DriveServiceImpl implements IDriveService {
             fileDTO.setFilename(file.getName());
             fileDTO.setDirectory(file.isDirectory());
             if (!file.isDirectory()){
-                fileDTO.setFileType(FileTypeUtils.getFileType(file));
+                fileDTO.setFileType(FileTypeUtils.getFileType(file.getName()));
                 fileDTO.setFileSize(FileUtils.calcSize(FileUtil.size(file)));
             }
             fileDTOList.add(fileDTO);

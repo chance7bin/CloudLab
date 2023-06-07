@@ -107,9 +107,23 @@ export const constantRoutes = [
     children: [
       {
         path: "invoke",
-        component: () => import("@/views/lab/service/InvokePage.vue"),
+        component: () => import("@/views/lab/service/invokePage.vue"),
         name: "invoke",
         meta: { title: "服务调用", icon: "user" }
+      }
+    ]
+  },
+  {
+    path: "/instance",
+    component: Layout,
+    hidden: true,
+    redirect: "noredirect",
+    children: [
+      {
+        path: "detail",
+        component: () => import("@/views/lab/service/instanceDetail.vue"),
+        name: "detail",
+        meta: { title: "任务详情", icon: "user" }
       }
     ]
   },

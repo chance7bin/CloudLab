@@ -21,7 +21,7 @@ const containerId = route.query && route.query.containerId;
 // const url = ref("http://127.0.0.1:7006/lab?token=66666")
 const url = ref<string>("")
 
-proxy.$modal.loading();
+proxy.$modal.loading("正在初始化工作空间，请稍后...");
 
 getWorkspaceByContainerId(containerId as string)
   .then((res) => {

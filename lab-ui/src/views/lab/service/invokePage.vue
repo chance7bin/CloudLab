@@ -111,9 +111,11 @@
       <!--  :container-id="containerId"-->
       <!--  @selectedItem="fillInputValue"-->
       <!--&gt;</file-select-modal>-->
-      <my-folder
-        @selectedItem="fillInputValue"
-      ></my-folder>
+      <div class="drive-layout">
+        <my-folder
+            @selectedItem="fillInputValue"
+        ></my-folder>
+      </div>
       <template #footer>
         <div class="dialog-footer">
           <el-button type="primary" @click="confirmInputValue"> 确定 </el-button>
@@ -150,7 +152,7 @@ onBeforeUnmount(() => {
 
 const loading = ref<boolean>(true);
 const serviceExist = ref<boolean>(true);
-proxy.$modal.loading();
+proxy.$modal.loading("正在初始化服务，请稍后...");
 
 const collapseAll = ref<string[]>([]);
 const modelService = ref();
@@ -210,7 +212,7 @@ function initParams() {
 
       if (event["interaction"]){
         // 设置params
-        // {id: value}
+        // {parameter id 标识: value}
         params[event["inputParameter"]["id"]] = "";
         fileParamsStorage[event["inputParameter"]["id"]] = "";
         const required = event["required"];
@@ -323,15 +325,16 @@ const invoke = async () => {
                 // 这里调用调用需要执行的方法
                 getMsInsById(currentInsId).then((res) => {
                   // console.log("getMsInsById: ",res);
+                  let msrIns = res["data"]["msrIns"];
 
-                  if (res["data"] != null){
-                    insInfo.value = res["data"];
-                    logs.value = res["data"]["logs"];
-                    outputs.value = res["data"]["outputs"];
+                  if (msrIns != null){
+                    insInfo.value = msrIns;
+                    logs.value = msrIns["logs"];
+                    outputs.value = msrIns["outputs"];
                   }
 
                   //任务结束删除定时任务
-                  if (res["data"] == null || res["data"]["status"] == "FINISHED" || res["data"]["status"] == "ERROR"){
+                  if (msrIns == null || msrIns["status"] == "FINISHED" || msrIns["status"] == "ERROR"){
                     clearInterval(timer)
                     showResult.value = true;
                   }
@@ -422,7 +425,6 @@ const indexMethod = (index: number) => {
 // 下载文件
 const downloadFile = async (driveFileId) => {
   await checkAuth();
-
   window.location.href = import.meta.env.VITE_APP_DRIVE_API + "/file/download/" + driveFileId;
 }
 
@@ -437,5 +439,16 @@ const downloadFile = async (driveFileId) => {
 }
 .dialog-footer button:first-child {
   margin-right: 10px;
+}
+
+$layout-height: 60vh;
+.drive-layout{
+  min-height: $layout-height;
+  max-height: $layout-height;
+  overflow: scroll;
+  overflow-x: hidden;
+  border: none;
+  border-radius: 15px;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
 </style>

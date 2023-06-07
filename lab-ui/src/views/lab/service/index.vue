@@ -52,8 +52,8 @@
         </template>
         <!--容器列表-->
         <el-table :data="containers" stripe highlight-current-row @current-change="handleCurrentContainer">
-          <el-table-column label="容器名称" prop="containerName" show-overflow-tooltip width="200" />
-          <el-table-column label="镜像名称" prop="imageName" width="200" />
+          <el-table-column label="容器名称" prop="containerName" show-overflow-tooltip width="250" />
+          <el-table-column label="镜像名称" prop="imageName" show-overflow-tooltip width="250" />
           <el-table-column label="容器状态" prop="status" />
         </el-table>
         <pagination
@@ -282,10 +282,12 @@ function getImageList(){
 
 const selectedImage = ref<string>("");
 const handleCurrentImage = (val) => {
-  selectedImage.value = val.repoTags;
-  proxy.$modal.msgSuccess("已选择: " + val.repoTags);
-  serviceOpts.imageName = val.repoTags;
-  serviceOpts.imageId = val.imageId;
+  if (val != null){
+    selectedImage.value = val.repoTags;
+    proxy.$modal.msgSuccess("已选择: " + val.repoTags);
+    serviceOpts.imageName = val.repoTags;
+    serviceOpts.imageId = val.imageId;
+  }
 };
 
 getContainerList();
@@ -299,10 +301,13 @@ function getContainerList(){
 
 const selectedContainer = ref<string>("");
 const handleCurrentContainer = (val) => {
-  selectedContainer.value = val.containerName;
-  proxy.$modal.msgSuccess("已选择: " + val.containerName);
-  serviceOpts.containerName = val.containerName;
-  serviceOpts.containerId = val.containerId;
+  if(val != null){
+    selectedContainer.value = val.containerName;
+    proxy.$modal.msgSuccess("已选择: " + val.containerName);
+    serviceOpts.containerName = val.containerName;
+    serviceOpts.containerId = val.containerId;
+  }
+
 };
 
 //配置文件设置

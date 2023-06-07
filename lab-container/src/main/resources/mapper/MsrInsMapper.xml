@@ -21,6 +21,14 @@
         <result property="remark" column="remark"/>
     </resultMap>
 
+    <resultMap id="detailResult" type="instanceDetail">
+        <result property="serviceName" column="service_name"/>
+        <!--<result property="modelClass" column="model_class" typeHandler="org.opengms.container.handler.ModelClassHandler"/>-->
+        <result property="serviceCreteBy" column="service_create_by"/>
+        <result property="serviceCreateTime" column="service_create_time"/>
+        <association property="msrIns" javaType="msrIns" resultMap="MsrInsResult"/>
+    </resultMap>
+
     <resultMap id="MsrInsPlainResult" type="msrInsPlain">
         <result property="insId" column="msri_id"/>
         <result property="serviceName" column="ms_name"/>
@@ -31,6 +39,15 @@
         <result property="serviceType" column="service_type"/>
         <result property="createTime" column="create_time"/>
     </resultMap>
+
+    <sql id="selectInstanceVo">
+        select instance.msri_id, instance.ms_id, instance.current_state, instance.instance_dir, instance.status,
+               instance.span_time, instance.inputs, instance.outputs, instance.logs, instance.create_by,
+               instance.create_time, instance.update_by, instance.update_time, instance.remark,
+               service.ms_name as service_name, service.create_time as service_create_time, service.create_by as service_create_by
+        from ms_run_instance instance
+                 left join model_service service on instance.ms_id = service.ms_id
+    </sql>
 
     <insert id="insert" parameterType="msrIns">
         insert into ms_run_instance (
@@ -114,9 +131,8 @@
         where msri_id = #{msriId}
     </update>
 
-    <select id="selectByMsriId" resultMap="MsrInsResult">
-        select *
-        from ms_run_instance
+    <select id="selectByMsriId" resultMap="detailResult">
+        <include refid="selectInstanceVo"/>
         where msri_id = #{msriId}
     </select>
 </mapper>

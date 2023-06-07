@@ -1,8 +1,10 @@
 package org.opengms.container.service.impl;
 
 import org.opengms.common.utils.file.FileUtils;
+import org.opengms.container.constant.ContainerStatus;
 import org.opengms.container.entity.dto.docker.JupyterInfoDTO;
 import org.opengms.container.entity.po.JupyterContainer;
+import org.opengms.container.exception.ServiceException;
 import org.opengms.container.mapper.JupyterMapper;
 import org.opengms.container.service.IDockerService;
 import org.opengms.container.service.IJupyterService;
@@ -68,14 +70,17 @@ public class JupyterServiceImpl implements IJupyterService {
     public JupyterInfoDTO getJupyterContainerById(Long id) {
 
         JupyterContainer jc = jupyterMapper.selectById(id);
-        String status = dockerService.getContainerStatusByContainerInsId(jc.getContainerInsId());
-        jc.setStatus(status);
-        jupyterMapper.updateContainerStatus(jc.getContainerId(), status);
-        JupyterInfoDTO jupyterInfoDTO = new JupyterInfoDTO();
-        if (jc != null){
-            BeanUtils.copyProperties(jc, jupyterInfoDTO);
-            jupyterInfoDTO.setCreated(jc.getCreateTime());
+        if (jc == null){
+            throw new ServiceException("未找到该容器");
         }
+        if (!ContainerStatus.DELETED.equals(jc.getStatus())){
+            String status = dockerService.getContainerStatusByContainerInsId(jc.getContainerInsId());
+            jc.setStatus(status);
+            jupyterMapper.updateContainerStatus(jc.getContainerId(), status);
+        }
+        JupyterInfoDTO jupyterInfoDTO = new JupyterInfoDTO();
+        BeanUtils.copyProperties(jc, jupyterInfoDTO);
+        jupyterInfoDTO.setCreated(jc.getCreateTime());
         return jupyterInfoDTO;
 
     }

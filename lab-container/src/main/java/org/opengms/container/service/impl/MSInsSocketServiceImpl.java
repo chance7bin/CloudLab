@@ -501,7 +501,7 @@ public class MSInsSocketServiceImpl implements IMSInsSocketService {
                 new Date()
             ));
 
-            msrIns.getInputs().add(new InOutParam(state, event, dataMIME.getInfo(), parameter));
+            // msrIns.getInputs().add(new InOutParam(state, event, dataMIME.getInfo(), parameter));
 
             msrInsMapper.updateById(msrIns);
 

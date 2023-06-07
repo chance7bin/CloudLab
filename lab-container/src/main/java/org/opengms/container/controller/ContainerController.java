@@ -47,10 +47,7 @@ public class ContainerController extends BaseController {
         TableDataInfo dataTable = getDataTable(list);
         List<ContainerInfoDTO> res = new ArrayList<>();
         for (ContainerInfo info : list) {
-            ContainerInfoDTO containerInfoDTO = new ContainerInfoDTO();
-            BeanUtils.copyProperties(info, containerInfoDTO);
-            containerInfoDTO.setCreated(info.getCreateTime());
-            res.add(containerInfoDTO);
+            res.add(containerService.formatContainerResult(info));
         }
         dataTable.setRows(res);
         return dataTable;

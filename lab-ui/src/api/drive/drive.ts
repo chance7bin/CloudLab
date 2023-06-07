@@ -1,4 +1,6 @@
 import request from "@/utils/request";
+import type { QueryParams } from "@/utils/customType";
+import useDriveStore from "@/stores/modules/drive";
 // request.defaults.baseURL = import.meta.env.VITE_APP_DRIVE_API;
 const drivePath = import.meta.env.VITE_APP_DRIVE_API;
 const adminPath = import.meta.env.VITE_APP_BASE_API;
@@ -12,11 +14,18 @@ export function listWorkspaceDir(params?: any) {
   });
 }
 
-export function getFileList(parentId: string) {
+export function getFileList(parentId: string, queryParams: QueryParams) {
+  const query = {
+    // parentId 从状态管理器中获取
+    // parentId: useDriveStore().getCurrentPath(),
+    parentId: parentId,
+    pageNum: queryParams.pageNum,
+    pageSize: queryParams.pageSize
+  };
   return request({
     url: contextPath + "/list",
     method: "get",
-    params: { parentId: parentId }
+    params: query
   });
 }
 

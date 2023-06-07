@@ -11,6 +11,7 @@ import org.opengms.container.constant.TaskStatus;
 import org.opengms.container.entity.bo.InOutParam;
 import org.opengms.container.entity.bo.Log;
 import org.opengms.container.entity.dto.ApiResponse;
+import org.opengms.container.entity.po.InstanceDetail;
 import org.opengms.container.entity.po.MsrIns;
 import org.opengms.container.entity.bo.SubIdentifier;
 import org.opengms.container.entity.po.ModelService;
@@ -51,7 +52,7 @@ public class MSInsServiceImpl implements IMSInsService {
     MsrInsMapper msrInsMapper;
 
     @Override
-    public MsrIns getMsrInsByMsriId(String msrInsId) {
+    public InstanceDetail getMsrInsByMsriId(String msrInsId) {
         return msrInsMapper.selectByMsriId(msrInsId);
     }
 

@@ -26,6 +26,8 @@ public interface IContainerService {
 
     List<ContainerInfo> listContainers(ContainerType type);
 
+    ContainerInfoDTO formatContainerResult(ContainerInfo containerInfo);
+
     /**
      * 根据主机ip获取已经使用的端口
      * @param hostIP

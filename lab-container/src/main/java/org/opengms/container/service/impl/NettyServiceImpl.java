@@ -37,7 +37,7 @@ public class NettyServiceImpl implements INettyService {
 
         log.info("SocketListener - netty server - listening on port : " + socketPort);
 
-        NioEventLoopGroup boss = new NioEventLoopGroup();
+        NioEventLoopGroup boss = new NioEventLoopGroup(1);
         NioEventLoopGroup worker = new NioEventLoopGroup();
         LoggingHandler LOGGING_HANDLER = new LoggingHandler(LogLevel.DEBUG);
         StringDecoder STRING_DECODER = new StringDecoder();

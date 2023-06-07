@@ -32,7 +32,7 @@ public class FileTypeUtils
     }
 
     /**
-     * 获取文件类型
+     * 获取文件类型 无法判断是否是文件夹 需要判断是否是文件夹要传入File类型的参数
      * <p>
      * 例如: 7bin.txt, 返回: txt
      *
@@ -41,12 +41,13 @@ public class FileTypeUtils
      */
     public static String getFileType(String fileName)
     {
-        int separatorIndex = fileName.lastIndexOf(".");
-        if (separatorIndex < 0)
-        {
-            return "";
-        }
-        return fileName.substring(separatorIndex + 1).toLowerCase();
+        // int separatorIndex = fileName.lastIndexOf(".");
+        // if (separatorIndex < 0)
+        // {
+        //     return "";
+        // }
+        // return fileName.substring(separatorIndex + 1).toLowerCase();
+        return FileNameUtil.extName(fileName);
     }
 
     /**

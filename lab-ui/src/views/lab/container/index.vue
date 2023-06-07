@@ -92,10 +92,22 @@ const createEnvDialog = ref(false);
 getContainerList();
 
 function getContainerList() {
-  listContainers(queryParams.value).then((res: any) => {
-    containers.value = res.rows;
-    total.value = Number(res.total);
-  });
+  let sendDate = (new Date()).getTime();
+  proxy.$modal.loading("正在获取数据，请稍后...");
+  listContainers(queryParams.value)
+      .then((res: any) => {
+        let receiveDate = (new Date()).getTime();
+        let responseTimeMs = receiveDate - sendDate;
+        let delay = Math.max(500 - responseTimeMs);
+        setTimeout(() => {
+          containers.value = res.rows;
+          total.value = Number(res.total);
+          proxy.$modal.closeLoading();
+        }, delay);
+      })
+      .catch(() => {
+        proxy.$modal.closeLoading();
+      });
 }
 
 function refresh(index, row) {

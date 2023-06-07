@@ -3,10 +3,10 @@
 
     <!--云盘布局-->
     <div class="drive-layout">
-      <el-row :gutter="0">
+      <!--<el-row :gutter="0">
 
         <el-col :span="3" >
-          <!--菜单栏-->
+          &lt;!&ndash;菜单栏&ndash;&gt;
           <el-menu
             active-text-color="#0db2ff"
             background-color="#f9fafb"
@@ -43,7 +43,12 @@
           <recycle-bin v-if="currentIndex == '4'"></recycle-bin>
 
         </el-col>
-      </el-row>
+      </el-row>-->
+
+      <!--<el-scrollbar :height="driveLayoutHeight">-->
+        <my-folder></my-folder>
+      <!--</el-scrollbar>-->
+
     </div>
 
   </div>
@@ -68,6 +73,10 @@ import Uploaded from "@/views/drive/Uploaded.vue";
 import RecycleBin from "@/views/drive/RecycleBin.vue";
 
 
+// 计算drive-layout高度
+// let driveLayoutHeight = document.documentElement.clientHeight - 84 - 20 - 20;
+
+
 //导航栏部分
 const currentIndex = ref<string>("1");
 const isCollapse = ref(false)
@@ -84,8 +93,11 @@ $layout-height: calc(100vh - 84px - 20px - 20px);
 
 .drive-layout{
   min-height: $layout-height;
-  //border: none;
-  //border-radius: 15px;
+  max-height: $layout-height;
+  overflow: scroll;
+  overflow-x: hidden;
+  border: none;
+  border-radius: 15px;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
 .drive-menu{

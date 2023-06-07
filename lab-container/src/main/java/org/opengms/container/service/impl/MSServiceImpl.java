@@ -5,6 +5,7 @@ import com.github.dockerjava.api.exception.InternalServerErrorException;
 import com.github.dockerjava.api.model.Bind;
 import lombok.extern.slf4j.Slf4j;
 import org.opengms.container.constant.*;
+import org.opengms.container.entity.bo.InOutParam;
 import org.opengms.container.entity.dto.InvokeDTO;
 import org.opengms.container.entity.po.JupyterContainer;
 import org.opengms.container.entity.po.MsrIns;
@@ -28,6 +29,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -112,6 +114,8 @@ public class MSServiceImpl implements IMSService {
         msrIns.setMsId(modelService.getMsId());
         msrIns.setStatus(TaskStatus.INIT);
         msrIns.setContainerId(containerInfo.getContainerId());
+        // 构建input数据
+        msrIns.setInputs(buildInputs(modelService));
         msrInsMapper.insert(msrIns);
         // 将该实例绑定到实例集合中
         Map<String, MsrIns> msrInsColl = msInsSocketService.getMsrInsColl();
@@ -145,6 +149,8 @@ public class MSServiceImpl implements IMSService {
                     break;
                 }
                 if (cnt > 10){
+                    // 删除对应的模型运行实例
+                    msrInsColl.remove(instanceId);
                     throw new ServiceException("pod创建超时");
                 }
                 try {
@@ -171,6 +177,30 @@ public class MSServiceImpl implements IMSService {
 
         return instanceId;
 
+    }
+
+    // 构建前端传入的input数据
+    private List<InOutParam> buildInputs(ModelService modelService) {
+
+        List<InOutParam> inputs = new ArrayList<>();
+
+        // add(new InOutParam(state, event, dataMIME.getInfo(), parameter))
+
+        ModelClass modelClass = modelService.getModelClass();
+
+        List<State> states = modelClass.getBehavior().getStateGroup().getStates();
+
+        for (State state : states) {
+            List<Event> events = state.getEvents();
+            for (Event event : events) {
+                InputParameter inputParameter = event.getInputParameter();
+                if (inputParameter != null){
+                    inputs.add(new InOutParam(state.getName(), event.getName(), inputParameter.getDataMIME(), inputParameter.getValue()));
+                }
+            }
+        }
+
+        return inputs;
     }
 
     // 调用前准备 根据关联image启动容器, 之后再调用
