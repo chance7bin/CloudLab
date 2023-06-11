@@ -25,7 +25,8 @@ defineProps({
   }
 })
 
-const title = ref('OpenGMS Lab');
+// const title = ref('OpenGMS Lab');
+const title = ref('模型服务云平台');
 const settingsStore = useSettingsStore();
 const sideTheme = computed(() => settingsStore.sideTheme);
 </script>

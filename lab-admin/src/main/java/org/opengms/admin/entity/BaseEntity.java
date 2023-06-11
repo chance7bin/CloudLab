@@ -1,6 +1,7 @@
 package org.opengms.admin.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -38,7 +39,11 @@ public class BaseEntity implements Serializable {
     /** 备注 */
     private String remark;
 
-    /** 请求参数 */
+    /** 请求参数<br/>
+     *  例如 params.beginTime: 开始时间检索<br/>
+     *  <code>@JsonInclude(JsonInclude.Include.NON_EMPTY)</code> ： null、集合数组等没有内容、空字符串等，都不会被序列化
+     **/
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, Object> params;
 
     public String getSearchValue()

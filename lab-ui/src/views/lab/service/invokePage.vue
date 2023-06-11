@@ -133,7 +133,7 @@ import {getMsInsById} from "@/api/container/msIns";
 import { onBeforeUnmount, ref } from "vue";
 import type { FormInstance, FormRules } from "element-plus";
 import { FolderOpened , Download} from "@element-plus/icons-vue";
-import { checkAuth } from "@/api/admin/login";
+import { checkAuth } from "@/api/admin/user";
 import { ElMessageBox } from "element-plus";
 import type {InvokeDTO} from "@/api/container/modelService";
 
@@ -425,7 +425,9 @@ const indexMethod = (index: number) => {
 // 下载文件
 const downloadFile = async (driveFileId) => {
   await checkAuth();
-  window.location.href = import.meta.env.VITE_APP_DRIVE_API + "/file/download/" + driveFileId;
+  let downloadUrl = import.meta.env.VITE_APP_DRIVE_API + "/file/download/" + driveFileId;
+  window.location.href = downloadUrl;
+  // proxy.download(downloadUrl);
 }
 
 </script>

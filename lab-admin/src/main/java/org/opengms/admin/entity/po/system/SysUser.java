@@ -1,5 +1,6 @@
 package org.opengms.admin.entity.po.system;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -18,6 +19,9 @@ import java.util.List;
  * @date 2022/08/22
  */
 // @Data
+@JsonIgnoreProperties({
+    "admin"
+})
 public class SysUser extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
@@ -183,6 +187,16 @@ public class SysUser extends BaseEntity {
 
     public void setRoleId(Long roleId) {
         this.roleId = roleId;
+    }
+
+    public boolean isAdmin()
+    {
+        return isAdmin(this.userId);
+    }
+
+    public static boolean isAdmin(Long userId)
+    {
+        return userId != null && 1L == userId;
     }
 
     public SysUser()

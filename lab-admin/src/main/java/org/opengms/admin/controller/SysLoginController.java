@@ -14,6 +14,7 @@ import org.opengms.admin.service.ISysConfigService;
 import org.opengms.admin.service.ISysLoginService;
 import org.opengms.admin.service.ISysMenuService;
 import org.opengms.admin.service.ISysUserService;
+import org.opengms.admin.service.framework.SysPermissionService;
 import org.opengms.admin.utils.SecurityUtils;
 import org.opengms.common.constant.Constants;
 import org.opengms.common.utils.StringUtils;
@@ -44,6 +45,9 @@ public class SysLoginController extends BaseController {
 
     @Autowired
     private ISysMenuService menuService;
+
+    @Autowired
+    private SysPermissionService permissionService;
 
 
     /**
@@ -94,13 +98,13 @@ public class SysLoginController extends BaseController {
         SysUser user = SecurityUtils.getLoginUser().getUser();
         // TODO: 2022/9/14 角色权限功能
         // 角色集合
-        // Set<String> roles = permissionService.getRolePermission(user);
+        Set<String> roles = permissionService.getRolePermission(user);
         // 权限集合
-        // Set<String> permissions = permissionService.getMenuPermission(user);
+        Set<String> permissions = permissionService.getMenuPermission(user);
         ApiResponse ajax = ApiResponse.success();
         ajax.put("user", user);
-        // ajax.put("roles", roles);
-        // ajax.put("permissions", permissions);
+        ajax.put("roles", roles);
+        ajax.put("permissions", permissions);
         return ajax;
     }
 

@@ -86,7 +86,7 @@ import useCurrentInstance from "@/utils/currentInstance";
 import { ref } from "vue";
 import { getMsInsById } from "@/api/container/msIns";
 import { Download} from "@element-plus/icons-vue";
-import {checkAuth} from "@/api/admin/login";
+import {checkAuth} from "@/api/admin/user";
 
 const { proxy } = useCurrentInstance();
 

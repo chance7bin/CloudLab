@@ -35,7 +35,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
     private UserDetailsService userDetailsService;
     
     /**
-     * 认证失败处理类
+     * 认证失败处理类 （抛出AuthenticationException异常走这里）
      */
     @Autowired
     private AuthenticationEntryPointImpl unauthorizedHandler;
@@ -109,6 +109,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 // 过滤请求
                 .authorizeRequests()
+                // anonymous() :匿名访问, 仅允许匿名用户访问, 如果登录认证后, 带有token信息再去请求, 这个anonymous()关联的资源就不能被访问，
+                // permitAll() :登录能访问,不登录也能访问, 一般用于静态资源js等
                 // 对于登录login 注册register 验证码captchaImage 允许匿名访问
                 .antMatchers("/login", "/register", "/captchaImage","/docker/**").anonymous()
                 // 静态资源，可匿名访问

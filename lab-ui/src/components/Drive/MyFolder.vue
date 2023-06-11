@@ -102,7 +102,7 @@ const { proxy } = useCurrentInstance();
 import { ElNotification as notify, ElMessageBox, ElMessage } from "element-plus";
 import { getFileList, addFile } from "@/api/drive/drive";
 import type { FileInfoDTO } from "@/api/drive/drive";
-import { checkAuth } from "@/api/admin/login";
+import { checkAuth } from "@/api/admin/user";
 import {ref} from "vue";
 import useDriveStore from "@/stores/modules/drive";
 
@@ -299,6 +299,9 @@ const downloadFile = async (item) => {
   await checkAuth();
 
   window.location.href = import.meta.env.VITE_APP_DRIVE_API + "/file/download/" + item.driveFileId + "?downloadFilename=" + item.filename;
+
+  // proxy.download(import.meta.env.VITE_APP_DRIVE_API + "/file/download/" + item.driveFileId, {}, "123");
+
 };
 
 // 选择文件展示的图标

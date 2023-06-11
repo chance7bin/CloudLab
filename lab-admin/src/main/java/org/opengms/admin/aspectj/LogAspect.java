@@ -7,9 +7,11 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.opengms.admin.annotation.Log;
+import org.opengms.admin.entity.dto.LoginUser;
 import org.opengms.admin.entity.po.system.SysOperLog;
 import org.opengms.admin.enums.BusinessStatus;
 import org.opengms.admin.service.IAsyncService;
+import org.opengms.admin.utils.SecurityUtils;
 import org.opengms.common.utils.ServletUtils;
 import org.opengms.common.utils.StringUtils;
 import org.opengms.common.utils.ip.IpUtils;
@@ -70,7 +72,7 @@ public class LogAspect {
         try
         {
             // 获取当前的用户
-            // LoginUser loginUser = SecurityUtils.getLoginUser();
+            LoginUser loginUser = SecurityUtils.getLoginUser();
 
             // *========数据库日志=========*//
             SysOperLog operLog = new SysOperLog();
@@ -79,10 +81,10 @@ public class LogAspect {
             String ip = IpUtils.getIpAddr(ServletUtils.getRequest());
             operLog.setOperIp(ip);
             operLog.setOperUrl(ServletUtils.getRequest().getRequestURI());
-            // if (loginUser != null)
-            // {
-            //     operLog.setOperName(loginUser.getUsername());
-            // }
+            if (loginUser != null)
+            {
+                operLog.setOperName(loginUser.getUsername());
+            }
             operLog.setOperName("test user");
 
             if (e != null)

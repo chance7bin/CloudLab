@@ -4,6 +4,7 @@ import org.opengms.admin.entity.dto.RouterDTO;
 import org.opengms.admin.entity.po.system.SysMenu;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author bin
@@ -26,5 +27,22 @@ public interface ISysMenuService {
      * @return 路由列表
      */
     List<RouterDTO> buildMenus(List<SysMenu> menus);
+
+
+    /**
+     * 根据角色ID查询权限
+     *
+     * @param roleId 角色ID
+     * @return 权限列表
+     */
+    Set<String> selectMenuPermsByRoleId(Long roleId);
+
+    /**
+     * 根据用户ID查询权限
+     *
+     * @param userId 用户ID
+     * @return 权限列表
+     */
+    Set<String> selectMenuPermsByUserId(Long userId);
 
 }

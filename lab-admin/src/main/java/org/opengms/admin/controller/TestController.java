@@ -14,6 +14,8 @@ import org.opengms.admin.enums.BusinessType;
 import org.opengms.admin.service.ISysOperLogService;
 import org.opengms.admin.entity.dto.ApiResponse;
 import org.opengms.admin.entity.dto.TableDataInfo;
+import org.opengms.admin.service.ITestService;
+import org.opengms.admin.service.TestService;
 import org.opengms.admin.utils.redis.RedisCache;
 import org.opengms.admin.exception.ServiceException;
 import org.opengms.common.utils.MessageUtils;
@@ -145,6 +147,15 @@ public class TestController extends BaseController{
         List<SysOperLog> sysOperationLogs = sysOperLogService.selectAll();
 
         return getDataTable(sysOperationLogs);
+    }
+
+    @Autowired
+    ITestService testService;
+
+    @Anonymous
+    @GetMapping("/aop")
+    public void testAop(){
+        testService.test2();
     }
 
 }

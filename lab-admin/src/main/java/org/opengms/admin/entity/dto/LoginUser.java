@@ -64,7 +64,7 @@ public class LoginUser implements UserDetails
     /**
      * 权限列表
      */
-    // private Set<String> permissions;
+    private Set<String> permissions;
 
     /**
      * 用户信息
@@ -103,18 +103,18 @@ public class LoginUser implements UserDetails
         // this.permissions = permissions;
     }
 
-    // public LoginUser(SysUser user, Set<String> permissions)
-    // {
-    //     this.user = user;
-    //     this.permissions = permissions;
-    // }
-    //
-    // public LoginUser(Long userId, SysUser user, Set<String> permissions)
-    // {
-    //     this.userId = userId;
-    //     this.user = user;
-    //     this.permissions = permissions;
-    // }
+    public LoginUser(SysUser user, Set<String> permissions)
+    {
+        this.user = user;
+        this.permissions = permissions;
+    }
+
+    public LoginUser(Long userId, SysUser user, Set<String> permissions)
+    {
+        this.userId = userId;
+        this.user = user;
+        this.permissions = permissions;
+    }
 
     @JSONField(serialize = false)
     @Override
@@ -235,15 +235,15 @@ public class LoginUser implements UserDetails
         this.expireTime = expireTime;
     }
 
-    // public Set<String> getPermissions()
-    // {
-    //     return permissions;
-    // }
+    public Set<String> getPermissions()
+    {
+        return permissions;
+    }
 
-    // public void setPermissions(Set<String> permissions)
-    // {
-    //     this.permissions = permissions;
-    // }
+    public void setPermissions(Set<String> permissions)
+    {
+        this.permissions = permissions;
+    }
 
     public SysUser getUser()
     {

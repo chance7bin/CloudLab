@@ -146,19 +146,21 @@ service.interceptors.response.use(
 // 通用下载方法
 export function download(url: string, params: any, filename: string) {
   downloadLoadingInstance = ElLoading.service({ text: "正在下载数据，请稍候", background: "rgba(0, 0, 0, 0.7)" });
+  // 如果请求的params是字符串的话直接加个问号进行拼接
+  if (typeof params === "string") {
+    url = url + "?" + params;
+  } else {
+    url = url + "?" + tansParams(params);
+    url = url.slice(0, -1);
+  }
   return service
-    .post(url, params, {
-      transformRequest: [
-        (params) => {
-          return tansParams(params);
-        }
-      ],
+    .get(url, {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       responseType: "blob"
     })
     .then(async (data: any) => {
-      const isLogin = await blobValidate(data);
-      if (isLogin) {
+      const isBlob = await blobValidate(data);
+      if (isBlob) {
         const blob = new Blob([data]);
         saveAs(blob, filename);
       } else {

@@ -7,6 +7,7 @@ import org.opengms.admin.entity.BaseEntity;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import java.util.Set;
 
 
 /**
@@ -30,8 +31,8 @@ public class SysRole extends BaseEntity
     /** 角色权限 */
     private String roleKey;
 
-    /** 角色排序 */
-    private String roleSort;
+    /** 角色菜单权限 */
+    private Set<String> permissions;
 
     /** 角色状态（0正常 1停用） */
     private String status;
@@ -96,16 +97,7 @@ public class SysRole extends BaseEntity
         this.roleKey = roleKey;
     }
 
-    @NotBlank(message = "显示顺序不能为空")
-    public String getRoleSort()
-    {
-        return roleSort;
-    }
 
-    public void setRoleSort(String roleSort)
-    {
-        this.roleSort = roleSort;
-    }
 
 
     public String getStatus()
@@ -138,6 +130,15 @@ public class SysRole extends BaseEntity
         this.flag = flag;
     }
 
+    public Set<String> getPermissions()
+    {
+        return permissions;
+    }
+
+    public void setPermissions(Set<String> permissions)
+    {
+        this.permissions = permissions;
+    }
 
     @Override
     public String toString() {
@@ -145,7 +146,6 @@ public class SysRole extends BaseEntity
             .append("roleId", getRoleId())
             .append("roleName", getRoleName())
             .append("roleKey", getRoleKey())
-            .append("roleSort", getRoleSort())
             .append("status", getStatus())
             .append("delFlag", getDelFlag())
             .append("createBy", getCreateBy())

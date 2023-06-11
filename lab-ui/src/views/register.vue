@@ -1,7 +1,8 @@
 <template>
   <div class="register">
     <el-form ref="registerRef" :model="registerForm" :rules="registerRules" class="register-form">
-      <h3 class="title">OpenGMS Lab</h3>
+      <!--<h3 class="title">OpenGMS Lab</h3>-->
+      <h3 class="title">模型服务一站式云平台</h3>
       <el-form-item prop="username">
         <el-input 
           v-model="registerForm.username" 

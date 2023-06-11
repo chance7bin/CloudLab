@@ -58,7 +58,7 @@ import useCurrentInstance from "@/utils/currentInstance";
 import { generateMD5 } from "@/components/Uploader/utils/md5";
 import { ElNotification } from "element-plus";
 import { addFileToDrive } from "@/api/drive/drive";
-import { checkAuth } from "@/api/admin/login";
+import { checkAuth } from "@/api/admin/user";
 const { proxy } = useCurrentInstance();
 
 

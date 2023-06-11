@@ -62,6 +62,8 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
+  aop:
+    proxy-target-class: false
 
 # MyBatis配置
 mybatis:

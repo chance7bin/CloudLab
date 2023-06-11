@@ -117,6 +117,14 @@ public class BaseController
     }
 
     /**
+     * 返回成功消息
+     */
+    public ApiResponse success(Object data)
+    {
+        return ApiResponse.success(data);
+    }
+
+    /**
      * 返回失败消息
      */
     public ApiResponse error(String message)
