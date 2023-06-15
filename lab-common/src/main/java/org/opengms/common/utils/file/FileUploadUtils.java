@@ -35,7 +35,7 @@ public class FileUploadUtils
     /**
      * 默认上传的地址
      */
-    private static String defaultBaseDir = "E:/opengms-lab/uploadPath";
+    private static String defaultBaseDir = "/defaultBaseDir";
 
     public static void setDefaultBaseDir(String defaultBaseDir)
     {
@@ -114,9 +114,7 @@ public class FileUploadUtils
 
         String absPath = getAbsoluteFile(baseDir, fileName).getAbsolutePath();
         file.transferTo(Paths.get(absPath));
-        // TODO: 2022/9/22 baseDir 是通过截取配置文件中的config进行切割的
-        // return getPathFileName(baseDir, fileName);
-        return FileUtils.concatenateDirAndFilename(baseDir,fileName);
+        return getPathFileName(baseDir, fileName);
     }
 
     /**

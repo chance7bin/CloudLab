@@ -1,10 +1,7 @@
 package org.opengms.admin.service.impl;
 
-import cn.hutool.core.io.file.FileNameUtil;
-import com.alibaba.fastjson2.JSONObject;
-import org.apache.ibatis.annotations.Param;
 import org.opengms.admin.clients.DriveClient;
-import org.opengms.admin.constant.HttpStatus;
+import org.opengms.common.constant.HttpStatus;
 import org.opengms.admin.entity.dto.ApiResponse;
 import org.opengms.admin.entity.dto.drive.FileInfoDTO;
 import org.opengms.admin.entity.po.drive.FileInfo;

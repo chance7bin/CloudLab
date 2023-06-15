@@ -36,14 +36,14 @@ public class UserDetailsServiceImpl implements UserDetailsService
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException
     {
+        // 如果使用邮箱作为登录凭据，loadUserByUsername 方法的参数应该是用户的邮箱地址
+        // SysUser user = userService.findByEmail(username);
+
         SysUser user = userService.selectUserByUserName(username);
-        if (StringUtils.isNull(user))
-        {
+        if (StringUtils.isNull(user)) {
             log.info("登录用户：{} 不存在.", username);
             throw new ServiceException("登录用户：" + username + " 不存在");
-        }
-        else if (UserStatus.DELETED.getCode().equals(user.getDelFlag()))
-        {
+        } else if (UserStatus.DELETED.getCode().equals(user.getDelFlag())) {
             log.info("登录用户：{} 已被删除.", username);
             throw new ServiceException("对不起，您的账号：" + username + " 已被删除");
         }

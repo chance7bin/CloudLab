@@ -3,7 +3,9 @@ package org.opengms.admin.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import org.opengms.admin.interceptor.RepeatSubmitInterceptor;
 import org.opengms.common.constant.Constants;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -11,6 +13,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -20,18 +23,20 @@ import java.util.List;
 
 /**
  * 通用配置
- * 
+ *
  * @author 7bin
  */
 @Configuration
-public class ResourcesConfig implements WebMvcConfigurer
-{
+public class ResourcesConfig implements WebMvcConfigurer {
+
+    @Autowired
+    private RepeatSubmitInterceptor repeatSubmitInterceptor;
+
     @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry)
-    {
-        /** 本地文件上传路径 */
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        /** 配置资源映射路径 */
         registry.addResourceHandler(Constants.RESOURCE_PREFIX + "/**")
-                .addResourceLocations("file:" + AppConfig.getProfile() + "/");
+            .addResourceLocations("file:" + AppConfig.getProfile() + "/");
 
         /** swagger配置 */
         // registry.addResourceHandler("/swagger-ui/**")
@@ -41,11 +46,10 @@ public class ResourcesConfig implements WebMvcConfigurer
     /**
      * 自定义拦截规则
      */
-    // @Override
-    // public void addInterceptors(InterceptorRegistry registry)
-    // {
-    //     registry.addInterceptor(repeatSubmitInterceptor).addPathPatterns("/**");
-    // }
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(repeatSubmitInterceptor).addPathPatterns("/**");
+    }
 
     /**
      * 跨域配置

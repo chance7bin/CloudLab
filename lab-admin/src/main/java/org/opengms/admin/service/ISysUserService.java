@@ -125,4 +125,24 @@ public interface ISysUserService {
      * @return 结果
      */
     int resetPwd(SysUser user);
+
+    /**
+     * 根据条件分页查询已分配指定角色的用户列表
+     *
+     * @param user 用户信息
+     * @return 用户信息集合信息
+     */
+    List<SysUser> selectAllocatedList(SysUser user);
+
+    /**
+     * 根据用户ID查询用户所属角色组
+     *
+     * @param userName 用户名
+     * @return 结果
+     */
+    String selectUserRoleGroup(String userName);
+
+    int resetUserPwd(String userName, String encryptPassword);
+
+    boolean updateUserAvatar(String username, String avatar);
 }

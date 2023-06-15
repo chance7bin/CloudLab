@@ -38,6 +38,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class ContainerServiceImpl implements IContainerService {
 
     @Value("${docker.useDockerHub}")

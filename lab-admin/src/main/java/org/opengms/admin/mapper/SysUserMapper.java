@@ -1,6 +1,7 @@
 package org.opengms.admin.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.opengms.admin.entity.po.system.SysUser;
 
 import java.util.List;
@@ -95,4 +96,31 @@ public interface SysUserMapper {
      * @return 结果
      */
     int deleteUserByIds(Long[] userIds);
+
+    /**
+     * 根据条件分页查询已分配指定角色的用户列表
+     *
+     * @param user 用户信息
+     * @return 用户信息集合信息
+     */
+    List<SysUser> selectAllocatedList(SysUser user);
+
+    /**
+     * 重置用户密码
+     *
+     * @param userName 用户名
+     * @param password 密码
+     * @return 结果
+     */
+    int resetUserPwd(@Param("userName") String userName, @Param("password") String password);
+
+    /**
+     * 修改用户头像
+     *
+     * @param userName 用户名
+     * @param avatar   头像地址
+     * @return 结果
+     */
+    int updateUserAvatar(@Param("userName") String userName, @Param("avatar") String avatar);
+
 }

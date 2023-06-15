@@ -1,4 +1,4 @@
-package org.opengms.admin.constant;
+package org.opengms.common.constant;
 
 /**
  * 返回状态码

@@ -28,4 +28,31 @@ public interface SysRoleMapper {
      * @return 角色数据集合信息
      */
     List<SysRole> selectRoleList(SysRole role);
+
+    /**
+     * 新增角色信息
+     *
+     * @param role 角色信息
+     * @return 结果
+     */
+    int insertRole(SysRole role);
+
+
+    SysRole selectRoleById(Long roleId);
+
+    SysRole checkRoleNameUnique(String roleName);
+
+    SysRole checkRoleKeyUnique(String roleKey);
+
+    int updateRole(SysRole role);
+
+    int deleteRoleByIds(Long[] roleIds);
+
+    /**
+     * 根据用户ID查询角色
+     *
+     * @param userName 用户名
+     * @return 角色列表
+     */
+    List<SysRole> selectRolesByUserName(String userName);
 }

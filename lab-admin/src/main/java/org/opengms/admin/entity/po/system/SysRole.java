@@ -22,22 +22,39 @@ public class SysRole extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
-    /** 角色ID */
+    /**
+     * 角色ID
+     */
     private Long roleId;
 
-    /** 角色名称 */
+    /**
+     * 角色名称
+     */
     private String roleName;
 
-    /** 角色权限 */
+    /**
+     * 角色权限
+     */
     private String roleKey;
 
-    /** 角色菜单权限 */
+    /**
+     * 菜单组
+     */
+    private Long[] menuIds;
+
+    /**
+     * 角色菜单权限
+     */
     private Set<String> permissions;
 
-    /** 角色状态（0正常 1停用） */
+    /**
+     * 角色状态（0正常 1停用）
+     */
     private String status;
 
-    /** 删除标志（0代表存在 2代表删除） */
+    /**
+     * 删除标志（0代表存在 2代表删除）
+     */
     private String delFlag;
 
     /** 用户是否存在此角色标识 默认不存在 */
@@ -87,21 +104,24 @@ public class SysRole extends BaseEntity
 
     @NotBlank(message = "权限字符不能为空")
     @Size(min = 0, max = 100, message = "权限字符长度不能超过100个字符")
-    public String getRoleKey()
-    {
+    public String getRoleKey() {
         return roleKey;
     }
 
-    public void setRoleKey(String roleKey)
-    {
+    public void setRoleKey(String roleKey) {
         this.roleKey = roleKey;
     }
 
+    public Long[] getMenuIds() {
+        return menuIds;
+    }
+
+    public void setMenuIds(Long[] menuIds) {
+        this.menuIds = menuIds;
+    }
 
 
-
-    public String getStatus()
-    {
+    public String getStatus() {
         return status;
     }
 

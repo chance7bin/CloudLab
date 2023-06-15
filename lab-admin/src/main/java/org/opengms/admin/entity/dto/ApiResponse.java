@@ -1,6 +1,6 @@
 package org.opengms.admin.entity.dto;
 
-import org.opengms.admin.constant.HttpStatus;
+import org.opengms.common.constant.HttpStatus;
 import org.opengms.common.utils.StringUtils;
 
 import java.util.HashMap;

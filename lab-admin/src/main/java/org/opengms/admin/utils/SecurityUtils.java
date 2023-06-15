@@ -1,6 +1,6 @@
 package org.opengms.admin.utils;
 
-import org.opengms.admin.constant.HttpStatus;
+import org.opengms.common.constant.HttpStatus;
 import org.opengms.admin.entity.dto.LoginUser;
 import org.opengms.admin.exception.ServiceException;
 import org.springframework.security.core.Authentication;

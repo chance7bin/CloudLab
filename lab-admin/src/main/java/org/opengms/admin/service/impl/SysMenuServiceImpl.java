@@ -3,8 +3,12 @@ package org.opengms.admin.service.impl;
 import org.opengms.admin.constant.UserConstants;
 import org.opengms.admin.entity.dto.MetaDTO;
 import org.opengms.admin.entity.dto.RouterDTO;
+import org.opengms.admin.entity.dto.TreeSelect;
 import org.opengms.admin.entity.po.system.SysMenu;
+import org.opengms.admin.entity.po.system.SysRole;
+import org.opengms.admin.entity.po.system.SysUser;
 import org.opengms.admin.mapper.SysMenuMapper;
+import org.opengms.admin.mapper.SysRoleMapper;
 import org.opengms.admin.service.ISysMenuService;
 import org.opengms.admin.utils.SecurityUtils;
 import org.opengms.common.constant.Constants;
@@ -13,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author bin
@@ -26,6 +31,10 @@ public class SysMenuServiceImpl implements ISysMenuService {
     private SysMenuMapper menuMapper;
 
 
+    @Autowired
+    private SysRoleMapper roleMapper;
+
+
     /**
      * 根据用户ID查询菜单
      *
@@ -33,8 +42,7 @@ public class SysMenuServiceImpl implements ISysMenuService {
      * @return 菜单列表
      */
     @Override
-    public List<SysMenu> selectMenuTreeByUserId(Long userId)
-    {
+    public List<SysMenu> selectMenuTreeByUserId(Long userId) {
         List<SysMenu> menus = null;
         if (SecurityUtils.isAdmin(userId))
         {
@@ -123,14 +131,65 @@ public class SysMenuServiceImpl implements ISysMenuService {
     public Set<String> selectMenuPermsByUserId(Long userId) {
         List<String> perms = menuMapper.selectMenuPermsByUserId(userId);
         Set<String> permsSet = new HashSet<>();
-        for (String perm : perms)
-        {
-            if (StringUtils.isNotEmpty(perm))
-            {
+        for (String perm : perms) {
+            if (StringUtils.isNotEmpty(perm)) {
                 permsSet.addAll(Arrays.asList(perm.trim().split(",")));
             }
         }
         return permsSet;
+    }
+
+    @Override
+    public List<SysMenu> selectMenuList(Long userId) {
+        return selectMenuList(new SysMenu(), userId);
+    }
+
+    public List<SysMenu> selectMenuList(SysMenu menu, Long userId) {
+        List<SysMenu> menuList = null;
+        // 管理员显示所有菜单信息
+        if (SysUser.isAdmin(userId)) {
+            menuList = menuMapper.selectMenuList(menu);
+        } else {
+            menu.getParams().put("userId", userId);
+            menuList = menuMapper.selectMenuListByUserId(menu);
+        }
+        return menuList;
+    }
+
+    @Override
+    public List<Long> selectMenuListByRoleId(Long roleId) {
+        // SysRole role = roleMapper.selectRoleById(roleId);
+        return menuMapper.selectMenuListByRoleId(roleId);
+    }
+
+
+    @Override
+    public List<TreeSelect> buildMenuTreeSelect(List<SysMenu> menus) {
+        List<SysMenu> menuTrees = buildMenuTree(menus);
+        return menuTrees.stream().map(TreeSelect::new).collect(Collectors.toList());
+    }
+
+    /**
+     * 构建前端所需要树结构
+     *
+     * @param menus 菜单列表
+     * @return 树结构列表
+     */
+    public List<SysMenu> buildMenuTree(List<SysMenu> menus) {
+        List<SysMenu> returnList = new ArrayList<SysMenu>();
+        List<Long> tempList = menus.stream().map(SysMenu::getMenuId).collect(Collectors.toList());
+        for (Iterator<SysMenu> iterator = menus.iterator(); iterator.hasNext(); ) {
+            SysMenu menu = (SysMenu) iterator.next();
+            // 如果是顶级节点, 遍历该父节点的所有子节点
+            if (!tempList.contains(menu.getParentId())) {
+                recursionFn(menus, menu);
+                returnList.add(menu);
+            }
+        }
+        if (returnList.isEmpty()) {
+            returnList = menus;
+        }
+        return returnList;
     }
 
 
@@ -140,8 +199,7 @@ public class SysMenuServiceImpl implements ISysMenuService {
      * @param menu 菜单信息
      * @return 路由名称
      */
-    public String getRouteName(SysMenu menu)
-    {
+    public String getRouteName(SysMenu menu) {
         String routerName = StringUtils.capitalize(menu.getPath());
         // 非外链并且是一级目录（类型为目录）
         if (isMenuFrame(menu))

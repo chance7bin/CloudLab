@@ -132,5 +132,16 @@ feign:
     max-connections: 200 # 最大的连接数
     max-connections-per-route: 50 # 每个路径的最大连接数
 
+
+# 防止XSS攻击
+xss:
+  # 过滤开关
+  enabled: true
+  # 排除链接（多个用逗号分隔）
+  excludes: /system/notice
+  # 匹配链接
+  urlPatterns: /system/*,/monitor/*,/tool/*
+
+
 labDriveUrl: localhost:8809/drive
 labContainerUrl: localhost:8810/container

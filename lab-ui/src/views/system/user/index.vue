@@ -1,6 +1,5 @@
 <template>
   <div class="app-container">
-
     <!--搜索-->
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="用户名称" prop="userName">
@@ -22,21 +21,11 @@
         />
       </el-form-item>
       <el-form-item label="状态" prop="status">
-        <el-select
-            v-model="queryParams.status"
-            placeholder="用户状态"
-            clearable
-            style="width: 240px"
-        >
-          <el-option
-              v-for="dict in sys_normal_disable"
-              :key="dict.value"
-              :label="dict.label"
-              :value="dict.value"
-          />
+        <el-select v-model="queryParams.status" placeholder="用户状态" clearable style="width: 240px">
+          <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label" :value="dict.value"/>
         </el-select>
       </el-form-item>
-      <el-form-item label="创建时间" style="width: 308px;font-weight: bold;">
+      <el-form-item label="创建时间" style="width: 308px; font-weight: bold">
         <el-date-picker
             v-model="dateRange"
             value-format="YYYY-MM-DD"
@@ -53,16 +42,23 @@
     </el-form>
 
     <!--用户数据-->
-    <el-table v-loading="loading" :data="userList" >
-      <el-table-column :label="columns[0].label" align="center" width="150" key="userId" prop="userId" v-if="columns[0].visible" />
+    <el-table v-loading="loading" :data="userList">
       <el-table-column
-        :label="columns[1].label"
-        align="center"
-        key="userName"
-        width="150"
-        prop="userName"
-        v-if="columns[1].visible"
-        :show-overflow-tooltip="true"
+          :label="columns[0].label"
+          align="center"
+          width="150"
+          key="userId"
+          prop="userId"
+          v-if="columns[0].visible"
+      />
+      <el-table-column
+          :label="columns[1].label"
+          align="center"
+          key="userName"
+          width="150"
+          prop="userName"
+          v-if="columns[1].visible"
+          :show-overflow-tooltip="true"
       />
       <el-table-column
           :label="columns[5].label"
@@ -74,20 +70,32 @@
           :show-overflow-tooltip="true"
       />
       <el-table-column
-        :label="columns[2].label"
-        align="center"
-        key="phonenumber"
-        prop="phonenumber"
-        v-if="columns[2].visible"
-        width="150"
+          :label="columns[2].label"
+          align="center"
+          key="phonenumber"
+          prop="phonenumber"
+          v-if="columns[2].visible"
+          width="150"
       />
+      <el-table-column
+          :label="columns[6].label"
+          align="center"
+          key="role"
+          v-if="columns[6].visible"
+          width="200"
+          :show-overflow-tooltip="true"
+      >
+        <template #default="scope">
+          <el-tag v-for="item in scope.row.roles" style="margin: 0 5px">{{ item.roleName }}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column :label="columns[3].label" align="center" width="150" key="status" v-if="columns[3].visible">
         <template #default="scope">
           <el-switch
-            v-model="scope.row.status"
-            active-value="0"
-            inactive-value="1"
-            @change="handleStatusChange(scope.row)"
+              v-model="scope.row.status"
+              active-value="0"
+              inactive-value="1"
+              @change="handleStatusChange(scope.row)"
           ></el-switch>
         </template>
       </el-table-column>
@@ -96,31 +104,16 @@
           <span>{{ scope.row.createTime }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作"  class-name="small-padding fixed-width">
+      <el-table-column label="操作" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-tooltip content="修改" placement="top" v-if="scope.row.userId != 1">
-            <el-button
-              link
-              type="primary"
-              icon="Edit"
-              @click="handleUpdate(scope.row)"
-            ></el-button>
+          <el-tooltip content="修改" v-hasPermi="['system:user:edit']" placement="top" v-if="scope.row.userId != 1">
+            <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"></el-button>
           </el-tooltip>
-          <el-tooltip content="重置密码" placement="top" v-if="scope.row.userId != 1">
-            <el-button
-              link
-              type="primary"
-              icon="Key"
-              @click="handleResetPwd(scope.row)"
-            ></el-button>
+          <el-tooltip content="重置密码" v-hasPermi="['system:user:resetPwd']" placement="top" v-if="scope.row.userId != 1">
+            <el-button link type="primary" icon="Key" @click="handleResetPwd(scope.row)"></el-button>
           </el-tooltip>
-          <el-tooltip content="删除" placement="top" v-if="scope.row.userId != 1">
-            <el-button
-                link
-                type="primary"
-                icon="Delete"
-                @click="handleDelete(scope.row)"
-            ></el-button>
+          <el-tooltip content="删除" v-hasPermi="['system:user:remove']" placement="top" v-if="scope.row.userId != 1">
+            <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
           </el-tooltip>
         </template>
       </el-table-column>
@@ -197,11 +190,10 @@
           <el-col :span="12">
             <el-form-item label="状态">
               <el-radio-group v-model="form.status">
-                <el-radio
-                    v-for="dict in sys_normal_disable"
-                    :key="dict.value"
-                    :label="dict.value"
-                >{{ dict.label }}</el-radio>
+                <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.value">{{
+                    dict.label
+                  }}
+                </el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -221,8 +213,6 @@
         </div>
       </template>
     </el-dialog>
-
-
   </div>
 </template>
 
@@ -250,24 +240,24 @@ const data = reactive({
     pageSize: 10,
     userName: undefined,
     phonenumber: undefined,
-    status: undefined,
+    status: undefined
   },
   rules: {
     userName: [
       { required: true, message: "用户名称不能为空", trigger: "blur" },
-      { min: 2, max: 20, message: "用户名称长度必须介于 2 和 20 之间", trigger: "blur" }
+      {min: 2, max: 20, message: "用户名称长度必须介于 2 和 20 之间", trigger: "blur"}
     ],
     password: [
-      { required: true, message: "用户密码不能为空", trigger: "blur" },
-      { min: 5, max: 20, message: "用户密码长度必须介于 5 和 20 之间", trigger: "blur" }
+      {required: true, message: "用户密码不能为空", trigger: "blur"},
+      {min: 5, max: 20, message: "用户密码长度必须介于 5 和 20 之间", trigger: "blur"}
     ],
-    email: [{ type: "email", message: "请输入正确的邮箱地址", trigger: ["blur", "change"] }],
-    phonenumber: [{ pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/, message: "请输入正确的手机号码", trigger: "blur" }]
+    email: [{type: "email", message: "请输入正确的邮箱地址", trigger: ["blur", "change"]}],
+    phonenumber: [{pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/, message: "请输入正确的手机号码", trigger: "blur"}]
   }
 });
-const userRef = ref<FormInstance>()
-const queryRef = ref<FormInstance>()
-const { queryParams, form, rules } = toRefs(data);
+const userRef = ref<FormInstance>();
+const queryRef = ref<FormInstance>();
+const {queryParams, form, rules} = toRefs(data);
 const title = ref("");
 const userList = ref([]);
 const roleOptions = ref([]);
@@ -276,13 +266,14 @@ const total = ref(0);
 const open = ref(false);
 const dateRange = ref([]);
 const showSearch = ref(true);
+const ids = ref([]);
 
 getList();
 
 /** 查询用户列表 */
 function getList() {
   loading.value = true;
-  listUser(proxy.addDateRange(queryParams.value, dateRange.value)).then((res : any) => {
+  listUser(proxy.addDateRange(queryParams.value, dateRange.value)).then((res: any) => {
     loading.value = false;
     userList.value = res.rows;
     total.value = Number(res.total);
@@ -293,7 +284,7 @@ function getList() {
 function handleStatusChange(row) {
   let text = row.status === "0" ? "启用" : "停用";
   proxy.$modal
-    .confirm('确认要' + text + '"' + row.userName + '"用户吗?')
+      .confirm("确认要" + text + '"' + row.userName + '"用户吗?')
     .then(function () {
       return changeUserStatus(row.userId, row.status);
     })
@@ -309,7 +300,7 @@ function handleStatusChange(row) {
 function handleUpdate(row) {
   reset();
   const userId = row.userId;
-  getUser(userId).then((response : any) => {
+  getUser(userId).then((response: any) => {
     form.value = response.data;
     roleOptions.value = response.roles;
     form.value["roleIds"] = response.roleIds;
@@ -337,47 +328,52 @@ function reset() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   // ids是批量删除的id数组
-  // const userIds = row.userId || ids.value;
-  const userIds = row.userId;
+  const userIds = row.userId || ids.value;
+  // const userIds = row.userId;
   proxy.$modal
-    .confirm('是否确认删除用户编号为"' + userIds + '"的用户？')
-    .then(function () {
-      return delUser(userIds);
-    })
-    .then(() => {
-      getList();
-      proxy.$modal.msgSuccess("删除成功");
-    })
-    .catch(() => {});
+      .confirm('是否确认删除用户编号为"' + userIds + '"的用户？')
+      .then(function () {
+        return delUser(userIds);
+      })
+      .then(() => {
+        getList();
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {
+      });
 }
 
 /** 重置密码按钮操作 */
 function handleResetPwd(row) {
-  proxy.$prompt('请输入"' + row.userName + '"的新密码', "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    closeOnClickModal: false,
-    inputPattern: /^.{5,20}$/,
-    inputErrorMessage: "用户密码长度必须介于 5 和 20 之间",
-  }).then(({ value }) => {
-    resetUserPwd(row.userId, value).then(response => {
-      proxy.$modal.msgSuccess("修改成功，新密码是：" + value);
-    });
-  }).catch(() => {});
-};
+  proxy
+      .$prompt('请输入"' + row.userName + '"的新密码', "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        closeOnClickModal: false,
+        inputPattern: /^.{5,20}$/,
+        inputErrorMessage: "用户密码长度必须介于 5 和 20 之间"
+      })
+      .then(({value}) => {
+        resetUserPwd(row.userId, value).then((response) => {
+          proxy.$modal.msgSuccess("修改成功，新密码是：" + value);
+        });
+      })
+      .catch(() => {
+      });
+}
 
 // TODO 新增用户
 /** 提交按钮 */
 function submitForm() {
   // proxy.$refs["userRef"].validate(valid => {
-    userRef.value?.validate((valid: boolean) => {
+  userRef.value?.validate((valid: boolean) => {
     if (valid) {
       // if (form.value.userId != undefined) {
-        updateUser(form.value).then(response => {
-          proxy.$modal.msgSuccess("修改成功");
-          open.value = false;
-          getList();
-        });
+      updateUser(form.value).then((response) => {
+        proxy.$modal.msgSuccess("修改成功");
+        open.value = false;
+        getList();
+      });
       // } else {
       //   addUser(form.value).then(response => {
       //     proxy.$modal.msgSuccess("新增成功");
@@ -387,19 +383,19 @@ function submitForm() {
       // }
     }
   });
-};
+}
 
 /** 取消按钮 */
 function cancel() {
   open.value = false;
   reset();
-};
+}
 
 /** 搜索按钮操作 */
 function handleQuery() {
   queryParams.value.pageNum = 1;
   getList();
-};
+}
 
 /** 重置按钮操作 */
 function resetQuery() {
@@ -407,8 +403,7 @@ function resetQuery() {
   // 表单重置并且移除校验结果(el-form-item必须有prop与表单里文本框v-model对应)
   proxy.resetForm(queryRef);
   handleQuery();
-};
-
+}
 </script>
 
 <style scoped lang="scss"></style>

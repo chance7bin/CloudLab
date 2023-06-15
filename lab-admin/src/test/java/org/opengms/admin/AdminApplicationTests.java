@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.opengms.admin.clients.DriveClient;
 import org.opengms.admin.entity.bo.Server;
 import org.opengms.admin.entity.dto.ApiResponse;
+import org.opengms.common.utils.file.FileUploadUtils;
 import org.opengms.common.utils.file.FileUtils;
 import org.opengms.common.utils.uuid.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,12 +59,19 @@ public class AdminApplicationTests {
 
     // 判断两个文件是否相同
     @Test
-    void isSameFile(){
+    void isSameFile() {
         String file1 = "E:\\opengms-lab\\container\\pod\\test1.tar";
         String file2 = "E:\\opengms-lab\\container\\pod\\test3.tar";
 
         Boolean sameFile = FileUtils.isSameFile(file1, file2);
         System.out.println(sameFile);
+    }
+
+    // 测试默认路径赋值
+    @Test
+    void testUploadPath() {
+        String defaultBaseDir = FileUploadUtils.getDefaultBaseDir();
+        System.out.println(defaultBaseDir);
     }
 
 }

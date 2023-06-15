@@ -1,9 +1,8 @@
 package org.opengms.admin.exception;
 
 import lombok.extern.slf4j.Slf4j;
-import org.opengms.admin.constant.HttpStatus;
+import org.opengms.common.constant.HttpStatus;
 import org.opengms.admin.entity.dto.ApiResponse;
-import org.opengms.admin.exception.ServiceException;
 import org.opengms.common.utils.StringUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;

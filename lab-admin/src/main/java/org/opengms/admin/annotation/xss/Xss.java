@@ -1,4 +1,4 @@
-package org.opengms.common.xss;
+package org.opengms.admin.annotation.xss;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;
@@ -9,17 +9,16 @@ import java.lang.annotation.Target;
 
 /**
  * 自定义xss校验注解
- * 
+ *
  * @author 7bin
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(value = { ElementType.METHOD, ElementType.FIELD, ElementType.CONSTRUCTOR, ElementType.PARAMETER })
-@Constraint(validatedBy = { XssValidator.class })
-public @interface Xss
-{
+@Target(value = {ElementType.METHOD, ElementType.FIELD, ElementType.CONSTRUCTOR, ElementType.PARAMETER})
+@Constraint(validatedBy = {XssValidator.class})
+public @interface Xss {
     String message()
 
-    default "不允许任何脚本运行";
+        default "不允许任何脚本运行";
 
     Class<?>[] groups() default {};
 

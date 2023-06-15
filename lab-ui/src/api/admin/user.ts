@@ -63,9 +63,48 @@ export function delUser(userId) {
 
 // 修改用户
 export function updateUser(data) {
-  return request({
-    url: contextPath + "",
-    method: "put",
-    data: data
-  });
+    return request({
+        url: contextPath + "",
+        method: "put",
+        data: data
+    });
+}
+
+// 修改用户个人信息
+export function updateUserProfile(data) {
+    return request({
+        url: contextPath + "/profile",
+        method: "put",
+        data: data
+    });
+}
+
+// 查询用户个人信息
+export function getUserProfile() {
+    return request({
+        url: contextPath + "/profile",
+        method: "get"
+    });
+}
+
+// 用户头像上传
+export function uploadAvatar(data) {
+    return request({
+        url: contextPath + "/profile/avatar",
+        method: "post",
+        data: data
+    });
+}
+
+// 用户密码重置
+export function updateUserPwd(oldPassword, newPassword) {
+    const data = {
+        oldPassword,
+        newPassword
+    };
+    return request({
+        url: contextPath + "/profile/pwd",
+        method: "put",
+        params: data
+    });
 }

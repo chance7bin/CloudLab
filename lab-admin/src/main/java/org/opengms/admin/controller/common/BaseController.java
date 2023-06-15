@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
-import org.opengms.admin.constant.HttpStatus;
+import org.opengms.common.constant.HttpStatus;
 import org.opengms.admin.entity.dto.ApiResponse;
 import org.opengms.admin.entity.dto.LoginUser;
 import org.opengms.admin.entity.dto.PageDTO;

@@ -1,4 +1,4 @@
-package org.opengms.common.xss;
+package org.opengms.admin.annotation.xss;
 
 
 import org.opengms.common.utils.StringUtils;

@@ -1,7 +1,7 @@
 package org.opengms.admin.security.handle;
 
 import com.alibaba.fastjson2.JSON;
-import org.opengms.admin.constant.HttpStatus;
+import org.opengms.common.constant.HttpStatus;
 import org.opengms.admin.entity.dto.ApiResponse;
 import org.opengms.common.utils.ServletUtils;
 import org.opengms.common.utils.StringUtils;

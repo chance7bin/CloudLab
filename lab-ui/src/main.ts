@@ -23,10 +23,22 @@ import "./permission"; // permission control
 
 // 注册指令
 import plugins from "./plugins"; // plugins
-import { download } from "@/utils/request";
-import { resetForm, addDateRange, parseTime, handleTree } from "@/utils/common";
-import { useDict } from "@/utils/dict";
+import {download} from "@/utils/request";
 // import { parseTime, resetForm, addDateRange, handleTree, selectDictLabel, selectDictLabels } from "@/utils/ruoyi";
+import {resetForm, addDateRange, parseTime, handleTree} from "@/utils/common";
+import {useDict} from "@/utils/dict";
+
+const app = createApp(App);
+
+// 全局方法挂载
+app.config.globalProperties.useDict = useDict;
+app.config.globalProperties.download = download;
+app.config.globalProperties.parseTime = parseTime;
+app.config.globalProperties.resetForm = resetForm;
+app.config.globalProperties.handleTree = handleTree;
+app.config.globalProperties.addDateRange = addDateRange;
+// app.config.globalProperties.selectDictLabel = selectDictLabel;
+// app.config.globalProperties.selectDictLabels = selectDictLabels;
 
 // 分页组件
 // import Pagination from "@/components/Pagination";
@@ -43,18 +55,6 @@ import { useDict } from "@/utils/dict";
 // 字典标签组件
 // import DictTag from "@/components/DictTag";
 
-const app = createApp(App);
-
-// 全局方法挂载
-app.config.globalProperties.useDict = useDict;
-app.config.globalProperties.download = download;
-app.config.globalProperties.parseTime = parseTime;
-app.config.globalProperties.resetForm = resetForm;
-app.config.globalProperties.handleTree = handleTree;
-app.config.globalProperties.addDateRange = addDateRange;
-// app.config.globalProperties.selectDictLabel = selectDictLabel;
-// app.config.globalProperties.selectDictLabels = selectDictLabels;
-
 // 全局组件挂载
 // app.component("DictTag", DictTag);
 // app.component("Pagination", Pagination);
@@ -64,10 +64,17 @@ app.config.globalProperties.addDateRange = addDateRange;
 // app.component("ImagePreview", ImagePreview);
 // app.component("RightToolbar", RightToolbar);
 
+// Vue-Cropper
+import VueCropper from "vue-cropper";
+import "vue-cropper/dist/index.css";
+
+app.use(VueCropper);
+
 // 注册vue-simple-uploader
 //引入大文件分片上传
 import uploader from "vue-simple-uploader";
 import "vue-simple-uploader/dist/style.css";
+
 app.use(uploader);
 
 // 引入jquery
@@ -90,15 +97,5 @@ app.use(ElementPlus, {
   // 支持 large、default、small
   size: Cookies.get("size") || "default"
 });
-
-// 自定义权限指令(自己加的, 之后放在directive模块中)
-// const permission = usePermissionStore();
-// app.directive("permission", {
-//   mounted(el, binding) {
-//     if (!permission.key.includes(String(binding.value))) {
-//       el["hidden"] = true;
-//     }
-//   }
-// });
 
 app.mount("#app");

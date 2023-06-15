@@ -2,9 +2,11 @@ package org.opengms.admin.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.opengms.admin.constant.UserConstants;
+import org.opengms.admin.entity.po.system.SysRole;
 import org.opengms.admin.entity.po.system.SysUser;
 import org.opengms.admin.entity.po.system.SysUserRole;
 import org.opengms.admin.exception.ServiceException;
+import org.opengms.admin.mapper.SysRoleMapper;
 import org.opengms.admin.mapper.SysUserMapper;
 import org.opengms.admin.mapper.SysUserRoleMapper;
 import org.opengms.admin.service.ISysUserService;
@@ -12,9 +14,11 @@ import org.opengms.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户业务层实现
@@ -31,6 +35,9 @@ public class SysUserServiceImpl implements ISysUserService {
 
     @Autowired
     SysUserRoleMapper userRoleMapper;
+
+    @Autowired
+    private SysRoleMapper roleMapper;
 
 
     @Override
@@ -216,8 +223,32 @@ public class SysUserServiceImpl implements ISysUserService {
     }
 
     @Override
-    public int resetPwd(SysUser user)
-    {
+    public int resetPwd(SysUser user) {
         return userMapper.updateUser(user);
     }
+
+    @Override
+    public List<SysUser> selectAllocatedList(SysUser user) {
+        return userMapper.selectAllocatedList(user);
+    }
+
+    @Override
+    public String selectUserRoleGroup(String userName) {
+        List<SysRole> list = roleMapper.selectRolesByUserName(userName);
+        if (CollectionUtils.isEmpty(list)) {
+            return StringUtils.EMPTY;
+        }
+        return list.stream().map(SysRole::getRoleName).collect(Collectors.joining(","));
+    }
+
+    @Override
+    public int resetUserPwd(String userName, String password) {
+        return userMapper.resetUserPwd(userName, password);
+    }
+
+    @Override
+    public boolean updateUserAvatar(String userName, String avatar) {
+        return userMapper.updateUserAvatar(userName, avatar) > 0;
+    }
+
 }
