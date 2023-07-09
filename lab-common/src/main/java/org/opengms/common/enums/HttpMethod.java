@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * 请求方式
  *
- * @author ruoyi
+ * @author 7bin
  */
 public enum HttpMethod {
     GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE;

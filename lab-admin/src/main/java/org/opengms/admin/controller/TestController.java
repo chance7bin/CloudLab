@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.opengms.admin.annotation.Anonymous;
 import org.opengms.admin.annotation.Log;
+import org.opengms.admin.annotation.RateLimiter;
 import org.opengms.admin.clients.container.ContainerClient;
 import org.opengms.admin.entity.po.system.SysOperLog;
 import org.opengms.admin.entity.po.system.SysUser;
@@ -154,8 +155,15 @@ public class TestController extends BaseController{
 
     @Anonymous
     @GetMapping("/aop")
-    public void testAop(){
+    public void testAop() {
         testService.test2();
+    }
+
+    @RateLimiter
+    @Anonymous
+    @GetMapping("/rate")
+    public String testRate() {
+        return "hello";
     }
 
 }

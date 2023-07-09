@@ -241,6 +241,7 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
         // 根据当前环境生成镜像包
         ContainerInfo container = containerService.getContainerInfoById(containerId, ContainerType.JUPYTER);
         if (container == null){
+            imageMapper.updateStatusById(imageId, ImageStatus.ERROR);
             throw new ServiceException("未找到对应的容器");
         }
 
@@ -284,12 +285,13 @@ public class MSCAsyncServiceImpl implements IMSCAsyncService {
         if (useDockerHub){
             try {
                 dockerService.pushImage(envName, tag);
+                log.info("镜像push成功");
                 imageMapper.updateStatusById(imageId, ImageStatus.PUSHED);
             } catch (InterruptedException e) {
                 // 更新image表
                 imageMapper.updateStatusById(imageId, ImageStatus.ERROR);
-                log.info("镜像commit出错，镜像id：" + imageId);
-                throw new ServiceException("镜像commit出错");
+                log.info("镜像push出错，镜像id：" + imageId);
+                throw new ServiceException("镜像push出错");
 
             }
         }

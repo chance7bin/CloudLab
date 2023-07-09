@@ -29,7 +29,7 @@ interface Tree {
 }
 
 const handleNodeClick = (data: Tree) => {
-  // console.log(data)
+  console.log(data)
   emit("selectedItem", data)
 }
 

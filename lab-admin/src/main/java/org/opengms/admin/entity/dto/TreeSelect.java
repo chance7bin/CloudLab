@@ -10,7 +10,7 @@ import org.opengms.admin.entity.po.system.SysMenu;
 /**
  * Treeselect树结构实体类
  *
- * @author ruoyi
+ * @author 7bin
  */
 public class TreeSelect implements Serializable {
     private static final long serialVersionUID = 1L;

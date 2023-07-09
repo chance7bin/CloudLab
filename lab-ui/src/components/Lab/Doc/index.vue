@@ -7,7 +7,7 @@
 <script setup>
 const { proxy } = getCurrentInstance();
 
-const url = ref('http://doc.ruoyi.vip/ruoyi-vue');
+const url = ref('http://doc.binb.vip/binb-vue');
 
 function goto() {
   // window.open(url.value)

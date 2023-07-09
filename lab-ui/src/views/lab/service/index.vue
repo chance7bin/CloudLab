@@ -119,15 +119,15 @@
       </el-card>
     </div>
 
-    <el-dialog class="config-dialog" v-model="configDialogVisible" width="20%" title="选择文件" draggable>
+    <el-dialog class="config-dialog" v-model="configDialogVisible" width="20%" title="选择文件" draggable destroy-on-close>
       <file-select-modal
-        :container-name="serviceOpts.containerName"
-        :container-id="serviceOpts.containerId"
-        @selectedItem="fillInputValue"
+          :container-name="serviceOpts.containerName"
+          :container-id="serviceOpts.containerId"
+          @selectedItem="fillInputValue"
       ></file-select-modal>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="confirmInputValue"> 确定 </el-button>
+          <el-button type="primary" @click="confirmInputValue"> 确定</el-button>
         </div>
       </template>
     </el-dialog>

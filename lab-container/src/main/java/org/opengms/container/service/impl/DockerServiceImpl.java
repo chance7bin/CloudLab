@@ -369,7 +369,8 @@ public class DockerServiceImpl implements IDockerService {
 
 
         // 3.删除以镜像仓库地址为前缀的镜像（因为该镜像只是用于推送到指定docker registry的临时tag）
-        dockerClient.removeImageCmd(newImageName).withForce(true).exec();
+        // 不用删除
+        // dockerClient.removeImageCmd(newImageName).withForce(true).exec();
 
     }
 

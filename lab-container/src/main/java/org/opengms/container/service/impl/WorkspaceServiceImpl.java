@@ -68,6 +68,10 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
     @Value(value = "${container.repository}")
     private String repository;
 
+    @Value(value = "${container.linuxRepository}")
+    private String linuxRepository;
+
+
     private static final int JUPYTER_CONTAINER_EXPORT_PORT = 8888;
     private static final int[] HOST_BIND_PORT_LIMIT = {7001, 8000};
 
@@ -82,7 +86,7 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
         jupyterContainer.setContainerId(SnowFlake.nextId());
         // jupyterContainer.setImageName("jupyter_cus:5.0");
         ImageInfo imageInfo = imageMapper.selectById(Long.valueOf(imageId));
-        jupyterContainer.setImageName(dockerService.getRealImageNameWithTag(imageInfo.getImageName()));
+        jupyterContainer.setImageName(dockerService.getRealImageNameWithTag(imageInfo.getRepoTags()));
         jupyterContainer.setImageId(imageInfo.getId());
         // jupyterContainer.setContainerName(jupyterContainer.getImageName().replaceAll(":","_") + "_" + jupyterContainer.getContainerId());
         jupyterContainer.setContainerName(containerName);
@@ -152,20 +156,23 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
             // 补全volume信息
             List<String> vlist = jupyterContainer.getVolumeList();
             for (int i = 0; i < vlist.size(); i++) {
-                vlist.set(i, repository + vlist.get(i));
+                // vlist.set(i, repository + vlist.get(i));
+                // docker切换到linux环境下 容器运行时宿主机目录
+                vlist.set(i, linuxRepository + vlist.get(i));
             }
             dockerService.createContainer(jupyterContainer);
             // 更新容器实例信息
             containerService.updateContainerInsId(jupyterContainer.getContainerId(), jupyterContainer.getContainerInsId(), ContainerType.JUPYTER);
 
-        } catch (InternalServerErrorException serverErrorException){
-            if (serverErrorException.getMessage().contains("port is already allocated")){
-                throw new ServiceException("端口被占用");
+        } catch (Exception e) {
+            // 如果容器创建失败，删除容器信息
+            containerService.deleteContainer(jupyterContainer.getContainerId(), ContainerType.JUPYTER);
+
+            // 如果容器创建成功，但是因为其他原因导致try中代码抛异常，删除容器
+            if (jupyterContainer.getContainerInsId() != null) {
+                dockerService.removeContainer(jupyterContainer.getContainerInsId());
             }
-            else {
-                throw new ServiceException(serverErrorException.getMessage());
-            }
-        } catch (Exception e){
+
             throw new ServiceException(e.getMessage());
         }
 

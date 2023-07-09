@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * 角色与菜单关联表 数据层
  *
- * @author ruoyi
+ * @author 7bin
  */
 @Mapper
 public interface SysRoleMenuMapper {

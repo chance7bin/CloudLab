@@ -1,7 +1,16 @@
+ip:
+  localhost: 172.21.212.240
+  remote:
+    docker: 172.21.212.177
+    k8s:
+      master: 172.21.212.102
+
 container:
   profile: E:/opengms-lab/uploadPath
   # 资源存放路径
   repository: E:/opengms-lab/container
+  # docker切换到linux环境下 容器运行时宿主机目录
+  linuxRepository: /opt/repository
 
 #日志配置
 logging:
@@ -14,22 +23,23 @@ labDriveUrl: localhost:8809/drive
 
 #docker配置
 docker:
-  clientHost: localhost
+  #  clientHost: localhost
+  clientHost: ${ip.remote.docker}
   clientPort: 2375
   clientMac: 18-C0-4D-38-98-4B
   useDockerHub: true
-  registryUrl: 172.21.212.240:8080
+  registryUrl: ${ip.remote.docker}:8080
 
 
 
 #socket配置
 mscSocket:
-  host: 172.21.212.240
+  host: ${ip.localhost}
   port: 6001
 
 #nfs配置
 nfs:
-  host: 172.21.212.240
+  host: ${ip.localhost}
   path: /e/opengms-lab/container
 
 

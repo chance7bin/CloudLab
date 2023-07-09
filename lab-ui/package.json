@@ -12,6 +12,7 @@
     "@element-plus/icons-vue": "^2.0.9",
     "@vueuse/core": "^9.2.0",
     "axios": "^0.27.2",
+    "codemirror-editor-vue3": "^2.3.0",
     "element-plus": "^2.2.16",
     "eslint-plugin-vue": "^9.4.0",
     "file-saver": "2.0.5",

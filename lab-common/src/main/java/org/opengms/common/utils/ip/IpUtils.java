@@ -3,6 +3,7 @@ package org.opengms.common.utils.ip;
 
 import cn.hutool.core.net.NetUtil;
 import cn.hutool.system.oshi.OshiUtil;
+import org.opengms.common.utils.ServletUtils;
 import org.opengms.common.utils.StringUtils;
 import oshi.hardware.GlobalMemory;
 
@@ -12,19 +13,27 @@ import java.net.*;
 
 /**
  * 获取IP方法
- * 
+ *
  * @author 7bin
  */
-public class IpUtils
-{
+public class IpUtils {
+
     /**
      * 获取客户端IP
-     * 
+     *
+     * @return IP地址
+     */
+    public static String getIpAddr() {
+        return getIpAddr(ServletUtils.getRequest());
+    }
+
+    /**
+     * 获取客户端IP
+     *
      * @param request 请求对象
      * @return IP地址
      */
-    public static String getIpAddr(HttpServletRequest request)
-    {
+    public static String getIpAddr(HttpServletRequest request) {
         if (request == null)
         {
             return "unknown";

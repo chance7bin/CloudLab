@@ -8,6 +8,7 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     Breadcrumb: typeof import('./components/Breadcrumb/index.vue')['default']
+    CodeVisual: typeof import('./components/Drive/CodeVisual.vue')['default']
     DictTag: typeof import('./components/DictTag/index.vue')['default']
     Doc: typeof import('./components/Lab/Doc/index.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']

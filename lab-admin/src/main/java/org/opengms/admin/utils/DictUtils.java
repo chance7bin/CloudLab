@@ -11,8 +11,8 @@ import org.opengms.common.utils.spring.SpringUtils;
 
 /**
  * 字典工具类
- * 
- * @author ruoyi
+ *
+ * @author 7bin
  */
 public class DictUtils
 {

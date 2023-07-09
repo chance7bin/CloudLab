@@ -23,6 +23,7 @@ import org.opengms.container.service.IDockerService;
 import org.opengms.container.service.IMdlService;
 import org.opengms.container.service.IWorkspaceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.net.URISyntaxException;
@@ -43,10 +44,17 @@ public class DockerTests {
     @Autowired
     IDockerService dockerService;
 
+    @Value("${docker.clientHost}")
+    private String clientHost;
+
+    @Value("${docker.clientPort}")
+    private String clientPort;
 
     //连接docker
-    public static DockerClient connect() throws URISyntaxException {
+    public DockerClient connect() throws URISyntaxException {
         // String host = "tcp://localhost:2333";
+        String host = "tcp://" + clientHost + ":" + clientPort;
+        log.debug(host);
         // String apiVersion = "1.38";
         //创建DefaultDockerClientConfig
         DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
@@ -70,7 +78,7 @@ public class DockerTests {
     void dockerInfo() throws URISyntaxException {
         DockerClient client = connect();
         Info info = client.infoCmd().exec();
-        System.out.println("docker info : " + info.toString());
+        log.debug("docker info : " + info.toString());
     }
 
     //创建容器
@@ -218,11 +226,11 @@ public class DockerTests {
     void addDefaultImage() {
         ImageInfo imageInfo = new ImageInfo();
         imageInfo.setId(SnowFlake.nextId());
-        imageInfo.setImageId("sha256:8834a83ccd002170cc8b60bfee25582aa44b3b2b444dd94fada1e6d6e3eb3326");
-        imageInfo.setImageName("jupyter_ws");
-        imageInfo.setTag("3.0");
-        imageInfo.setSize(391766465L);
-        imageInfo.setRepoTags("jupyter_ws:3.0");
+        imageInfo.setImageId("sha256:e8d6781644fe733d79fefdc0296269686aa32ddd380ea976fc847adfc45483d0");
+        imageInfo.setImageName("linux-default");
+        imageInfo.setTag("1.0");
+        imageInfo.setSize(391872808L);
+        imageInfo.setRepoTags("linux-default:1.0");
         imageMapper.insert(imageInfo);
     }
 

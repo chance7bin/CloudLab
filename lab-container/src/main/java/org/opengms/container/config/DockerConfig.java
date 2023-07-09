@@ -1,6 +1,7 @@
 package org.opengms.container.config;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.model.Info;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
@@ -54,6 +55,9 @@ public class DockerConfig {
         DockerClient client = DockerClientImpl.getInstance(config, httpClient);
 
         log.info("docker initialize successfully!");
+
+        Info info = client.infoCmd().exec();
+        // log.info("docker info : " + info.toString());
 
         return client;
     }
