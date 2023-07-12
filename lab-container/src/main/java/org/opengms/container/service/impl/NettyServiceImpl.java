@@ -31,7 +31,7 @@ public class NettyServiceImpl implements INettyService {
     // socket传输的字节大小
     private final static int SOCKET_MESSAGE_SIZE = 1024;
 
-    @Async
+    // @Async
     @Override
     public void startSocketListener() {
 

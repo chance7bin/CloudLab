@@ -10,8 +10,6 @@ import org.opengms.admin.enums.LimitType;
 import org.opengms.admin.exception.ServiceException;
 import org.opengms.common.utils.StringUtils;
 import org.opengms.common.utils.ip.IpUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;

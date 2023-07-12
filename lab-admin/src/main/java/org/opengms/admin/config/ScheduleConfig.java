@@ -31,7 +31,7 @@ public class ScheduleConfig {
         // 设置线程活跃时间（秒）
         executor.setKeepAliveSeconds(60);
         // 设置默认线程名称
-        executor.setThreadNamePrefix("AsyncThread-");
+        executor.setThreadNamePrefix("async-pool-");
         // 设置拒绝策略 当最大池被填满时，此策略为我们提供可伸缩队列
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         // 等待所有任务结束后再关闭线程池

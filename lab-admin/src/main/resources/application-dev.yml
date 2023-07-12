@@ -6,3 +6,20 @@ logging:
   config: classpath:log4j2-config.xml
   file:
     path: E:/opengms-lab/admin/log
+
+spring:
+  rabbitmq:
+    host: 172.21.212.177 # rabbitMQ的ip地址
+    port: 8071 # 端口
+    username: itcast
+    password: 123321
+    virtual-host: /   # 虚拟主机
+    listener:
+      simple:
+        prefetch: 1 # 每次从MQ中取出一条消息进行消费
+        acknowledge-mode: auto  # 自动确认
+        retry:
+          enabled: true # 开启重试机制
+          initial-interval: 1000 # 重试间隔时间
+          multiplier: 3 # 重试倍数
+          max-attempts: 4 # 最大重试次数

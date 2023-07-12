@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.opengms.admin.clients.DriveClient;
 import org.opengms.admin.entity.bo.Server;
 import org.opengms.admin.entity.dto.ApiResponse;
+import org.opengms.admin.utils.MqUtils;
 import org.opengms.common.utils.file.FileUploadUtils;
 import org.opengms.common.utils.file.FileUtils;
 import org.opengms.common.utils.uuid.UUID;
@@ -72,6 +73,13 @@ public class AdminApplicationTests {
     void testUploadPath() {
         String defaultBaseDir = FileUploadUtils.getDefaultBaseDir();
         System.out.println(defaultBaseDir);
+    }
+
+    // 测试消息队列
+    @Test
+    void testMq() {
+        MqUtils.sendRedisKeyToMq("sys_config:sys.index.sideTheme");
+        // log.info("hello");
     }
 
 }
