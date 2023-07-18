@@ -46,15 +46,15 @@ cloud-lab
 
 ### 功能模块
 
-![modules](./doc/images/modules.png)
+<img src="./doc/images/modules.png" style="zoom:50%;" />
 
 ### 服务架构
 
-![workflow](./doc/images/workflow.png)
+<img src="./doc/images/workflow.png" style="zoom:50%;" />
 
 ### 使用情景
 
-![scene](./doc/images/scene.png)
+<img src="./doc/images/scene.png" style="zoom:50%;" />
 
 ## 演示截图
 
