@@ -42,7 +42,7 @@ public class RabbitMqListener {
         key = {"canal"}
     ))
     public void listenCanalQueue(Message mqMessage, Channel channel) {
-        log.info("start listening mysql data change...");
+        // log.info("start listening mysql data change...");
         String message = new String(mqMessage.getBody(), StandardCharsets.UTF_8);
         // 解析message转换成CanalMessage对象
         CanalMessage canalMessage = JSONUtil.toBean(message, CanalMessage.class);

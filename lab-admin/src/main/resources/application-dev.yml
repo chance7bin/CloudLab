@@ -11,8 +11,9 @@ spring:
   rabbitmq:
     host: 172.21.212.177 # rabbitMQ的ip地址
     port: 8071 # 端口
-    username: itcast
-    password: 123321
+    #    addresses: 172.21.212.177:8071, 172.21.212.177:8072, 172.21.212.177:8073
+    username: ogms
+    password: ogms
     virtual-host: /   # 虚拟主机
     listener:
       simple:
