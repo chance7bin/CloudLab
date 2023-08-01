@@ -1,5 +1,6 @@
 package org.opengms.admin.clients.container;
 
+import org.opengms.admin.constant.ServiceConstants;
 import org.opengms.admin.entity.dto.ApiResponse;
 import org.opengms.admin.entity.dto.PageableParams;
 import org.opengms.admin.entity.dto.container.InvokeDTO;
@@ -16,10 +17,11 @@ import org.springframework.web.bind.annotation.RequestBody;
  * @author 7bin
  * @date 2023/04/12
  */
-@FeignClient(name = "container-service", url = "${labContainerUrl}")
+// @FeignClient(name = "container-service", url = "${labContainerUrl}")
+@FeignClient(name = "lab-container", contextId = "service")
 public interface ModelServiceClient {
 
-    String MODEL_SERVICE_MODULE = "/service";
+    String MODEL_SERVICE_MODULE = ServiceConstants.LAB_CONTAINER_CONTEXT_PATH + "/service";
 
     @PostMapping(value = MODEL_SERVICE_MODULE + "")
     ApiResponse insertModelService(@RequestBody ModelServiceDTO modelServiceDTO);

@@ -29,7 +29,7 @@ spring:
     nacos:
       server-addr: localhost:8848
       discovery:
-        enabled: false
+        enabled: true
   application:
     name: lab-container
   mvc:

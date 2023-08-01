@@ -1,20 +1,15 @@
 package org.opengms.drive.service.impl;
 
-import cn.hutool.core.io.FileTypeUtil;
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.novelweb.tool.http.Result;
 import cn.novelweb.tool.upload.local.LocalUpload;
 import cn.novelweb.tool.upload.local.pojo.UploadFileParam;
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.nacos.common.utils.UuidUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.annotations.Results;
 import org.opengms.common.utils.DateUtils;
 import org.opengms.common.utils.StringUtils;
 import org.opengms.common.utils.file.FileTypeUtils;
-import org.opengms.common.utils.file.FileUtils;
 import org.opengms.common.utils.uuid.SnowFlake;
 import org.opengms.common.utils.uuid.UUID;
 import org.opengms.drive.constant.FileConstants;
@@ -22,14 +17,11 @@ import org.opengms.drive.entity.po.FileInfo;
 import org.opengms.drive.exception.ServiceException;
 import org.opengms.drive.mapper.FileMapper;
 import org.opengms.drive.service.IFileService;
-import org.opengms.drive.utils.NovelWebUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.print.DocFlavor;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileInputStream;

@@ -1,5 +1,6 @@
 package org.opengms.admin.clients.container;
 
+import org.opengms.admin.constant.ServiceConstants;
 import org.opengms.admin.entity.dto.ApiResponse;
 import org.opengms.admin.entity.dto.PageableParams;
 import org.opengms.admin.entity.dto.container.EnvDTO;
@@ -16,10 +17,13 @@ import org.springframework.web.bind.annotation.RequestBody;
  * @author 7bin
  * @date 2023/04/12
  */
-@FeignClient(name = "container-container", url = "${labContainerUrl}")
+// 更换为nacos注册服务
+// @FeignClient(name = "container-container", url = "${labContainerUrl}")
+@FeignClient(name = "lab-container", contextId = "container")
 public interface ContainerClient {
 
-    String CONTAINER_MODULE = "/container";
+
+    String CONTAINER_MODULE = ServiceConstants.LAB_CONTAINER_CONTEXT_PATH + "/container";
 
     @GetMapping(value = CONTAINER_MODULE + "/list")
     ApiResponse listContainers(@SpringQueryMap PageableParams pageableParams);

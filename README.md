@@ -70,6 +70,9 @@ cloud-lab
 
 ![Alt text](./doc/images/image-2.png)
 
+**工作空间**
+![Alt text](./doc/images/image8.png)
+
 **服务发布**
 
 ![Alt text](./doc/images/image-3.png)

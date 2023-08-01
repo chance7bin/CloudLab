@@ -24,7 +24,7 @@ import "./permission"; // permission control
 // 注册指令
 import plugins from "./plugins"; // plugins
 import {download} from "@/utils/request";
-// import { parseTime, resetForm, addDateRange, handleTree, selectDictLabel, selectDictLabels } from "@/utils/ruoyi";
+// import { parseTime, resetForm, addDateRange, handleTree, selectDictLabel, selectDictLabels } from "@/utils/common";
 import {resetForm, addDateRange, parseTime, handleTree} from "@/utils/common";
 import {useDict} from "@/utils/dict";
 
