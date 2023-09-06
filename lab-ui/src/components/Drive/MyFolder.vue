@@ -105,6 +105,7 @@ import type { FileInfoDTO } from "@/api/drive/drive";
 import { checkAuth } from "@/api/admin/user";
 import {ref} from "vue";
 import useDriveStore from "@/stores/modules/drive";
+import {now} from "@vueuse/core";
 
 const total = ref<number>(0);
 
@@ -203,7 +204,6 @@ function getFolder() {
     total.value = Number(res.total);
   });
 }
-
 
 
 const folderSelect = (item, index) => {
