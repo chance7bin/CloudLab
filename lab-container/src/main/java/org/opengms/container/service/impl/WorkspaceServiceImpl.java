@@ -173,7 +173,7 @@ public class WorkspaceServiceImpl implements IWorkspaceService {
                 dockerService.removeContainer(jupyterContainer.getContainerInsId());
             }
 
-            throw new ServiceException(e.getMessage());
+
         }
 
         return count > 0;
