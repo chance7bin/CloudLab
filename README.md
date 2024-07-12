@@ -44,7 +44,7 @@ cloud-lab
 
 ## 功能模块
 
-<img src="./doc/images/modules.png" style="zoom:50%;" />
+<img src="./doc/images/modules.png" style="width:50%;" />
 
 
 
@@ -52,13 +52,13 @@ cloud-lab
 
 在我们现在的研究中，我们写好了模型的封装代码以及描述文档之后，把部署包部署到模型容器上，模型容器会解析我们写的这个描述文档，生成模型服务的调用界面，调用这个模型服务时，模型容器与封装代码之间通过socket进行数据传输。我们可以看到其封装代码是运行在我们的计算机上的，模型运行所需要的环境也是直接安装在计算机上。
 
-<img src="./doc/images/pre-mode.png" style="zoom:50%;" />
+<img src="./doc/images/pre-mode.png" style="width:50%;" />
 
 那么，当我们在这个计算机上部署越来越多模型服务的时候，每个模型之间的运行环境其实都不是一样的，那么这样就容易出现兼容性问题。
 
 所以我们基于容器化的这种机制，将模型服务**从基于操作系统的运行方式改为基于容器的运行方式**，且我们将模型的运行脚本与容器解耦开，容器只提供一个运行环境，充当之前的操作系统，而我们的运行脚本还是放在宿主机的。这样设计如果当我们一些不同服务需要相同环境时可以做到容器镜像的复用。
 
-<img src="./doc/images/run-mode.png" style="zoom:50%;" />
+<img src="./doc/images/run-mode.png" style="width:50%;" />
 
 ## 应用模式
 
@@ -72,13 +72,13 @@ cloud-lab
 
 那么当一个服务可用时，云平台可将该服务公开出去，接入到资源门户由模型使用者来使用。
 
-<img src="./doc/images/scene.png" style="zoom:50%;" />
+<img src="./doc/images/scene.png" style="width:50%;" />
 
 
 
 ## 服务架构
 
-<img src="./doc/images/workflow.png" style="zoom:50%;" />
+<img src="./doc/images/workflow.png" style="width:50%;" />
 
 
 
@@ -94,7 +94,7 @@ cloud-lab
 - 计算节点B拉取模型部署包与环境镜像
 - 更新Manager与计算节点的模型服务信息
 
-<img src="./doc/images/push-pull.png" style="zoom:50%;" />
+<img src="./doc/images/push-pull.png" style="width:50%;" />
 
 
 
@@ -110,7 +110,7 @@ cloud-lab
 - 节点的负载检测
 - 基于调度算法选择出调度的目标节点
 
-<img src="./doc/images/dispatcher.png" style="zoom:50%;" />
+<img src="./doc/images/dispatcher.png" style="width:50%;" />
 
 
 
